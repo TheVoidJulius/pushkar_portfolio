@@ -1,0 +1,40 @@
+"use client";
+
+import type { PortfolioContent } from "@/lib/types";
+import { AssistantDock } from "../momo/AssistantDock";
+import { AssistantProvider } from "../momo/AssistantProvider";
+import { MomoFlight } from "../momo/MomoFlight";
+import { About } from "./About";
+import { BottomChips, TopNav } from "./Chrome";
+import { Contact } from "./Contact";
+import { ExperienceDial } from "./ExperienceDial";
+import { Hero } from "./Hero";
+import { Skills } from "./Skills";
+import { SmoothScroll } from "./SmoothScroll";
+import { Work } from "./Work";
+
+export function PublicSite({ content, previewBanner }: { content: PortfolioContent; previewBanner?: React.ReactNode }) {
+  const show = content.site.show_assistant;
+  return (
+    <AssistantProvider content={content}>
+      <SmoothScroll />
+      {previewBanner}
+      <TopNav showAssistant={show} />
+      <main>
+        <Hero profile={content.profile} showAssistant={show} />
+        <Work projects={content.projects} showAssistant={show} />
+        <Skills categories={content.skillCategories} showAssistant={show} />
+        <ExperienceDial items={content.experiences} showAssistant={show} />
+        <About about={content.about} name={content.profile.name} showAssistant={show} />
+      </main>
+      <Contact contact={content.contact} name={content.profile.name} footerNote={content.site.footer_note} showAssistant={show} />
+      {show && (
+        <>
+          <BottomChips />
+          <AssistantDock />
+          <MomoFlight />
+        </>
+      )}
+    </AssistantProvider>
+  );
+}

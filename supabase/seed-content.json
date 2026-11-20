@@ -1,0 +1,568 @@
+{
+  "site": {
+    "site_title": "Alex Morgan — Creative Developer",
+    "meta_description": "Alex Morgan is a creative developer building playful, AI-powered digital experiences. Explore projects, skills and experience — or ask Momo, the portfolio cat.",
+    "footer_note": "Designed and built with care, curiosity and one very opinionated cat.",
+    "show_assistant": true
+  },
+  "profile": {
+    "name": "Alex Morgan",
+    "designation": "Creative Developer & AI Enthusiast",
+    "introduction": "Building digital experiences that combine technology, creativity and a little bit of magic.",
+    "description": "I design and engineer interfaces that feel alive — from AI-assisted tools to motion-rich product sites. Eight years of shipping for startups and studios taught me that the details people notice are rarely the ones in the spec.",
+    "location": "Lisbon, Portugal · Remote",
+    "availability": "Open to freelance & full-time roles from January",
+    "profile_image_url": "/placeholders/profile.svg",
+    "cta_primary_label": "See my work",
+    "cta_primary_href": "#work",
+    "cta_secondary_label": "Get in touch",
+    "cta_secondary_href": "#contact",
+    "stats": [
+      {
+        "value": "8+",
+        "label": "years building for the web"
+      },
+      {
+        "value": "40",
+        "label": "products shipped"
+      },
+      {
+        "value": "12",
+        "label": "AI features in production"
+      },
+      {
+        "value": "3",
+        "label": "design awards"
+      }
+    ]
+  },
+  "projects": [
+    {
+      "id": "6f1c2a10-0000-4000-8000-000000000001",
+      "title": "Lantern",
+      "summary": "An AI reading companion that turns long research papers into guided, interactive walkthroughs.",
+      "description": "Lantern ingests a PDF and builds a navigable map of its arguments, figures and citations. Readers can ask questions in context, and every answer links back to the exact passage it came from. I led product design and built the reader, the citation highlighter and the streaming answer UI.",
+      "category": "AI Product",
+      "year": "2026",
+      "highlight": "18k weekly readers within three months",
+      "image_url": "/placeholders/project-lantern.svg",
+      "technologies": [
+        "Next.js",
+        "TypeScript",
+        "Claude API",
+        "PostgreSQL",
+        "pgvector"
+      ],
+      "github_url": "https://github.com/example/lantern",
+      "demo_url": "https://lantern.example.com",
+      "featured": true,
+      "published": true,
+      "sort_order": 0
+    },
+    {
+      "id": "6f1c2a10-0000-4000-8000-000000000002",
+      "title": "Tidepool",
+      "summary": "A generative ocean-sound visualiser that reacts to live audio with GPU particles.",
+      "description": "Tidepool listens to the microphone, separates rhythm from texture and drives a 200k-particle simulation in WebGL. It started as a weekend experiment and ended up as the opening visual for a music festival in Porto.",
+      "category": "Creative Coding",
+      "year": "2025",
+      "highlight": "Featured as Site of the Day",
+      "image_url": "/placeholders/project-tidepool.svg",
+      "technologies": [
+        "Three.js",
+        "GLSL",
+        "Web Audio API",
+        "Vite"
+      ],
+      "github_url": "https://github.com/example/tidepool",
+      "demo_url": "https://tidepool.example.com",
+      "featured": true,
+      "published": true,
+      "sort_order": 1
+    },
+    {
+      "id": "6f1c2a10-0000-4000-8000-000000000003",
+      "title": "Fieldnote",
+      "summary": "A calm, offline-first journaling app with on-device mood insights.",
+      "description": "Fieldnote keeps every entry on the device, syncs end-to-end encrypted, and uses a small on-device model to surface gentle weekly patterns. I built the React Native client and the encrypted sync protocol.",
+      "category": "Mobile App",
+      "year": "2025",
+      "highlight": "4.8★ average across 2,000 reviews",
+      "image_url": "/placeholders/project-fieldnote.svg",
+      "technologies": [
+        "React Native",
+        "Expo",
+        "SQLite",
+        "TensorFlow Lite"
+      ],
+      "github_url": "https://github.com/example/fieldnote",
+      "demo_url": null,
+      "featured": false,
+      "published": true,
+      "sort_order": 2
+    },
+    {
+      "id": "6f1c2a10-0000-4000-8000-000000000004",
+      "title": "Switchboard",
+      "summary": "A design-system dashboard that tracks component usage across thirty product repositories.",
+      "description": "Switchboard scans repositories nightly, maps which components and tokens each team uses, and flags drift from the design system. It cut the time to plan a breaking change from weeks to an afternoon.",
+      "category": "Developer Tool",
+      "year": "2024",
+      "highlight": "Adopted by 30 product teams",
+      "image_url": "/placeholders/project-switchboard.svg",
+      "technologies": [
+        "React",
+        "Node.js",
+        "GraphQL",
+        "D3.js"
+      ],
+      "github_url": "https://github.com/example/switchboard",
+      "demo_url": "https://switchboard.example.com",
+      "featured": false,
+      "published": true,
+      "sort_order": 3
+    },
+    {
+      "id": "6f1c2a10-0000-4000-8000-000000000005",
+      "title": "Sprout",
+      "summary": "A playful plant-care assistant that identifies plants from a photo and schedules reminders.",
+      "description": "Sprout combines an image classifier with a friendly conversational layer. The fun part was the character design: the plant mascot changes expression depending on how thirsty your plants are.",
+      "category": "AI Product",
+      "year": "2024",
+      "highlight": "Top 10 in the Lifestyle category",
+      "image_url": "/placeholders/project-sprout.svg",
+      "technologies": [
+        "Python",
+        "FastAPI",
+        "PyTorch",
+        "Svelte"
+      ],
+      "github_url": "https://github.com/example/sprout",
+      "demo_url": "https://sprout.example.com",
+      "featured": false,
+      "published": true,
+      "sort_order": 4
+    },
+    {
+      "id": "6f1c2a10-0000-4000-8000-000000000006",
+      "title": "Paper Planes",
+      "summary": "An interactive scroll story about the history of flight, built for a science museum.",
+      "description": "A scroll-driven narrative with hand-drawn illustrations, folded-paper transitions and an accessibility-first reading mode. Built in close collaboration with the museum's education team.",
+      "category": "Interactive Story",
+      "year": "2023",
+      "highlight": "Used by 60 schools for remote lessons",
+      "image_url": "/placeholders/project-paperplanes.svg",
+      "technologies": [
+        "GSAP",
+        "SVG",
+        "Astro",
+        "Accessibility"
+      ],
+      "github_url": null,
+      "demo_url": "https://paperplanes.example.com",
+      "featured": false,
+      "published": true,
+      "sort_order": 5
+    }
+  ],
+  "skillCategories": [
+    {
+      "id": "a1b2c3d4-0000-4000-8000-000000000001",
+      "name": "Programming Languages",
+      "description": "The languages I think in.",
+      "icon": "code",
+      "sort_order": 0,
+      "skills": [
+        {
+          "id": "b0000000-0000-4000-8000-000000000101",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000001",
+          "name": "TypeScript",
+          "level": "expert",
+          "sort_order": 0
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000102",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000001",
+          "name": "JavaScript",
+          "level": "expert",
+          "sort_order": 1
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000103",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000001",
+          "name": "Python",
+          "level": "proficient",
+          "sort_order": 2
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000104",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000001",
+          "name": "GLSL",
+          "level": "proficient",
+          "sort_order": 3
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000105",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000001",
+          "name": "SQL",
+          "level": "proficient",
+          "sort_order": 4
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000106",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000001",
+          "name": "Rust",
+          "level": "familiar",
+          "sort_order": 5
+        }
+      ]
+    },
+    {
+      "id": "a1b2c3d4-0000-4000-8000-000000000002",
+      "name": "Frontend Development",
+      "description": "Interfaces that feel fast and alive.",
+      "icon": "layout",
+      "sort_order": 1,
+      "skills": [
+        {
+          "id": "b0000000-0000-4000-8000-000000000201",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000002",
+          "name": "React",
+          "level": "expert",
+          "sort_order": 0
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000202",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000002",
+          "name": "Next.js",
+          "level": "expert",
+          "sort_order": 1
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000203",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000002",
+          "name": "Tailwind CSS",
+          "level": "expert",
+          "sort_order": 2
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000204",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000002",
+          "name": "Motion / Framer Motion",
+          "level": "expert",
+          "sort_order": 3
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000205",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000002",
+          "name": "Three.js",
+          "level": "proficient",
+          "sort_order": 4
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000206",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000002",
+          "name": "Accessibility (WCAG)",
+          "level": "proficient",
+          "sort_order": 5
+        }
+      ]
+    },
+    {
+      "id": "a1b2c3d4-0000-4000-8000-000000000003",
+      "name": "Backend Development",
+      "description": "The plumbing that keeps the magic running.",
+      "icon": "server",
+      "sort_order": 2,
+      "skills": [
+        {
+          "id": "b0000000-0000-4000-8000-000000000301",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000003",
+          "name": "Node.js",
+          "level": "expert",
+          "sort_order": 0
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000302",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000003",
+          "name": "PostgreSQL",
+          "level": "proficient",
+          "sort_order": 1
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000303",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000003",
+          "name": "Supabase",
+          "level": "proficient",
+          "sort_order": 2
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000304",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000003",
+          "name": "GraphQL",
+          "level": "proficient",
+          "sort_order": 3
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000305",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000003",
+          "name": "FastAPI",
+          "level": "familiar",
+          "sort_order": 4
+        }
+      ]
+    },
+    {
+      "id": "a1b2c3d4-0000-4000-8000-000000000004",
+      "name": "AI / Machine Learning",
+      "description": "Making models useful, honest and kind.",
+      "icon": "brain",
+      "sort_order": 3,
+      "skills": [
+        {
+          "id": "b0000000-0000-4000-8000-000000000401",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000004",
+          "name": "LLM application design",
+          "level": "expert",
+          "sort_order": 0
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000402",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000004",
+          "name": "Retrieval (RAG)",
+          "level": "proficient",
+          "sort_order": 1
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000403",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000004",
+          "name": "Prompt evaluation",
+          "level": "proficient",
+          "sort_order": 2
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000404",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000004",
+          "name": "PyTorch",
+          "level": "familiar",
+          "sort_order": 3
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000405",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000004",
+          "name": "Voice interfaces",
+          "level": "proficient",
+          "sort_order": 4
+        }
+      ]
+    },
+    {
+      "id": "a1b2c3d4-0000-4000-8000-000000000005",
+      "name": "Tools & Technologies",
+      "description": "What's open on my desk.",
+      "icon": "wrench",
+      "sort_order": 4,
+      "skills": [
+        {
+          "id": "b0000000-0000-4000-8000-000000000501",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000005",
+          "name": "Figma",
+          "level": "expert",
+          "sort_order": 0
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000502",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000005",
+          "name": "Git & GitHub",
+          "level": "expert",
+          "sort_order": 1
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000503",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000005",
+          "name": "Vercel",
+          "level": "proficient",
+          "sort_order": 2
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000504",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000005",
+          "name": "Docker",
+          "level": "proficient",
+          "sort_order": 3
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000505",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000005",
+          "name": "Rive",
+          "level": "familiar",
+          "sort_order": 4
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000506",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000005",
+          "name": "Blender",
+          "level": "familiar",
+          "sort_order": 5
+        }
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "id": "c0ffee00-0000-4000-8000-000000000001",
+      "company": "Brightloop",
+      "role": "Senior Creative Developer",
+      "location": "Remote",
+      "company_url": "https://brightloop.example.com",
+      "start_date": "2024-03-01",
+      "end_date": null,
+      "is_current": true,
+      "description": "Leading the front-end and AI interaction work for a studio that builds conversational products for education and health clients.",
+      "achievements": [
+        "Designed the studio's reusable streaming-chat component kit, now used in 9 client products",
+        "Introduced evaluation checklists for AI features, cutting hallucination reports by 60%",
+        "Mentor two junior developers"
+      ],
+      "technologies": [
+        "Next.js",
+        "TypeScript",
+        "Claude API",
+        "Supabase"
+      ],
+      "logo_url": "/placeholders/logo-brightloop.svg",
+      "published": true,
+      "sort_order": 0
+    },
+    {
+      "id": "c0ffee00-0000-4000-8000-000000000002",
+      "company": "Paperkite Studio",
+      "role": "Creative Developer",
+      "location": "Porto, Portugal",
+      "company_url": "https://paperkite.example.com",
+      "start_date": "2021-06-01",
+      "end_date": "2024-02-29",
+      "is_current": false,
+      "description": "Built award-winning interactive sites and installations for museums, festivals and cultural brands.",
+      "achievements": [
+        "Shipped 14 interactive campaigns, three recognised with design awards",
+        "Built the studio's WebGL starter kit and motion guidelines"
+      ],
+      "technologies": [
+        "Three.js",
+        "GSAP",
+        "React",
+        "GLSL"
+      ],
+      "logo_url": "/placeholders/logo-paperkite.svg",
+      "published": true,
+      "sort_order": 1
+    },
+    {
+      "id": "c0ffee00-0000-4000-8000-000000000003",
+      "company": "Halcyon Health",
+      "role": "Front-end Engineer",
+      "location": "London, UK",
+      "company_url": "https://halcyon.example.com",
+      "start_date": "2018-09-01",
+      "end_date": "2021-05-31",
+      "is_current": false,
+      "description": "Worked on the patient-facing web app for a digital therapy provider, with a focus on accessibility and performance.",
+      "achievements": [
+        "Raised the app's accessibility audit score from 71 to 98",
+        "Halved the initial load time on low-end Android devices"
+      ],
+      "technologies": [
+        "React",
+        "Redux",
+        "Node.js",
+        "Jest"
+      ],
+      "logo_url": "/placeholders/logo-halcyon.svg",
+      "published": true,
+      "sort_order": 2
+    }
+  ],
+  "about": {
+    "headline": "Part engineer, part illustrator, full-time tinkerer.",
+    "introduction": "Hi, I'm Alex. I like building things that make people smile the first time they use them — and still work perfectly the hundredth time.",
+    "biography": "I grew up drawing comics and taking apart old radios, so it's no surprise I ended up somewhere between design and engineering. I started out building accessible health software, moved into creative agencies to learn motion and storytelling, and now spend most of my time designing AI products that feel friendly rather than intimidating.",
+    "background": "BSc in Computer Science from a fictional university, plus a stubborn self-taught streak in illustration and animation. I've worked with startups, studios and cultural institutions across Europe.",
+    "interests": [
+      "Generative art",
+      "Film photography",
+      "Bouldering",
+      "Japanese animation",
+      "Synthesizers",
+      "Long walks with podcasts"
+    ],
+    "highlights": [
+      {
+        "title": "Speaker",
+        "description": "Talked about friendly AI interfaces at four (fictional) design conferences."
+      },
+      {
+        "title": "Open source",
+        "description": "Maintainer of a small motion utilities library with 2k stars."
+      },
+      {
+        "title": "Teacher",
+        "description": "Runs a free monthly creative-coding workshop for teenagers."
+      }
+    ],
+    "image_url": "/placeholders/about.svg"
+  },
+  "contact": {
+    "email": "hello@alexmorgan.example",
+    "phone": "",
+    "location": "Lisbon, Portugal",
+    "availability_note": "I reply to every message within two working days.",
+    "socials": [
+      {
+        "platform": "github",
+        "label": "GitHub",
+        "url": "https://github.com/example"
+      },
+      {
+        "platform": "linkedin",
+        "label": "LinkedIn",
+        "url": "https://www.linkedin.com/in/example"
+      },
+      {
+        "platform": "x",
+        "label": "X / Twitter",
+        "url": "https://x.com/example"
+      },
+      {
+        "platform": "dribbble",
+        "label": "Dribbble",
+        "url": "https://dribbble.com/example"
+      }
+    ],
+    "form_enabled": true
+  },
+  "assistant": {
+    "name": "Momo",
+    "greeting": "Hey there! I'm Momo, your little portfolio companion! Want me to show you around?",
+    "personality": "You are warm, graceful and gently playful, like a confident young Japanese woman who is fluent in English. You speak in a soft, expressive, mature tone. Keep answers short (two to four sentences), clear and kind. You love showing off projects. Always speak natural, fluent English (no Japanese words). One small cat-themed joke per answer at most.",
+    "default_language": "en-US",
+    "greeting_enabled": true,
+    "tour_enabled": true,
+    "voice_enabled": true,
+    "voice_provider": "auto",
+    "voice_id": "",
+    "voice_model": "eleven_v3",
+    "voice_stability": 0.4,
+    "voice_style": 0.55,
+    "voice_speed": 1.0,
+    "browser_pitch": 1.08,
+    "browser_rate": 0.96,
+    "browser_accent": "japanese",
+    "suggested_questions": [
+      "What's Alex's best project?",
+      "What does Alex work with?",
+      "Where has Alex worked?",
+      "How can I contact Alex?"
+    ]
+  }
+}

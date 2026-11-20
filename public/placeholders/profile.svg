@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" role="img" aria-label="Illustrated portrait placeholder">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd9c2"/><stop offset="1" stop-color="#c9b8ff"/></linearGradient></defs>
+<rect width="400" height="480" fill="url(#bg)"/>
+<circle cx="320" cy="90" r="46" fill="#fff" fill-opacity="0.25"/>
+<path d="M60 480 C 70 370, 130 330, 200 330 C 270 330, 330 370, 340 480Z" fill="#2a2440"/>
+<path d="M170 300 L230 300 L226 345 C 214 356, 186 356, 174 345Z" fill="#f1c7a5"/>
+<ellipse cx="200" cy="230" rx="78" ry="90" fill="#f6d3b5"/>
+<path d="M118 228 C 110 140, 170 112, 214 118 C 270 124, 296 170, 284 236 C 274 196, 250 172, 210 168 C 172 166, 140 186, 118 228Z" fill="#3a2e4f"/>
+<ellipse cx="172" cy="238" rx="7" ry="9" fill="#2a2440"/><ellipse cx="230" cy="238" rx="7" ry="9" fill="#2a2440"/>
+<path d="M184 278 C 194 288, 210 288, 220 278" stroke="#c9826b" stroke-width="5" fill="none" stroke-linecap="round"/>
+<ellipse cx="156" cy="266" rx="12" ry="7" fill="#ff9a9a" fill-opacity="0.45"/><ellipse cx="246" cy="266" rx="12" ry="7" fill="#ff9a9a" fill-opacity="0.45"/>
+</svg>
