@@ -41,7 +41,7 @@ export function Contact({
     <footer id="contact" aria-labelledby="contact-title" className="container-page pt-28 pb-24 md:pt-40">
       <div className="grid gap-14 md:grid-cols-[minmax(0,460px)_minmax(0,1fr)] md:gap-20">
         <div>
-          {showAssistant && <MomoLine id="contact" size={84} className="-ml-2 mb-10" />}
+          {showAssistant && <MomoLine id="contact" size={108} className="-ml-2 mb-10" />}
           <FadeUp>
             <h2 id="contact-title">Let&apos;s build something together.</h2>
             {contact.availability_note && <p className="mt-3 text-ink-3">{contact.availability_note}</p>}

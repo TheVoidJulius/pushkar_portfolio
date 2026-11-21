@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import Image from "next/image";
 import { scrollToSection } from "@/lib/scroll";
 import type { Profile } from "@/lib/types";
@@ -8,16 +8,15 @@ import { MomoLine } from "../momo/MomoLine";
 
 const ease = [0.23, 1, 0.32, 1] as const;
 
-function BlurWords({ text, delay = 0, className = "" }: { text: string; delay?: number; className?: string }) {
-  const reduce = useReducedMotion();
+function BlurWords({ text, delay = 0, className = "", wordClassName = "" }: { text: string; delay?: number; className?: string; wordClassName?: string }) {
   return (
     <span className={className}>
       {text.split(" ").map((w, i) => (
         <motion.span
           key={i}
-          className="inline-block whitespace-pre"
-          initial={reduce ? { opacity: 0 } : { opacity: 0, filter: "blur(6px)", y: 4 }}
-          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+          className={`inline-block whitespace-pre ${wordClassName}`}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: delay + i * 0.06, ease }}
         >
           {w}{" "}
@@ -58,18 +57,21 @@ export function Hero({ profile, showAssistant }: { profile: Profile; showAssista
             )}
           </motion.div>
           <h1 id="hero-title" className="leading-[1.45]">
-            <BlurWords text={`Hello, I'm ${first}.`} delay={0.15} className="block text-ink" />
+            <span className="block text-ink">
+              <BlurWords text="Hello, I'm" delay={0.15} />
+              <BlurWords text={`${first}.`} delay={0.27} wordClassName="chrome-text font-semibold" />
+            </span>
             <BlurWords text={profile.designation} delay={0.45} className="block text-ink-3" />
           </h1>
         </div>
 
-        {showAssistant && <MomoLine id="hero" align="right" size={60} className="mt-20 hidden md:flex" />}
+        {showAssistant && <MomoLine id="hero" align="right" size={112} className="mt-16 hidden md:flex" />}
       </div>
-      {showAssistant && <MomoLine id="hero" align="left" size={56} className="mt-10 md:hidden" />}
+      {showAssistant && <MomoLine id="hero" align="left" size={84} className="mt-8 md:hidden" />}
 
       {/* Where Momo first appears, before she settles beside her line */}
       {showAssistant && (
-        <div data-momo-anchor="intro" aria-hidden className="pointer-events-none absolute top-[26%] left-[55%] size-[clamp(120px,14vw,170px)] md:left-[62%]" />
+        <div data-momo-anchor="intro" aria-hidden className="pointer-events-none absolute top-[26%] left-[55%] size-[clamp(150px,19vw,250px)] md:left-[58%]" />
       )}
 
       <div className="mt-auto grid items-end gap-10 pt-24 md:grid-cols-[minmax(0,420px)_1fr_minmax(0,240px)]">

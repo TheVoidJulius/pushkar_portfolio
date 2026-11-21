@@ -11,12 +11,16 @@ import type {
   SkillCategory,
 } from "../types";
 
-const demoContent = demo as unknown as PortfolioContent;
+const renamed = (s: string) => (s ?? "").replace(/\bMomo\b/g, "Mikuro");
 
 /** Normalises numeric columns (Postgres numeric arrives as string). */
 function normaliseAssistant(a: PortfolioContent["assistant"]): PortfolioContent["assistant"] {
   return {
     ...a,
+    // The character was renamed; saved content may still use the old name
+    name: renamed(a.name),
+    greeting: renamed(a.greeting),
+    personality: renamed(a.personality),
     voice_stability: Number(a.voice_stability),
     voice_style: Number(a.voice_style),
     voice_speed: Number(a.voice_speed),
@@ -24,6 +28,13 @@ function normaliseAssistant(a: PortfolioContent["assistant"]): PortfolioContent[
     browser_rate: Number(a.browser_rate),
   };
 }
+
+const rawDemo = demo as unknown as PortfolioContent;
+const demoContent: PortfolioContent = {
+  ...rawDemo,
+  site: { ...rawDemo.site, meta_description: renamed(rawDemo.site.meta_description) },
+  assistant: normaliseAssistant(rawDemo.assistant),
+};
 
 /**
  * Loads all portfolio content from Supabase — the single source of truth
@@ -69,7 +80,7 @@ export async function getPortfolioContent(
     return {
       source: "supabase",
       content: {
-        site: site.data,
+        site: { ...site.data, meta_description: renamed(site.data.meta_description) },
         profile: { ...profile.data, stats: profile.data.stats ?? [] },
         about: about.data,
         contact: contact.data,

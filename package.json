@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "db:seed:generate": "node scripts/generate-seed.mjs",
     "placeholders": "node scripts/generate-placeholders.mjs",
+    "voice:bake": "node --env-file=.env.local scripts/bake-voice.mjs",
     "check:security": "node --env-file=.env.local scripts/rls-check.mjs"
   },
   "dependencies": {

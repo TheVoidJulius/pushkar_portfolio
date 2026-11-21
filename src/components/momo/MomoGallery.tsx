@@ -29,7 +29,7 @@ export function MomoGallery() {
         </div>
         <label className="mt-4 flex items-center gap-2 text-[14px] text-ink-2">
           <input type="checkbox" checked={talking} onChange={(e) => setTalking(e.target.checked)} className="accent-[var(--accent)]" />
-          Make her talk
+          Make Mikuro talk
         </label>
       </div>
     </div>

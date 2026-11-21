@@ -15,12 +15,18 @@ export function Work({ projects, showAssistant }: { projects: Project[]; showAss
   const [openId, setOpenId] = useState<string | null>(null);
   const open = projects.find((p) => p.id === openId) ?? null;
   const cur = projects[active];
-  const go = (d: number) => setActive((i) => (i + d + projects.length) % projects.length);
+  const [warp, setWarp] = useState({ key: 0, dir: 1 });
+  const select = (next: number) => {
+    if (next === active) return;
+    setWarp((w) => ({ key: w.key + 1, dir: next > active ? 1 : -1 }));
+    setActive(next);
+  };
+  const go = (d: number) => select((active + d + projects.length) % projects.length);
 
   return (
     <section id="work" aria-labelledby="work-title" className="container-page py-28 md:py-40">
       <div className="flex flex-col items-center gap-14 text-center">
-        {showAssistant && <MomoLine id="work" size={72} className="text-left" />}
+        {showAssistant && <MomoLine id="work" size={104} className="text-left" />}
         <FadeUp>
           <h2 id="work-title">
             <SectionPill n={1}>Projects</SectionPill>
@@ -33,8 +39,19 @@ export function Work({ projects, showAssistant }: { projects: Project[]; showAss
       ) : (
         <>
           {/* Icon carousel */}
-          <div className="relative mx-auto mt-14 h-[96px] max-w-3xl overflow-hidden" role="group" aria-roledescription="carousel" aria-label="Projects">
-            <div className="absolute inset-0 flex items-center justify-center">
+          <div
+            className="relative mx-auto mt-14 h-[120px] max-w-3xl overflow-hidden [perspective:900px]"
+            role="group"
+            aria-roledescription="carousel"
+            aria-label="Projects"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowLeft") go(-1);
+              if (e.key === "ArrowRight") go(1);
+            }}
+          >
+            {warp.key > 0 && <span key={warp.key} aria-hidden data-dir={warp.dir} className="warp-streak" />}
+            <div className="absolute inset-0 flex items-center justify-center [transform-style:preserve-3d]">
               {projects.map((p, i) => {
                 const offset = i - active;
                 const dist = Math.abs(offset);
@@ -42,12 +59,19 @@ export function Work({ projects, showAssistant }: { projects: Project[]; showAss
                   <motion.button
                     key={p.id}
                     type="button"
-                    onClick={() => (i === active ? setOpenId(p.id) : setActive(i))}
+                    onClick={() => (i === active ? setOpenId(p.id) : select(i))}
                     aria-label={i === active ? `Open ${p.title}` : `Show ${p.title}`}
                     aria-current={i === active}
-                    className="absolute size-16 overflow-hidden rounded-[16px] bg-surface-2 shadow-soft"
-                    animate={{ x: offset * 150, scale: i === active ? 1.2 : 0.85, opacity: dist > 2 ? 0 : 1 - dist * 0.22 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 32 }}
+                    tabIndex={dist > 2 ? -1 : 0}
+                    className={`absolute size-16 overflow-hidden rounded-[16px] bg-surface-2 shadow-soft will-change-transform ${i === active ? "chrome-ring" : ""}`}
+                    animate={{
+                      x: Math.sign(offset) * (Math.min(dist, 1) * 128 + Math.max(dist - 1, 0) * 96),
+                      z: -dist * 90,
+                      rotateY: Math.max(-58, Math.min(58, -offset * 40)),
+                      scale: i === active ? 1.25 : 0.9,
+                      opacity: dist > 2 ? 0 : 1 - dist * 0.22,
+                    }}
+                    transition={{ type: "spring", stiffness: 210, damping: 26, mass: 0.9 }}
                   >
                     <Cover p={p} sizes="80px" />
                   </motion.button>
@@ -80,9 +104,9 @@ export function Work({ projects, showAssistant }: { projects: Project[]; showAss
               {cur && (
                 <motion.div
                   key={cur.id}
-                  initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, y: -6, filter: "blur(4px)", transition: { duration: 0.15 } }}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6, transition: { duration: 0.15 } }}
                   transition={{ duration: 0.35, ease }}
                 >
                   <p>{cur.title}</p>

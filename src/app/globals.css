@@ -240,6 +240,172 @@ html.lenis body {
   transform: scale(0.97);
 }
 
+/* =====================================================================
+   Liquid chrome accents: used sparingly (name, active item, Mikuro)
+   ===================================================================== */
+.chrome-text {
+  background: linear-gradient(112deg, #2b2c33 0%, #8d8f9a 24%, #24252b 42%, #a9abb6 58%, #33343c 76%, #777985 100%) 0 0 / 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: background-position 900ms var(--ease-out-quint);
+}
+[data-theme="dark"] .chrome-text {
+  background-image: linear-gradient(112deg, #ffffff 0%, #9ea0ab 24%, #f4f5f8 42%, #7f818c 58%, #ffffff 76%, #b9bbc5 100%);
+}
+.chrome-text:hover {
+  background-position: 100% 0;
+}
+.chrome-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(135deg, #fff, #8f909b 30%, #f4f4f7 52%, #6d6e78 74%, #fff);
+  -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+.warp-streak {
+  position: absolute;
+  z-index: 2;
+  inset: 8px -30%;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 38%, color-mix(in oklab, var(--ink) 9%, transparent) 46%, rgba(255, 255, 255, 0.62) 50%, color-mix(in oklab, var(--ink) 9%, transparent) 54%, transparent 62%);
+  mix-blend-mode: soft-light;
+  animation: warp-sweep 520ms var(--ease-out-quint) both;
+}
+.warp-streak[data-dir="-1"] {
+  animation-name: warp-sweep-back;
+}
+@keyframes warp-sweep {
+  from {
+    opacity: 0.2;
+    transform: translate3d(-42%, 0, 0) scaleX(1.5);
+  }
+  35% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(42%, 0, 0) scaleX(0.9);
+  }
+}
+@keyframes warp-sweep-back {
+  from {
+    opacity: 0.2;
+    transform: translate3d(42%, 0, 0) scaleX(1.5);
+  }
+  35% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(-42%, 0, 0) scaleX(0.9);
+  }
+}
+
+/* Spoken karaoke words (lit directly, without a React render per frame) */
+.line-word {
+  color: color-mix(in oklab, var(--ink-3) 70%, transparent);
+  transition: color 280ms ease;
+}
+.line-word[data-lit] {
+  color: var(--ink);
+}
+
+/* Mikuro's speech bubble */
+.mikuro-bubble {
+  width: max-content;
+  max-width: min(250px, calc(100vw - 24px));
+  padding: 9px 14px;
+  border-radius: 18px;
+  background: color-mix(in oklab, var(--bg-elevated) 92%, transparent);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.35;
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  border: 1px solid var(--line-strong);
+}
+
+/* =====================================================================
+   Theme switch: circular reveal + a metallic ring riding its edge
+   ===================================================================== */
+@property --vt-ring {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+.theme-sheen {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  pointer-events: none;
+  view-transition-name: theme-sheen;
+  background: conic-gradient(from 40deg at var(--vt-x) var(--vt-y), #fff, #84858f, #f6f6f9, #5f606a, #fff, #9b9ca7, #fff);
+}
+html.theme-reveal::view-transition {
+  pointer-events: none;
+}
+html.theme-reveal::view-transition-group(root) {
+  animation: none;
+}
+html.theme-reveal::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+html.theme-reveal::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation: theme-iris 580ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+html.theme-reveal::view-transition-group(theme-sheen) {
+  animation: none;
+}
+html.theme-reveal::view-transition-new(theme-sheen) {
+  mix-blend-mode: normal;
+  -webkit-mask-image: radial-gradient(circle at var(--vt-x) var(--vt-y), transparent calc(var(--vt-ring) - 34px), #000 calc(var(--vt-ring) - 9px), transparent var(--vt-ring));
+  mask-image: radial-gradient(circle at var(--vt-x) var(--vt-y), transparent calc(var(--vt-ring) - 34px), #000 calc(var(--vt-ring) - 9px), transparent var(--vt-ring));
+  animation: theme-ring 580ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes theme-iris {
+  from {
+    clip-path: circle(0px at var(--vt-x) var(--vt-y));
+  }
+  to {
+    clip-path: circle(var(--vt-radius) at var(--vt-x) var(--vt-y));
+  }
+}
+@keyframes theme-ring {
+  from {
+    --vt-ring: 0px;
+    opacity: 0.95;
+  }
+  70% {
+    opacity: 0.8;
+  }
+  to {
+    --vt-ring: var(--vt-radius);
+    opacity: 0;
+  }
+}
+
+/* Covers the page before first paint on a first visit, until the intro mounts */
+html[data-intro] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #050507;
+  animation: intro-failsafe 200ms linear 5s forwards;
+}
+@keyframes intro-failsafe {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 /* chat typing + listening */
 .typing-dot {
   animation: dot 1.1s ease-in-out infinite;

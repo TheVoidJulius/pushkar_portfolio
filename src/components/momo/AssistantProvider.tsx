@@ -1,15 +1,17 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { parseReply, SECTIONS, type Mood, type SectionId } from "@/lib/assistant/protocol";
-import { buildLines, type MomoLineSpec } from "@/lib/assistant/tour";
+import { pickQuip, type MikuroAct, type MikuroEvent, type MikuroState, type Quip } from "@/lib/assistant/mikuro";
+import { parseReply, readSignature, SECTIONS, type Mood, type SectionId } from "@/lib/assistant/protocol";
+import { buildLines, chatGreeting, type MomoLineSpec } from "@/lib/assistant/tour";
 import { scrollToSection } from "@/lib/scroll";
 import type { AssistantSettings, PortfolioContent } from "@/lib/types";
+import { setLineProgress } from "./lineProgress";
 import type { Expression } from "./three/MomoRenderer";
 import { VoiceEngine, type VoiceStatus } from "./voice";
 
 export type { Expression };
-export type ChatMessage = { id: string; role: "user" | "assistant"; content: string; mood?: Mood; error?: boolean };
+export type ChatMessage = { id: string; role: "user" | "assistant"; content: string; mood?: Mood; error?: boolean; signature?: string };
 
 export const MOOD_TO_EXPRESSION: Record<Mood, Expression> = {
   happy: "happy",
@@ -76,8 +78,23 @@ type Ctx = {
   touring: boolean;
   startTour: () => void;
   stopTour: () => void;
-  /** Where Momo should be: an anchor id. */
+  /** Where Mikuro should be: an anchor id. */
   anchor: string;
+  /** High-level character state (idle, coffee, sleeping…). */
+  state: MikuroState;
+  act: MikuroAct | null;
+  setAct: (a: MikuroAct | null) => void;
+  quip: Quip | null;
+  showQuip: (q: Quip | null, force?: boolean) => boolean;
+  /** True while Mikuro is mid-narration and shouldn't be interrupted. */
+  narrating: boolean;
+  /** Temporary gaze override, used when Mikuro gets distracted. */
+  lookRef: { current: { x: number; y: number; until: number } };
+  notice: (e: MikuroEvent) => void;
+  noticeRef: { current: ((e: MikuroEvent) => void) | null };
+  voiceAvailable: boolean;
+  cinemaDone: boolean;
+  finishCinema: () => void;
 };
 
 const AssistantContext = createContext<Ctx | null>(null);
@@ -137,6 +154,10 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
   const [silentTalk, setSilentTalk] = useState(false);
   const [narrating, setNarrating] = useState(false);
   const [touring, setTouring] = useState(false);
+  const [act, setActState] = useState<MikuroAct | null>(null);
+  const [quip, setQuip] = useState<Quip | null>(null);
+  const [voiceAvailable, setVoiceAvailable] = useState(false);
+  const [cinemaDone, setCinemaDone] = useState(false);
 
   const voice = useMemo(() => new VoiceEngine(settings), [settings]);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -149,10 +170,24 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
     token: 0,
   });
   const greeted = useRef(false);
-  const live = useRef({ muted, messages, audioUnlocked, activeLine, touring, lineState });
+  const quipTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const silentTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const clips = useRef<Record<string, string>>({});
+  const coffeeHold = useRef<Promise<void> | null>(null);
+  const lookRef = useRef({ x: 0, y: 0, until: 0 });
+  const noticeRef = useRef<((e: MikuroEvent) => void) | null>(null);
+  const remoteVoice = useRef(false);
+  const live = useRef({ muted, messages, audioUnlocked, activeLine, touring, lineState, act });
   useEffect(() => {
-    live.current = { muted, messages, audioUnlocked, activeLine, touring, lineState };
-  }, [muted, messages, audioUnlocked, activeLine, touring, lineState]);
+    live.current = { muted, messages, audioUnlocked, activeLine, touring, lineState, act };
+  }, [muted, messages, audioUnlocked, activeLine, touring, lineState, act]);
+
+  const setAct = useCallback((a: MikuroAct | null) => {
+    live.current.act = a;
+    setActState(a);
+  }, []);
+  const notice = useCallback((e: MikuroEvent) => noticeRef.current?.(e), []);
+  const finishCinema = useCallback(() => setCinemaDone(true), []);
 
   const react = useCallback((e: Expression, ms = 1400) => {
     clearTimeout(flashTimer.current);
@@ -176,6 +211,30 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
     };
   }, [voice]);
 
+  // Find out once whether the real voice exists, and load any pre-generated lines
+  useEffect(() => {
+    if (!settings.voice_enabled) return;
+    let cancelled = false;
+    void (async () => {
+      const [ok, status, manifest] = await Promise.all([
+        voice.available(),
+        voice.remoteStatus(),
+        fetch("/voice/manifest.json")
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null) as Promise<{ voiceId?: string; clips?: Record<string, string> } | null>,
+      ]);
+      if (cancelled) return;
+      // Clips recorded with a different voice are never played
+      const usable = manifest?.clips && manifest.voiceId === status.voiceId ? manifest.clips : {};
+      clips.current = usable;
+      remoteVoice.current = ok;
+      setVoiceAvailable(ok || Object.keys(usable).length > 0);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [voice, settings.voice_enabled]);
+
   // Browsers only allow sound after the visitor interacts with the page
   useEffect(() => {
     const unlock = () => {
@@ -191,6 +250,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
   // Narration: a karaoke line per section
   // ---------------------------------------------------------------------
   const setLine = useCallback((id: string, patch: Partial<LineState>) => {
+    if (patch.progress !== undefined) setLineProgress(id, patch.progress);
     setLineState((st) => ({ ...st, [id]: { ...(st[id] ?? { index: 0, progress: 0, done: false }), ...patch } }));
   }, []);
 
@@ -232,7 +292,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
       setBaseExpression(MOOD_TO_EXPRESSION[spec.mood]);
 
       const { muted: m, audioUnlocked: u } = live.current;
-      const withVoice = settings.voice_enabled && !m && u;
+      const withVoice = settings.voice_enabled && !m && u && remoteVoice.current;
       const est = Math.max(1800, wordsOf(text) * (withVoice ? 360 : 300));
       let start = 0;
 
@@ -263,7 +323,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
         if (token !== n.token) return;
         if (!start) start = now;
         const p = Math.min(withVoice ? 0.97 : 1, (now - start) / est);
-        setLine(id, { progress: p });
+        setLineProgress(id, p); // straight to the DOM: no React render per frame
         if (p < 1) n.raf = requestAnimationFrame(tick);
         else finish();
       };
@@ -298,19 +358,19 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
 
   // React to the focused line changing
   useEffect(() => {
-    if (!narrationEnabled || intro || !activeLine || open) return;
+    if (!narrationEnabled || !cinemaDone || intro || !activeLine || open) return;
     const st = live.current.lineState[activeLine];
     if (narr.current.id && narr.current.id !== activeLine) stopNarration(true);
     if (st?.done || narr.current.id === activeLine) return;
     playLine(activeLine, st?.index ?? 0);
-  }, [activeLine, intro, open, narrationEnabled, playLine, stopNarration]);
+  }, [activeLine, cinemaDone, intro, open, narrationEnabled, playLine, stopNarration]);
 
   // Intro: Momo appears big, then shrinks into place beside the hero text
   useEffect(() => {
-    if (!intro) return;
+    if (!intro || !cinemaDone) return;
     const t = setTimeout(() => setIntro(false), INTRO_MS);
     return () => clearTimeout(t);
-  }, [intro]);
+  }, [intro, cinemaDone]);
 
   const skipIntro = useCallback(() => {
     setIntro(false);
@@ -386,11 +446,37 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
   // Chat
   // ---------------------------------------------------------------------
   const speak = useCallback(
-    (text: string, mood: Mood) => {
+    (text: string, mood: Mood, signature?: string) => {
       if (live.current.muted || !settings.voice_enabled) return;
-      void voice.speak(text, mood);
+      void voice.speak(text, mood, signature);
     },
     [voice, settings.voice_enabled],
+  );
+
+  /** A short in-character remark. Voiced only from pre-generated clips: never spends credits. */
+  const showQuip = useCallback(
+    (q: Quip | null, force = false) => {
+      clearTimeout(quipTimer.current);
+      clearTimeout(silentTimer.current);
+      if (!q) {
+        setQuip(null);
+        return false;
+      }
+      if (!force && narr.current.id) return false;
+      const words = wordsOf(q.text);
+      const ms = Math.max(2800, words * 420);
+      setQuip(q);
+      quipTimer.current = setTimeout(() => setQuip(null), ms);
+      const clip = clips.current[q.id];
+      if (clip && !live.current.muted && live.current.audioUnlocked) {
+        void voice.playClip(clip);
+      } else {
+        setSilentTalk(true);
+        silentTimer.current = setTimeout(() => setSilentTalk(false), Math.min(ms - 500, words * 300));
+      }
+      return true;
+    },
+    [voice],
   );
 
   const setOpen = useCallback(
@@ -403,21 +489,39 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
       if (v) {
         voice.unlock();
         setAudioUnlocked(true);
-        if (!greeted.current && live.current.messages.length === 0) {
-          greeted.current = true;
-          const greeting = `What would you like to know about ${ownerName.split(" ")[0]}? Ask me anything.`;
-          setMessages([{ id: uid(), role: "assistant", content: greeting, mood: "happy" }]);
-          setBaseExpression("happy");
-          speak(greeting, "happy");
+        live.current.audioUnlocked = true;
+        const greet = () => {
+          if (!greeted.current && live.current.messages.length === 0) {
+            greeted.current = true;
+            const greeting = chatGreeting(content);
+            setMessages([{ id: uid(), role: "assistant", content: greeting, mood: "playful" }]);
+            setBaseExpression("smug");
+            speak(greeting, "playful");
+          } else {
+            react("happy");
+          }
+        };
+        if (live.current.act === "coffee") {
+          // Mikuro finishes the sip before paying attention
+          showQuip(pickQuip("coffeeInterrupted"), true);
+          coffeeHold.current = new Promise((done) =>
+            setTimeout(() => {
+              setAct(null);
+              coffeeHold.current = null;
+              greet();
+              done();
+            }, 1500),
+          );
         } else {
-          react("happy");
+          setAct(null);
+          greet();
         }
       } else {
         voice.stop();
         recognitionRef.current?.abort();
       }
     },
-    [voice, ownerName, speak, react, stopNarration],
+    [voice, content, speak, react, stopNarration, showQuip, setAct],
   );
 
   const send = useCallback(
@@ -425,6 +529,9 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
       const text = raw.trim();
       if (!text || pending) return;
       voice.unlock();
+      if (coffeeHold.current) await coffeeHold.current;
+      setAct(null);
+      showQuip(null);
       voice.stop();
       const user: ChatMessage = { id: uid(), role: "user", content: text };
       const reply: ChatMessage = { id: uid(), role: "assistant", content: "" };
@@ -465,7 +572,9 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
         }
         const final = parseReply(rawText).text.trim() || "Hmm, I lost my train of thought. Could you ask again?";
         setMessages((ms) => ms.map((m) => (m.id === reply.id ? { ...m, content: final, mood } : m)));
-        speak(final, mood);
+        const signature = readSignature(rawText);
+        setMessages((ms) => ms.map((m) => (m.id === reply.id ? { ...m, signature } : m)));
+        speak(final, mood, signature);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Something went wrong.";
         setMessages((ms) => ms.map((m) => (m.id === reply.id ? { ...m, content: msg, mood: "confused", error: true } : m)));
@@ -474,7 +583,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
         setPending(false);
       }
     },
-    [pending, voice, speak],
+    [pending, voice, speak, setAct, showQuip],
   );
 
   const toggleListening = useCallback(() => {
@@ -534,7 +643,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
   const replay = useCallback(
     (m: ChatMessage) => {
       voice.unlock();
-      void voice.speak(m.content, m.mood ?? "happy");
+      void voice.speak(m.content, m.mood ?? "happy", m.signature);
     },
     [voice],
   );
@@ -545,9 +654,21 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
   if (listening) expression = "listening";
   else if (pending && !flash) expression = "thinking";
   else if (intro) expression = "surprised";
+  else if (act && act !== "lookaround" && !flash && !(talking && act !== "coffee")) expression = act;
   else if (sleeping && !open && !talking && !flash && !narrating) expression = "sleeping";
 
-  const introPlaying = narrationEnabled && (intro || (activeLine === "hero" && !lineState.hero?.done));
+  let state: MikuroState = "idle";
+  if (listening) state = "listening";
+  else if (pending) state = "thinking";
+  else if (act === "coffee") state = "coffee";
+  else if (talking) state = "speaking";
+  else if (expression === "sleeping") state = "sleeping";
+  else if (expression === "surprised") state = "surprised";
+  else if (expression === "curious" || expression === "confused") state = "curious";
+  else if (expression === "thinking") state = "thinking";
+  else if (expression === "happy" || expression === "excited" || expression === "smug") state = "happy";
+
+  const introPlaying = narrationEnabled && cinemaDone && (intro || (activeLine === "hero" && !lineState.hero?.done));
   const anchor = open ? "chat" : intro ? "intro" : activeLine ? `line-${activeLine}` : "dock";
 
   const value: Ctx = {
@@ -581,12 +702,24 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
     intro,
     introPlaying,
     skipIntro,
-    needsSound: settings.voice_enabled && (!audioUnlocked || muted),
+    needsSound: settings.voice_enabled && voiceAvailable && (!audioUnlocked || muted),
     enableSound,
     touring,
     startTour,
     stopTour,
     anchor,
+    state,
+    act,
+    setAct,
+    quip,
+    showQuip,
+    narrating,
+    lookRef,
+    notice,
+    noticeRef,
+    voiceAvailable,
+    cinemaDone,
+    finishCinema,
   };
 
   return <AssistantContext.Provider value={value}>{children}</AssistantContext.Provider>;

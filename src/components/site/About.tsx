@@ -9,7 +9,7 @@ export function About({ about, name, showAssistant }: { about: AboutContent; nam
   return (
     <section id="about" aria-labelledby="about-title" className="container-page py-28 md:py-40">
       <div className="flex flex-col items-center gap-14 text-center">
-        {showAssistant && <MomoLine id="about" size={72} className="text-left" />}
+        {showAssistant && <MomoLine id="about" size={100} className="text-left" />}
         <FadeUp>
           <h2 id="about-title">
             <SectionPill n={4}>About</SectionPill>

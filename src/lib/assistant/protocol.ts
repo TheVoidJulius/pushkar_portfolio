@@ -21,6 +21,13 @@ export const SECTION_LABELS: Record<SectionId, string> = {
 export type ReplyMeta = { mood: Mood; goto: SectionId | null };
 
 const TAG_RE = /^\s*\[\[([^\]]*)\]\]\s*/;
+// Trailer the chat API appends so the reply can be voiced. Also matches a
+// partially streamed trailer, so it never flashes in the chat bubble.
+const SIG_TAIL_RE = /\n\[{0,2}(?:s(?:i(?:g(?:=[a-f0-9]*\]{0,2})?)?)?)?$/;
+const SIG_RE = /\n\[\[sig=([a-f0-9]{40})\]\]$/;
+
+export const formatSignature = (signature: string) => `\n[[sig=${signature}]]`;
+export const readSignature = (raw: string) => raw.match(SIG_RE)?.[1];
 
 export function formatMeta(meta: ReplyMeta) {
   return `[[mood=${meta.mood}; goto=${meta.goto ?? "none"}]] `;
@@ -30,7 +37,8 @@ export function formatMeta(meta: ReplyMeta) {
  * Parses a (possibly partial) streamed reply.
  * Returns `pending: true` while the tag might still be arriving.
  */
-export function parseReply(raw: string): { meta: ReplyMeta | null; text: string; pending: boolean } {
+export function parseReply(input: string): { meta: ReplyMeta | null; text: string; pending: boolean } {
+  const raw = input.replace(SIG_TAIL_RE, "");
   const match = raw.match(TAG_RE);
   if (match) {
     const fields = Object.fromEntries(
@@ -59,4 +67,15 @@ export function cleanForSpeech(text: string) {
     .replace(/https?:\/\/\S+/g, "the link")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+const MAX_SPEECH_CHARS = 420;
+
+/** Exactly what gets voiced: clean text, capped at a sentence to protect credits. */
+export function speechText(text: string) {
+  const clean = cleanForSpeech(text);
+  if (clean.length <= MAX_SPEECH_CHARS) return clean;
+  const cut = clean.slice(0, MAX_SPEECH_CHARS);
+  const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "));
+  return end > 80 ? cut.slice(0, end + 1) : `${cut.slice(0, cut.lastIndexOf(" "))}…`;
 }

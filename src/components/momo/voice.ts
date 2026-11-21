@@ -1,66 +1,45 @@
 "use client";
 
-import { cleanForSpeech, type Mood } from "@/lib/assistant/protocol";
+import { speechText, type Mood } from "@/lib/assistant/protocol";
 import type { AssistantSettings } from "@/lib/types";
 
 export type VoiceStatus = "idle" | "loading" | "speaking" | "error";
-type Listener = (status: VoiceStatus, info?: { engine: "elevenlabs" | "browser"; error?: string }) => void;
+type Engine = "elevenlabs" | "browser";
+type Listener = (status: VoiceStatus, info?: { engine: Engine; error?: string }) => void;
 
-// Japanese female voices. Reading English text with one of these gives a
-// natural Japanese accent. Neural ("Natural") voices first: they sound the
-// most human and handle English words best.
-const JAPANESE_FEMALE_VOICES = [
-  /nanami.*natural/i, // Edge: "Microsoft Nanami Online (Natural)": warm, mature, expressive
-  /aoi.*natural/i,
-  /mayu.*natural/i,
-  /shiori.*natural/i,
-  /kyoko/i, // macOS / iOS
-  /haruka/i, // Windows
-  /ayumi/i, // Windows
-  /o-ren/i, // macOS
-  /google 日本語/i, // Chrome
-];
+const AUDIO_CACHE = "mikuro-voice-v1";
+const MAX_BLOBS = 24;
 
-// Warm, mature English female voices (fallback when no Japanese voice exists)
-const ENGLISH_FEMALE_VOICES = [
-  /sonia.*natural/i,
-  /aria.*natural/i,
-  /jenny.*natural/i,
-  /ava.*(natural|multilingual)/i,
-  /emma.*(natural|multilingual)/i,
-  /google uk english female/i,
-  /samantha/i,
-  /\b(ava|allison|susan|karen|moira|tessa|serena)\b/i,
-  /zira/i,
-  /female/i,
-];
-
-// Per-mood delivery tweaks for the browser voice
-const BROWSER_MOOD: Record<Mood, { pitch: number; rate: number }> = {
-  happy: { pitch: 0.04, rate: 0.02 },
-  excited: { pitch: 0.1, rate: 0.07 },
-  curious: { pitch: 0.07, rate: -0.01 },
-  gentle: { pitch: -0.06, rate: -0.07 },
-  playful: { pitch: 0.08, rate: 0.03 },
-  thinking: { pitch: -0.06, rate: -0.06 },
-  confused: { pitch: 0.03, rate: -0.04 },
-  surprised: { pitch: 0.12, rate: 0.05 },
+const VOICE_ERRORS: Record<string, string> = {
+  not_configured: "Mikuro's voice isn't set up yet, so it's text only for now.",
+  bad_key: "Mikuro's voice key was rejected, so it's text only for now.",
+  out_of_credits: "Mikuro's voice is out of credits, so it's text only for now.",
+  daily_budget: "Mikuro has used up today's voice budget. Text only until tomorrow.",
+  rate_limited: "Mikuro needs a moment before speaking again.",
 };
+const DEFAULT_ERROR = "Mikuro's voice is unavailable right now, so it's text only.";
+
+// Warm English voices, used only if the owner explicitly selects the browser provider
+const BROWSER_VOICES = [/sonia.*natural/i, /aria.*natural/i, /jenny.*natural/i, /google uk english female/i, /samantha/i, /zira/i, /female/i];
 
 /**
- * Plays Momo's speech. Prefers ElevenLabs via /api/tts (key stays on the
- * server); falls back to the browser's speechSynthesis automatically.
- * Exposes a live loudness value (levelRef) used for lip-sync.
+ * Plays Mikuro's speech through ElevenLabs via /api/tts (the key stays on the
+ * server). There is deliberately no automatic fallback to a browser voice: if
+ * the real voice can't play, Mikuro goes text-only and says so. The browser
+ * voice only runs when the owner picks it in the admin.
+ *
+ * Audio is kept in memory and in the Cache API, so a repeat visit costs nothing.
  */
 export class VoiceEngine {
   levelRef = { current: -1 };
   private listeners = new Set<Listener>();
   private audio: HTMLAudioElement | null = null;
+  private finishPlayback: (() => void) | null = null;
   private ctx: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private raf = 0;
-  private remoteAvailable: boolean | null = null;
-  private cache = new Map<string, string>();
+  private remote: Promise<{ ok: boolean; key: string; voiceId: string }> | null = null;
+  private blobs = new Map<string, string>();
   private token = 0;
   settings: AssistantSettings;
 
@@ -68,9 +47,8 @@ export class VoiceEngine {
     this.settings = settings;
   }
 
-  /** Updates settings (e.g. from the admin form) without recreating the engine. */
   configure(settings: AssistantSettings) {
-    if (settings.voice_provider !== this.settings.voice_provider) this.remoteAvailable = null;
+    if (settings.voice_provider !== this.settings.voice_provider) this.remote = null;
     this.settings = settings;
   }
 
@@ -80,20 +58,32 @@ export class VoiceEngine {
   }
   private emit: Listener = (s, info) => this.listeners.forEach((l) => l(s, info));
 
-  get browserSupported() {
+  get usesBrowserVoice() {
+    return this.settings.voice_provider === "browser";
+  }
+  private get browserSupported() {
     return typeof window !== "undefined" && "speechSynthesis" in window;
   }
 
-  async checkRemote() {
-    if (this.remoteAvailable !== null) return this.remoteAvailable;
-    if (this.settings.voice_provider === "browser") return (this.remoteAvailable = false);
-    try {
-      const res = await fetch("/api/tts", { cache: "no-store" });
-      this.remoteAvailable = res.ok && Boolean((await res.json()).elevenlabs);
-    } catch {
-      this.remoteAvailable = false;
-    }
-    return this.remoteAvailable;
+  private checkRemote() {
+    this.remote ??= fetch("/api/tts", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => ({ ok: Boolean(d?.elevenlabs), key: String(d?.voiceKey ?? ""), voiceId: String(d?.voiceId ?? "") }))
+      .catch(() => {
+        this.remote = null; // a network blip shouldn't disable the voice for the session
+        return { ok: false, key: "", voiceId: "" };
+      });
+    return this.remote;
+  }
+
+  remoteStatus() {
+    return this.checkRemote();
+  }
+
+  /** Whether this visitor can hear a voice at all. Costs no credits. */
+  async available() {
+    if (this.usesBrowserVoice) return this.browserSupported;
+    return (await this.checkRemote()).ok;
   }
 
   /** Must be called from a user gesture once, so audio is allowed to play. */
@@ -106,8 +96,10 @@ export class VoiceEngine {
       }
     }
     void this.ctx?.resume();
-    // Warm up speechSynthesis voices list (Chrome loads it lazily)
-    if (this.browserSupported) window.speechSynthesis.getVoices();
+  }
+
+  get audioContext() {
+    return this.ctx;
   }
 
   stop() {
@@ -115,54 +107,103 @@ export class VoiceEngine {
     cancelAnimationFrame(this.raf);
     this.levelRef.current = -1;
     if (this.audio) {
+      this.audio.onerror = null;
       this.audio.pause();
-      this.audio.src = "";
+      this.audio.removeAttribute("src");
       this.audio = null;
     }
-    if (this.browserSupported) window.speechSynthesis.cancel();
+    this.finishPlayback?.();
+    this.finishPlayback = null;
+    if (this.browserSupported && this.usesBrowserVoice) window.speechSynthesis.cancel();
     this.emit("idle");
   }
 
-  async speak(raw: string, mood: Mood = "happy") {
-    const text = cleanForSpeech(raw);
+  async speak(raw: string, mood: Mood = "happy", signature?: string) {
+    const text = speechText(raw);
     if (!text) return;
     this.stop();
     const token = ++this.token;
     this.emit("loading");
 
-    if (await this.checkRemote()) {
-      try {
-        await this.playRemote(text, mood, token);
-        return;
-      } catch (err) {
-        if (token !== this.token) return;
-        console.warn("[voice] ElevenLabs unavailable, using browser voice", err);
-        this.remoteAvailable = false; // don't keep retrying this session
-      }
-    }
+    if (this.usesBrowserVoice) return this.playBrowser(text, token);
+
+    const remote = await this.checkRemote();
     if (token !== this.token) return;
-    this.playBrowser(text, mood, token);
+    if (!remote.ok) {
+      this.emit("error", { engine: "elevenlabs", error: VOICE_ERRORS.not_configured });
+      return;
+    }
+    try {
+      const url = await this.loadSpeech(text, mood, signature, remote.key);
+      if (token !== this.token) return;
+      await this.play(url, token);
+    } catch (err) {
+      if (token !== this.token) return;
+      console.warn("[voice] speech failed", err);
+      const code = err instanceof Error ? err.message : "";
+      this.emit("error", { engine: "elevenlabs", error: VOICE_ERRORS[code] ?? DEFAULT_ERROR });
+    }
   }
 
-  private async playRemote(text: string, mood: Mood, token: number) {
-    const cacheKey = `${mood}|${text}`;
-    let url = this.cache.get(cacheKey);
-    if (!url) {
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, mood }),
-      });
-      if (!res.ok) throw new Error(`tts ${res.status}`);
-      url = URL.createObjectURL(await res.blob());
-      this.cache.set(cacheKey, url);
+  /** Plays a pre-generated line (costs no credits). */
+  async playClip(url: string) {
+    this.stop();
+    const token = ++this.token;
+    try {
+      await this.play(url, token);
+    } catch {
+      if (token === this.token) this.emit("idle"); // the bubble still shows the line
     }
-    if (token !== this.token) return;
+  }
 
+  private async loadSpeech(text: string, mood: Mood, signature: string | undefined, voiceKey: string) {
+    const id = `${voiceKey}|${mood}|${text}`;
+    const known = this.blobs.get(id);
+    if (known) return known;
+
+    const cacheUrl = `/__mikuro-voice/${await sha256(id)}.mp3`;
+    let cache: Cache | null = null;
+    try {
+      cache = await caches.open(AUDIO_CACHE);
+      const hit = await cache.match(cacheUrl);
+      if (hit) return this.keepBlob(id, await hit.blob());
+    } catch {
+      cache = null; // Cache API blocked (private mode, insecure origin)
+    }
+
+    const res = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, mood, signature }),
+    });
+    if (!res.ok) {
+      const code = (await res.json().catch(() => null))?.error;
+      throw new Error(typeof code === "string" ? code : "provider_error");
+    }
+    const blob = await res.blob();
+    try {
+      await cache?.put(cacheUrl, new Response(blob, { headers: { "Content-Type": "audio/mpeg" } }));
+    } catch {
+      /* storage full: the in-memory copy still works */
+    }
+    return this.keepBlob(id, blob);
+  }
+
+  private keepBlob(id: string, blob: Blob) {
+    const url = URL.createObjectURL(blob);
+    this.blobs.set(id, url);
+    if (this.blobs.size > MAX_BLOBS) {
+      const [oldId, oldUrl] = this.blobs.entries().next().value as [string, string];
+      this.blobs.delete(oldId);
+      URL.revokeObjectURL(oldUrl);
+    }
+    return url;
+  }
+
+  private async play(url: string, token: number) {
     const audio = new Audio(url);
-    audio.crossOrigin = "anonymous";
     this.audio = audio;
-
+    this.analyser = null;
     if (this.ctx) {
       try {
         const source = this.ctx.createMediaElementSource(audio);
@@ -176,23 +217,26 @@ export class VoiceEngine {
     }
 
     await new Promise<void>((resolve, reject) => {
+      this.finishPlayback = resolve;
       audio.onplaying = () => {
         this.emit("speaking", { engine: "elevenlabs" });
         this.trackLevel();
       };
       audio.onended = () => resolve();
-      audio.onerror = () => reject(new Error("audio playback failed"));
+      audio.onerror = () => reject(new Error("playback_failed"));
       audio.play().catch(reject);
     });
     if (token === this.token) {
       cancelAnimationFrame(this.raf);
       this.levelRef.current = -1;
+      this.finishPlayback = null;
       this.emit("idle");
     }
   }
 
   private trackLevel() {
     const analyser = this.analyser;
+    cancelAnimationFrame(this.raf);
     if (!analyser) {
       this.levelRef.current = -1; // synthetic mouth movement
       return;
@@ -205,61 +249,36 @@ export class VoiceEngine {
         const v = (buf[i] - 128) / 128;
         sum += v * v;
       }
-      const rms = Math.sqrt(sum / buf.length);
-      // ease toward target so the mouth doesn't jitter
-      const target = Math.min(1, rms * 7);
+      const target = Math.min(1, Math.sqrt(sum / buf.length) * 7);
       const prev = Math.max(0, this.levelRef.current);
-      this.levelRef.current = prev + (target - prev) * 0.5;
+      // Opens fast, closes a little slower, like a real jaw
+      this.levelRef.current = prev + (target - prev) * (target > prev ? 0.6 : 0.3);
       this.raf = requestAnimationFrame(loop);
     };
     loop();
   }
 
-  /**
-   * Chooses the browser voice. With the Japanese accent (default) a Japanese
-   * female voice reads the English text; otherwise a warm English voice.
-   */
-  pickBrowserVoice(lang: string) {
-    if (!this.browserSupported) return null;
-    const voices = window.speechSynthesis.getVoices();
-    const find = (pool: SpeechSynthesisVoice[], prefs: RegExp[]) => {
-      for (const re of prefs) {
-        const hit = pool.find((v) => re.test(v.name));
-        if (hit) return hit;
-      }
-      return null;
-    };
-    if (this.settings.browser_accent !== "english") {
-      const ja = voices.filter((v) => v.lang.toLowerCase().startsWith("ja"));
-      const hit = find(ja, JAPANESE_FEMALE_VOICES);
-      if (hit) return hit;
-    }
-    const base = lang.split("-")[0].toLowerCase();
-    const sameLang = voices.filter((v) => v.lang.toLowerCase().startsWith(base));
-    const pool = sameLang.length ? sameLang : voices;
-    return find(pool, ENGLISH_FEMALE_VOICES) ?? pool.find((v) => v.lang.toLowerCase() === lang.toLowerCase()) ?? pool[0] ?? null;
-  }
-
-  private playBrowser(text: string, mood: Mood, token: number) {
+  /** Only reachable when the owner explicitly selects the browser voice. */
+  private playBrowser(text: string, token: number) {
     if (!this.browserSupported) {
       this.emit("error", { engine: "browser", error: "Speech isn't supported in this browser." });
       return;
     }
     const synth = window.speechSynthesis;
     const lang = this.settings.default_language || "en-US";
-    const tweak = BROWSER_MOOD[mood];
-    // Split into sentences: more natural pauses + avoids Chrome's 15s cutoff
+    const voices = synth.getVoices().filter((v) => v.lang.toLowerCase().startsWith(lang.split("-")[0].toLowerCase()));
+    const japanese = this.settings.browser_accent !== "english" ? synth.getVoices().find((v) => v.lang.toLowerCase().startsWith("ja")) : undefined;
+    const voice = japanese ?? BROWSER_VOICES.map((re) => voices.find((v) => re.test(v.name))).find(Boolean) ?? voices[0] ?? null;
     const parts = text.match(/[^.!?…]+[.!?…]*/g)?.map((s) => s.trim()).filter(Boolean) ?? [text];
 
     synth.cancel();
     this.levelRef.current = -1;
     parts.forEach((part, i) => {
       const u = new SpeechSynthesisUtterance(part);
-      const voice = this.pickBrowserVoice(lang);
       if (voice) u.voice = voice;
       u.lang = voice?.lang ?? lang;
-      u.pitch = Math.max(0, Math.min(2, this.settings.browser_pitch + tweak.pitch));
-      u.rate = Math.max(0.5, Math.min(1.6, this.settings.browser_rate + tweak.rate));
+      u.pitch = this.settings.browser_pitch;
+      u.rate = this.settings.browser_rate;
       if (i === 0) u.onstart = () => token === this.token && this.emit("speaking", { engine: "browser" });
       if (i === parts.length - 1) u.onend = () => token === this.token && this.emit("idle");
       u.onerror = (e) => {
@@ -269,4 +288,10 @@ export class VoiceEngine {
       synth.speak(u);
     });
   }
+}
+
+async function sha256(s: string) {
+  if (!crypto.subtle) return btoa(unescape(encodeURIComponent(s))).replace(/[^a-z0-9]/gi, "").slice(0, 64);
+  const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }

@@ -78,7 +78,7 @@ export function ExperienceDial({ items, showAssistant }: { items: Experience[]; 
 
         {/* Centre content (does not rotate) */}
         <div className="relative z-10 mt-[17vh] flex w-full max-w-[640px] flex-col items-center px-5">
-          {showAssistant && <MomoLine id="experience" size={84} />}
+          {showAssistant && <MomoLine id="experience" size={108} />}
           <div className="mt-8 w-full">
             <AnimatePresence mode="wait">
               {cur && (

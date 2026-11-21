@@ -1,11 +1,14 @@
 "use client";
 
+import { MotionConfig } from "motion/react";
 import type { PortfolioContent } from "@/lib/types";
 import { AssistantDock } from "../momo/AssistantDock";
 import { AssistantProvider } from "../momo/AssistantProvider";
+import { MikuroLife } from "../momo/MikuroLife";
 import { MomoFlight } from "../momo/MomoFlight";
 import { About } from "./About";
 import { BottomChips, TopNav } from "./Chrome";
+import { CinematicIntro } from "./CinematicIntro";
 import { Contact } from "./Contact";
 import { ExperienceDial } from "./ExperienceDial";
 import { Hero } from "./Hero";
@@ -17,6 +20,9 @@ export function PublicSite({ content, previewBanner }: { content: PortfolioConte
   const show = content.site.show_assistant;
   return (
     <AssistantProvider content={content}>
+      {/* Reduced motion is handled here, so server and client render identically */}
+      <MotionConfig reducedMotion="user">
+      <CinematicIntro />
       <SmoothScroll />
       {previewBanner}
       <TopNav showAssistant={show} />
@@ -33,8 +39,10 @@ export function PublicSite({ content, previewBanner }: { content: PortfolioConte
           <BottomChips />
           <AssistantDock />
           <MomoFlight />
+          <MikuroLife />
         </>
       )}
+      </MotionConfig>
     </AssistantProvider>
   );
 }

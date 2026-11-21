@@ -4,7 +4,8 @@ import { getPortfolioContent } from "@/lib/content/queries";
 import { buildKnowledge } from "@/lib/assistant/knowledge";
 import { localAnswer } from "@/lib/assistant/local-brain";
 import { ASSISTANT_RULES, buildPersona } from "@/lib/assistant/prompt";
-import { formatMeta } from "@/lib/assistant/protocol";
+import { formatMeta, formatSignature, parseReply, speechText } from "@/lib/assistant/protocol";
+import { signSpeech } from "@/lib/assistant/voice-server";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -41,6 +42,12 @@ const textStream = (producer: (write: (s: string) => void) => Promise<void>, hea
   });
 };
 
+/** Lets /api/tts confirm this reply really came from this server. */
+const signedTrailer = (reply: string) => {
+  const signature = signSpeech(speechText(parseReply(reply).text));
+  return signature ? formatSignature(signature) : "";
+};
+
 export async function POST(req: Request) {
   const limit = rateLimit(clientKey(req, "chat"), 20, 60_000);
   if (!limit.ok) {
@@ -65,15 +72,27 @@ export async function POST(req: Request) {
   const { content } = await getPortfolioContent();
 
   if (!process.env.ANTHROPIC_API_KEY) {
-    return textStream(async (write) => write(localAnswer(last.content, content)), { "X-Assistant-Engine": "local" });
+    return textStream(
+      async (write) => {
+        const answer = localAnswer(last.content, content);
+        write(answer);
+        write(signedTrailer(answer));
+      },
+      { "X-Assistant-Engine": "local" },
+    );
   }
 
   const client = new Anthropic();
   const knowledge = buildKnowledge(content);
 
   return textStream(
-    async (write) => {
+    async (emit) => {
       let wrote = false;
+      let full = "";
+      const write = (s: string) => {
+        full += s;
+        emit(s);
+      };
       try {
         const stream = client.beta.messages.stream({
           model: MODEL,
@@ -102,6 +121,7 @@ export async function POST(req: Request) {
         // Keep the assistant useful: answer from the portfolio data instead
         if (!wrote) write(localAnswer(last.content, content));
       }
+      emit(signedTrailer(full));
     },
     { "X-Assistant-Engine": "claude" },
   );
