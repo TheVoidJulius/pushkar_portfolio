@@ -4,7 +4,7 @@ import { useServerInsertedHTML } from "next/navigation";
 import { useLayoutEffect, useRef } from "react";
 
 // Stored choice → system preference. Runs before first paint (no flash).
-const resolve = `(function(){try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','light')}})()`;
+const resolve = `(function(){try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','light')}try{if(location.pathname==='/'&&!sessionStorage.getItem('mikuro-intro')&&!matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.setAttribute('data-intro','1')}}catch(e){}})()`;
 
 export function ThemeScript() {
   const inserted = useRef(false);

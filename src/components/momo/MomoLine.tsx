@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import type { SectionId } from "@/lib/assistant/protocol";
 import { useAssistant } from "./AssistantProvider";
+import { getLineProgress, subscribeLineProgress } from "./lineProgress";
 
 /**
  * Momo's spot in a section: the landing pad she flies to, plus her line as
@@ -21,6 +22,7 @@ export function MomoLine({
 }) {
   const a = useAssistant();
   const ref = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLParagraphElement>(null);
   const spec = a.lines[id];
   const st = a.lineState[id];
 
@@ -36,11 +38,24 @@ export function MomoLine({
     return () => io.disconnect();
   }, [focusLine, id]);
 
+  const index = st?.index ?? 0;
+  const done = Boolean(st?.done);
+  // Karaoke runs every frame, so words are lit directly instead of re-rendering
+  useLayoutEffect(() => {
+    const host = textRef.current;
+    if (!host) return;
+    const paint = () => {
+      const items = host.querySelectorAll<HTMLElement>(".line-word");
+      const lit = Math.ceil((done ? 1 : getLineProgress(id)) * items.length);
+      items.forEach((w, i) => w.toggleAttribute("data-lit", i < lit));
+    };
+    paint();
+    return subscribeLineProgress(id, paint);
+  }, [id, index, done]);
+
   if (!spec) return null;
-  const text = spec.texts[st?.index ?? 0] ?? spec.texts[0];
+  const text = spec.texts[index] ?? spec.texts[0];
   const words = text.split(" ");
-  const progress = st ? (st.done ? 1 : st.progress) : 0;
-  const lit = Math.ceil(progress * words.length);
   const started = Boolean(st);
 
   return (
@@ -58,12 +73,13 @@ export function MomoLine({
         style={{ width: size, height: size }}
       />
       <p
+        ref={textRef}
         className={`max-w-[300px] text-[15px] leading-[1.45] transition-opacity duration-500 ${started ? "opacity-100" : "opacity-0"}`}
         aria-live={a.activeLine === id ? "polite" : "off"}
       >
         <span className="sr-only">{a.settings.name} says: </span>
         {words.map((w, i) => (
-          <span key={`${st?.index ?? 0}-${i}`} className={`transition-colors duration-300 ${i < lit ? "text-ink" : "text-ink-3/70"}`}>
+          <span key={`${index}-${i}`} className="line-word">
             {w}{" "}
           </span>
         ))}

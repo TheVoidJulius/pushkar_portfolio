@@ -1,0 +1,59 @@
+{
+  "intro": [{ "id": "intro-1", "mood": "playful", "text": "Oh good. An audience." }],
+  "coffeeStart": [
+    { "id": "coffee-1", "mood": "playful", "text": "Hold on. Coffee first." },
+    { "id": "coffee-2", "mood": "playful", "text": "I'm on break. Union rules. I made the union." },
+    { "id": "coffee-3", "mood": "gentle", "text": "Nobody talk to me until this cup is empty." }
+  ],
+  "coffeeEnd": [
+    { "id": "coffee-end-1", "mood": "happy", "text": "Okay. I can feel my whiskers again." },
+    { "id": "coffee-end-2", "mood": "playful", "text": "Right. Where were we? Admiring me, I think." }
+  ],
+  "coffeeInterrupted": [
+    { "id": "coffee-int-1", "mood": "surprised", "text": "Mid-sip? Bold." },
+    { "id": "coffee-int-2", "mood": "playful", "text": "Fine, fine. The coffee can wait. It won't forgive you, though." }
+  ],
+  "idle": [
+    { "id": "idle-1", "mood": "curious", "text": "You read like someone who's about to hire somebody." },
+    { "id": "idle-2", "mood": "playful", "text": "I'm made entirely of chrome and unearned confidence." },
+    { "id": "idle-3", "mood": "thinking", "text": "If I knock this section off the page, is that a bug or a feature?" },
+    { "id": "idle-4", "mood": "curious", "text": "Do you ever think about how I can see your cursor? Because I do." }
+  ],
+  "yawn": [
+    { "id": "yawn-1", "mood": "gentle", "text": "Sorry. Being this shiny is exhausting." }
+  ],
+  "distracted": [
+    { "id": "distract-1", "mood": "surprised", "text": "Did that pixel just move?" },
+    { "id": "distract-2", "mood": "curious", "text": "Sorry, thought I saw a bird. On a website. Long day." }
+  ],
+  "hover": [
+    { "id": "hover-1", "mood": "curious", "text": "Yes? Can I help you, or are you just hovering?" },
+    { "id": "hover-2", "mood": "playful", "text": "Careful. Fingerprints show up on chrome." }
+  ],
+  "clickSpam": [
+    { "id": "spam-1", "mood": "surprised", "text": "I am not a button. Well. I am. But have some respect." },
+    { "id": "spam-2", "mood": "playful", "text": "Keep clicking. See what happens. Nothing will, but keep going." }
+  ],
+  "cursorFrenzy": [
+    { "id": "frenzy-1", "mood": "confused", "text": "Are you okay? Your cursor seems stressed." },
+    { "id": "frenzy-2", "mood": "playful", "text": "Stop that. I'm getting dizzy following you." }
+  ],
+  "fastScroll": [
+    { "id": "scroll-1", "mood": "surprised", "text": "Whoa. Someone worked hard on that section you just skipped." }
+  ],
+  "returned": [
+    { "id": "return-1", "mood": "surprised", "text": "Oh, you're back. I definitely didn't miss you." },
+    { "id": "return-2", "mood": "playful", "text": "Other tabs not doing it for you?" }
+  ],
+  "returnedLong": [
+    { "id": "return-long-1", "mood": "playful", "text": "Wow. I aged three cat years. Welcome back." }
+  ],
+  "dwell": [
+    { "id": "dwell-1", "mood": "happy", "text": "You're still here? I respect the dedication." },
+    { "id": "dwell-2", "mood": "playful", "text": "At this point you should probably just send a message." }
+  ],
+  "theme": [
+    { "id": "theme-1", "mood": "playful", "text": "Bold choice. I look good in both." },
+    { "id": "theme-2", "mood": "curious", "text": "Ooh. New lighting. Get my good side." }
+  ]
+}

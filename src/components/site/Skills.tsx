@@ -16,7 +16,7 @@ export function Skills({ categories, showAssistant }: { categories: SkillCategor
   return (
     <section id="skills" aria-labelledby="skills-title" className="container-page py-28 md:py-40">
       <div className="flex flex-col items-center gap-14 text-center">
-        {showAssistant && <MomoLine id="skills" size={72} className="text-left" />}
+        {showAssistant && <MomoLine id="skills" size={100} className="text-left" />}
         <FadeUp>
           <h2 id="skills-title">
             <SectionPill n={2}>Skills</SectionPill>

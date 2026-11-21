@@ -10,8 +10,12 @@ const list = (items: string[], max = 3) => {
   return `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
 };
 
+/** First thing Mikuro says when the chat opens. */
+export const chatGreeting = (c: PortfolioContent) =>
+  `Oh, a visitor with questions. Go on, ask me about ${c.profile.name.split(" ")[0] || c.profile.name}.`;
+
 /**
- * Momo's narration for every section, generated from the live portfolio
+ * Mikuro's narration for every section, generated from the live portfolio
  * content (so it never goes stale). Each section shows its line next to
  * Momo when the visitor scrolls there; the guided tour plays them in order.
  */
@@ -29,8 +33,11 @@ export function buildLines(c: PortfolioContent): Record<SectionId, MomoLineSpec>
       section: "hero",
       mood: "excited",
       texts: [
-        c.assistant.greeting || `Hi! I'm ${me}. I live here.`,
-        `Psst. The page keeps going, and I narrate every bit of it. Scroll with me.`,
+        // The old stock greeting doesn't suit the character; a custom one is kept
+        !c.assistant.greeting || /little portfolio companion/i.test(c.assistant.greeting)
+          ? `Oh good, an audience. I'm ${me}. I live here, you're just visiting.`
+          : c.assistant.greeting,
+        `The page keeps going, and I have opinions about all of it. Scroll.`,
       ],
     },
     work: {

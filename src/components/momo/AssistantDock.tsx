@@ -18,7 +18,7 @@ export function AssistantDock() {
       <div
         data-momo-anchor="dock"
         aria-hidden
-        className="pointer-events-none fixed right-3 bottom-3 z-40 size-[64px] sm:right-6 sm:bottom-6 sm:size-[76px]"
+        className="pointer-events-none fixed right-2 bottom-2 z-40 size-[78px] sm:right-5 sm:bottom-5 sm:size-[104px]"
       />
       <AnimatePresence>
         {showLabel && (
@@ -30,7 +30,7 @@ export function AssistantDock() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 16 }}
             transition={spring}
-            className="float-btn fixed right-[96px] bottom-7 z-40 hidden !flex-row items-center gap-2 px-3.5 text-[13px] sm:right-[112px] sm:bottom-[38px] md:!flex"
+            className="float-btn fixed right-[96px] bottom-7 z-40 hidden !flex-row items-center gap-2 px-3.5 text-[13px] sm:right-[132px] sm:bottom-[52px] md:!flex"
           >
             <span className="relative flex size-2">
               <span className="absolute inset-0 animate-ping rounded-full bg-accent opacity-60" />
@@ -47,12 +47,13 @@ export function AssistantDock() {
 
 function StatusLine() {
   const a = useAssistant();
-  let text = "Online · here to help";
+  let text = a.state === "coffee" ? "On a coffee break" : "Awake, unfortunately";
   let tone = "bg-mint";
   if (a.listening) [text, tone] = ["Listening…", "bg-accent"];
   else if (a.pending) [text, tone] = ["Thinking…", "bg-lavender"];
-  else if (a.voiceStatus === "loading") [text, tone] = ["Warming up her voice…", "bg-amber"];
+  else if (a.voiceStatus === "loading") [text, tone] = ["Clearing throat…", "bg-amber"];
   else if (a.talking) [text, tone] = [`Speaking${a.voiceEngine === "browser" ? " · browser voice" : ""}`, "bg-accent"];
+  else if (a.settings.voice_enabled && !a.voiceAvailable) [text, tone] = ["Text only · voice offline", "bg-ink-3"];
   else if (a.muted) [text, tone] = ["Voice muted", "bg-ink-3"];
   return (
     <p className="flex items-center gap-1.5 text-[12px] text-ink-3" aria-live="polite">
@@ -117,11 +118,11 @@ function ChatPanel() {
         {/* Momo flies into this slot while the chat is open */}
         <div data-momo-anchor="chat" aria-hidden className="-my-3 -ml-2 size-[92px] shrink-0" />
         <div className="min-w-0 flex-1 pb-1">
-          <p className="font-display text-[22px] leading-none font-semibold tracking-tight">{a.settings.name}</p>
+          <p className="chrome-text font-display text-[22px] leading-none font-semibold tracking-tight">{a.settings.name}</p>
           <StatusLine />
         </div>
         <div className="flex items-center gap-1 pb-1">
-          {a.settings.voice_enabled && (
+          {a.settings.voice_enabled && a.voiceAvailable && (
             <IconButton
               label={a.muted ? "Unmute voice" : "Mute voice"}
               pressed={!a.muted}
@@ -169,7 +170,7 @@ function ChatPanel() {
               >
                 {m.content}
               </div>
-              {!m.error && a.settings.voice_enabled && (
+              {!m.error && a.settings.voice_enabled && a.voiceAvailable && (
                 <button
                   type="button"
                   onClick={() => (a.talking && m === last ? a.stopSpeaking() : a.replay(m))}

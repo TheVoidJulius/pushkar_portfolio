@@ -1,12 +1,13 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { Home, Moon, Play, Sun, Volume2, VolumeX, X } from "lucide-react";
+import { Home, Moon, Play, RotateCcw, Sun, Volume2, VolumeX, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SECTION_LABELS, SECTIONS } from "@/lib/assistant/protocol";
 import { lockScroll, scrollToSection } from "@/lib/scroll";
 import { useAssistant } from "../momo/AssistantProvider";
-import { applyTheme, useTheme } from "./ThemeToggle";
+import { replayIntro } from "./introControl";
+import { toggleTheme, useTheme } from "./ThemeToggle";
 
 const ease = [0.23, 1, 0.32, 1] as const;
 
@@ -29,7 +30,7 @@ export function TopNav({ showAssistant }: { showAssistant: boolean }) {
         <button type="button" onClick={() => scrollToSection("hero")} className="float-btn" aria-label="Back to top">
           <Home className="size-[15px]" strokeWidth={2.2} />
         </button>
-        {showAssistant && a.settings.voice_enabled && (
+        {showAssistant && a.settings.voice_enabled && a.voiceAvailable && (
           <button
             type="button"
             onClick={() => (a.needsSound ? a.enableSound() : a.toggleMute())}
@@ -42,7 +43,7 @@ export function TopNav({ showAssistant }: { showAssistant: boolean }) {
         )}
         <button
           type="button"
-          onClick={() => applyTheme(theme === "dark" ? "light" : "dark")}
+          onClick={(e) => toggleTheme({ x: e.clientX, y: e.clientY })}
           className="float-btn"
           aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
         >
@@ -111,6 +112,19 @@ export function TopNav({ showAssistant }: { showAssistant: boolean }) {
                     </span>
                     Play the tour with {a.settings.name}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenu(false);
+                      replayIntro();
+                    }}
+                    className="flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left text-ink-3 transition hover:bg-surface hover:text-ink"
+                  >
+                    <span className="grid h-[30px] min-w-[30px] place-items-center rounded-full bg-surface-2">
+                      <RotateCcw className="size-3.5" />
+                    </span>
+                    Replay the intro
+                  </button>
                 </motion.li>
               )}
             </ul>
@@ -154,7 +168,7 @@ export function BottomChips() {
             transition={{ duration: 0.3, ease }}
             className="float-btn pointer-events-auto !flex px-4 text-[13.5px] text-ink-3"
           >
-            Skip intro
+            Skip narration
           </motion.button>
         )}
         {a.touring && (
@@ -180,8 +194,8 @@ export function FadeUp({ children, delay = 0, className = "" }: { children: Reac
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
-      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "0px 0px -10% 0px" }}
       transition={{ duration: 0.7, delay, ease }}
     >

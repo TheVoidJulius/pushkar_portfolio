@@ -15,7 +15,7 @@ export function MomoHead({
   levelRef,
   className = "",
   trackPointer = true,
-  label = "Momo, the chrome cat assistant",
+  label = "Mikuro, the liquid-chrome cat",
   onReady,
 }: {
   expression: Expression;

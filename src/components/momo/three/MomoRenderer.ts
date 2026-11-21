@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 /**
- * Momo — a procedurally modelled chrome cat head rendered with Three.js.
+ * Mikuro — a procedurally modelled liquid-chrome cat rendered with Three.js.
  * No external model files: everything is built from geometry so it loads
  * instantly and can be animated per-feature (lids, ears, iris, mouth).
  *
@@ -21,6 +21,10 @@ export const EXPRESSIONS = [
   "sleeping",
   "talking",
   "listening",
+  "coffee",
+  "yawning",
+  "stretching",
+  "smug",
 ] as const;
 export type Expression = (typeof EXPRESSIONS)[number];
 
@@ -54,7 +58,58 @@ const POSES: Record<Expression, Pose> = {
   sleeping: { lidUp: 1, lidLow: 0.25, eyeScale: 1, tilt: -0.14, pitch: 0.16, earSpread: 0.3, earFold: 0.4, earAsym: 0, iris: "#ffb547", glow: 0, blush: 0.3, pupil: 1, bob: 0, sway: 0.35 },
   talking: { lidUp: 0.1, lidLow: 0.08, eyeScale: 1.02, tilt: 0, pitch: 0, earSpread: -0.04, earFold: -0.05, earAsym: 0, iris: "#ffb547", glow: 1.3, blush: 0.35, pupil: 1.1, bob: 0, sway: 1 },
   listening: { lidUp: 0.04, lidLow: 0.02, eyeScale: 1.06, tilt: 0.12, pitch: -0.02, earSpread: -0.22, earFold: -0.25, earAsym: 0, iris: "#5eead4", glow: 1.6, blush: 0.25, gaze: [0, 0], pupil: 1.3, bob: 0, sway: 0.6 },
+  coffee: { lidUp: 0.46, lidLow: 0.22, eyeScale: 0.98, tilt: -0.07, pitch: 0.05, earSpread: 0.1, earFold: 0.1, earAsym: 0.05, iris: "#ffb547", glow: 0.9, blush: 0.4, gaze: [0.45, 0.55], pupil: 0.95, bob: 0, sway: 0.5 },
+  yawning: { lidUp: 0.84, lidLow: 0.34, eyeScale: 0.96, tilt: 0.1, pitch: -0.2, earSpread: 0.16, earFold: 0.3, earAsym: 0, iris: "#ffb547", glow: 0.6, blush: 0.3, pupil: 0.9, bob: 0, sway: 0.3 },
+  stretching: { lidUp: 0.72, lidLow: 0.42, eyeScale: 1, tilt: -0.05, pitch: -0.14, earSpread: -0.16, earFold: -0.22, earAsym: 0, iris: "#ffb547", glow: 0.9, blush: 0.4, pupil: 1, bob: 0.3, sway: 0.2 },
+  smug: { lidUp: 0.42, lidLow: 0.2, eyeScale: 1, tilt: 0.13, pitch: -0.04, earSpread: 0.04, earFold: 0, earAsym: 0.1, iris: "#c9a2ff", glow: 1.2, blush: 0.3, gaze: [0.7, -0.1], pupil: 0.85, bob: 0.1, sway: 0.7 },
 };
+
+/**
+ * Turns the physical material into flowing liquid metal: slow-moving normal
+ * ripples bend the reflections while the geometry stays put, and the ripples
+ * calm down across the face so expressions always read cleanly.
+ */
+function makeLiquid(material: THREE.MeshPhysicalMaterial, time: { value: number }) {
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uLiquidTime = time;
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vLiquidPos;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvLiquidPos = position;");
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+        varying vec3 vLiquidPos;
+        uniform float uLiquidTime;
+        float liquidField(vec3 p) {
+          float t = uLiquidTime;
+          return sin(p.x * 2.7 + t * 0.55 + sin(p.y * 3.1 - t * 0.4)) * 0.5
+            + sin(p.y * 3.7 - t * 0.42 + sin(p.z * 2.9 + t * 0.3)) * 0.3
+            + sin(p.z * 4.3 + t * 0.36 + sin(p.x * 3.3)) * 0.2;
+        }`,
+      )
+      .replace(
+        "#include <clearcoat_normal_fragment_maps>",
+        `#include <clearcoat_normal_fragment_maps>
+        {
+          const float e = 0.03;
+          float f0 = liquidField(vLiquidPos);
+          vec3 grad = vec3(
+            liquidField(vLiquidPos + vec3(e, 0.0, 0.0)) - f0,
+            liquidField(vLiquidPos + vec3(0.0, e, 0.0)) - f0,
+            liquidField(vLiquidPos + vec3(0.0, 0.0, e)) - f0
+          ) / e;
+          float face = smoothstep(0.2, 0.8, vLiquidPos.z) * (1.0 - smoothstep(0.35, 0.8, abs(vLiquidPos.y + 0.08)));
+          vec3 ripple = mat3(viewMatrix) * grad * 0.07 * (1.0 - 0.8 * face);
+          normal = normalize(normal + ripple);
+          #ifdef USE_CLEARCOAT
+            clearcoatNormal = normalize(clearcoatNormal + ripple * 0.6);
+          #endif
+        }`,
+      );
+  };
+  material.customProgramCacheKey = () => "mikuro-liquid-chrome";
+}
 
 const damp = (cur: number, target: number, lambda: number, dt: number) => cur + (target - cur) * (1 - Math.exp(-lambda * dt));
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
@@ -107,8 +162,19 @@ export class MomoRenderer {
   }[] = [];
   private mouthOpen!: THREE.Object3D;
   private blush: THREE.MeshBasicMaterial[] = [];
-  private envTarget: THREE.WebGLRenderTarget | null = null;
+  private envTargets: Partial<Record<"dark" | "light", THREE.WebGLRenderTarget>> = {};
   private pmrem: THREE.PMREMGenerator;
+  private liquidTime = { value: 0 };
+  private mug!: THREE.Group;
+  private steam: { mesh: THREE.Mesh; mat: THREE.MeshBasicMaterial; phase: number }[] = [];
+  private bufferPx = 0;
+  private quality = 1;
+  private displayPx = 320;
+  private lastResize = 0;
+  private slowFrames = 0;
+  private frames = 0;
+  private sinceRender = 0;
+  private idleHandle = 0;
 
   private expression: Expression = "idle";
   private talking = false;
@@ -136,6 +202,11 @@ export class MomoRenderer {
     mouth: 0,
     leanX: 0,
     leanZ: 0,
+    mug: 0,
+    yawn: 0,
+    stretch: 0,
+    envYaw: 0,
+    envPitch: 0,
   };
   private iris = new THREE.Color("#ffb547");
   private irisTarget = new THREE.Color("#ffb547");
@@ -163,8 +234,11 @@ export class MomoRenderer {
       powerPreference: "high-performance",
       premultipliedAlpha: true,
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    this.renderer.setSize(size, size, false);
+    // The drawing buffer follows the on-screen size (see setDisplaySize)
+    this.renderer.setPixelRatio(1);
+    this.displayPx = size;
+    this.bufferPx = this.targetBuffer();
+    this.renderer.setSize(this.bufferPx, this.bufferPx, false);
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
@@ -179,24 +253,52 @@ export class MomoRenderer {
     this.setTheme(Boolean(opts.dark));
     this.root.add(this.head);
     this.scene.add(this.root);
+
+    // Prepare the other theme's reflections while idle, so toggling never hitches
+    const prepare = () => {
+      if (!this.disposed) this.envFor(!opts.dark);
+    };
+    this.idleHandle = window.setTimeout(() => {
+      if (typeof requestIdleCallback === "function") requestIdleCallback(prepare, { timeout: 2000 });
+      else prepare();
+    }, 1500);
+  }
+
+  private targetBuffer() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2) * this.quality;
+    return clamp(Math.round((this.displayPx * dpr) / 32) * 32, 128, 640);
+  }
+
+  /** Renders only as many pixels as the cat occupies on screen. */
+  setDisplaySize(cssPx: number) {
+    this.displayPx = cssPx;
+    const now = performance.now();
+    if (now - this.lastResize < 400) return;
+    const target = this.targetBuffer();
+    if (Math.abs(target - this.bufferPx) < 32) return;
+    this.lastResize = now;
+    this.bufferPx = target;
+    this.renderer.setSize(target, target, false);
+    this.renderer.render(this.scene, this.camera); // resizing clears the canvas
   }
 
   // ---------------------------------------------------------------------
   // Model
   // ---------------------------------------------------------------------
   private build() {
-    // Liquid chrome with a thin-film rainbow sheen (iridescence)
+    // Polished liquid metal, with only a trace of thin-film colour
     this.chrome = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color("#f7f7fa"),
+      color: new THREE.Color("#eef0f4"),
       metalness: 1,
-      roughness: 0.05,
+      roughness: 0.07,
       clearcoat: 1,
-      clearcoatRoughness: 0.04,
-      iridescence: 1,
-      iridescenceIOR: 1.6,
-      iridescenceThicknessRange: [260, 820],
-      envMapIntensity: 1.2,
+      clearcoatRoughness: 0.03,
+      iridescence: 0.28,
+      iridescenceIOR: 1.5,
+      iridescenceThicknessRange: [240, 520],
+      envMapIntensity: 1.25,
     });
+    if (!this.reduced) makeLiquid(this.chrome, this.liquidTime);
     const darkMetal = new THREE.MeshPhysicalMaterial({ color: "#26262c", metalness: 0.9, roughness: 0.3, clearcoat: 0.6 });
     const pinkMetal = new THREE.MeshPhysicalMaterial({ color: "#ffb6c8", metalness: 0.7, roughness: 0.2, clearcoat: 1, iridescence: 0.3 });
     const glass = new THREE.MeshPhysicalMaterial({ color: "#040408", metalness: 0, roughness: 0.03, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 1.8 });
@@ -383,46 +485,99 @@ export class MomoRenderer {
         this.head.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 24, 0.006, 6), whiskerMat));
       }
     }
+
+    // Coffee mug (only exists on screen during a coffee break)
+    this.mug = new THREE.Group();
+    const cupProfile = [
+      [0, 0],
+      [0.13, 0],
+      [0.155, 0.02],
+      [0.17, 0.24],
+      [0.158, 0.24],
+      [0.145, 0.04],
+      [0, 0.04],
+    ].map(([x, y]) => new THREE.Vector2(x, y));
+    const cup = new THREE.Mesh(new THREE.LatheGeometry(cupProfile, 40), pinkMetal);
+    const handle = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.018, 10, 28, Math.PI * 1.25), this.chrome);
+    handle.position.set(0.165, 0.12, 0);
+    handle.rotation.z = -Math.PI * 0.62;
+    const coffee = new THREE.Mesh(
+      new THREE.CircleGeometry(0.15, 32),
+      new THREE.MeshPhysicalMaterial({ color: "#2a1509", roughness: 0.18, clearcoat: 1 }),
+    );
+    coffee.rotation.x = -Math.PI / 2;
+    coffee.position.y = 0.2;
+    this.mug.add(cup, handle, coffee);
+    const puff = new THREE.SphereGeometry(0.035, 10, 8);
+    for (let i = 0; i < 3; i++) {
+      const mat = new THREE.MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0, depthWrite: false });
+      const mesh = new THREE.Mesh(puff, mat);
+      this.mug.add(mesh);
+      this.steam.push({ mesh, mat, phase: i / 3 });
+    }
+    this.mug.visible = false;
+    this.head.add(this.mug);
   }
 
-  /** Bright studio environment with soft rainbow strips (holographic chrome). */
+  /** Reflections for a theme, built once and reused. */
+  private envFor(dark: boolean) {
+    const id = dark ? "dark" : "light";
+    const cached = this.envTargets[id];
+    if (cached) return cached;
+    const target = this.buildEnv(dark);
+    this.envTargets[id] = target;
+    return target;
+  }
+
   setTheme(dark: boolean) {
+    this.scene.environment = this.envFor(dark).texture;
+    this.renderOnce();
+  }
+
+  /** Studio environment: bright softboxes and dark bands give chrome its contrast. */
+  private buildEnv(dark: boolean) {
     const env = new THREE.Scene();
-    const sky = new THREE.Mesh(
-      new THREE.SphereGeometry(20, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2),
-      new THREE.MeshBasicMaterial({ color: dark ? "#b4b2ba" : "#d8d6dc", side: THREE.BackSide }),
+    env.add(
+      new THREE.Mesh(
+        new THREE.SphereGeometry(20, 48, 32),
+        new THREE.ShaderMaterial({
+          side: THREE.BackSide,
+          depthWrite: false,
+          uniforms: { uDim: { value: dark ? 0.8 : 1 } },
+          vertexShader: `varying vec3 vDir;
+            void main() { vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+          // The face reflects what's in front (a soft, clean gradient). The dark, rippled
+          // contours live behind the cat, so they only appear around its silhouette.
+          fragmentShader: `varying vec3 vDir; uniform float uDim;
+            float band(float x, float c, float w) { return 1.0 - smoothstep(0.0, w, abs(x - c)); }
+            void main() {
+              vec3 d = normalize(vDir);
+              float az = atan(d.x, d.z);
+              float h = d.y + 0.045 * sin(az * 3.0 + 0.6) + 0.02 * sin(az * 7.0 + 1.7);
+              vec3 c = mix(vec3(0.86, 0.87, 0.92), vec3(0.42, 0.46, 0.57), smoothstep(-0.55, 0.6, h));
+              c = mix(c, vec3(1.55, 1.57, 1.62), smoothstep(0.66, 0.94, h));
+              c = mix(c, vec3(0.5, 0.49, 0.54), 1.0 - smoothstep(-0.95, -0.6, h));
+              float z = d.z + 0.09 * sin(d.y * 6.0 + az * 2.0) + 0.04 * sin(d.y * 13.0 - az * 3.0);
+              c = mix(c, vec3(0.035, 0.038, 0.055), (1.0 - smoothstep(-0.62, -0.2, z)) * 0.96);
+              c += vec3(1.0, 0.55, 0.75) * 0.34 * band(z, -0.2, 0.05);
+              c += vec3(0.45, 0.82, 1.0) * 0.34 * band(z, -0.29, 0.05);
+              c = mix(c, vec3(1.25, 1.27, 1.34), 1.0 - smoothstep(-0.99, -0.86, z));
+              float upright = smoothstep(-0.25, 0.05, d.y) * (1.0 - smoothstep(0.55, 0.85, d.y));
+              c += vec3(2.6) * band(az, -1.5, 0.11) * upright;
+              c += vec3(1.7) * band(az, 1.72, 0.07) * upright;
+              c -= vec3(0.3) * band(az, 2.5, 0.28) * upright;
+              gl_FragColor = vec4(max(c, vec3(0.0)) * uDim, 1.0);
+            }`,
+        }),
+      ),
     );
-    const ground = new THREE.Mesh(
-      new THREE.SphereGeometry(20, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
-      new THREE.MeshBasicMaterial({ color: dark ? "#9a99a2" : "#b6b4bc", side: THREE.BackSide }),
-    );
-    env.add(sky, ground);
-    const light = (color: string, intensity: number, w: number, h: number, pos: [number, number, number]) => {
-      const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(intensity), side: THREE.DoubleSide });
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
-      m.position.set(...pos);
-      m.lookAt(0, 0, 0);
-      env.add(m);
-    };
-    light("#ffffff", 7, 14, 5, [0, 10, 3]); // top softbox
-    light("#ffffff", 5, 4, 10, [-9, 2, 6]); // key
-    light("#ffffff", 4, 4, 10, [9, 1, 5]); // fill
-    light("#ffffff", 9, 16, 0.35, [0, 7.5, 7]); // horizontal strip (lands on the forehead, not the eyes)
-    light("#ffffff", 8, 0.35, 10, [5.5, 0, 9]); // vertical strip
-    light("#ff9ec7", 3.2, 10, 0.6, [0, -6, 7]); // pink band
-    light("#9ee7ff", 3.2, 10, 0.6, [0, -7, 6]); // cyan band
-    light("#fff1a8", 2.6, 0.6, 8, [-5.5, 0, 8.5]); // butter band
-    light("#ffffff", 1.6, 14, 6, [0, -6, 8]); // front fill from below
-    light("#3a3a44", 1, 18, 2.2, [0, -4.2, 9]); // soft dark band low on the body (shape definition)
-    this.envTarget?.dispose();
-    this.envTarget = this.pmrem.fromScene(env, 0.03);
-    this.scene.environment = this.envTarget.texture;
+    const target = this.pmrem.fromScene(env, 0.03);
     env.traverse((o) => {
       const m = o as THREE.Mesh;
       m.geometry?.dispose();
       (m.material as THREE.Material | undefined)?.dispose();
     });
-    this.renderOnce();
+    return target;
   }
 
   // ---------------------------------------------------------------------
@@ -467,11 +622,18 @@ export class MomoRenderer {
     this.last = performance.now();
     const loop = (now: number) => {
       if (!this.running) return;
-      const dt = Math.min(0.05, (now - this.last) / 1000);
+      this.raf = requestAnimationFrame(loop);
+      const elapsed = (now - this.last) / 1000;
       this.last = now;
+      this.sinceRender += elapsed;
+      // Small and calm in the corner? 30 fps is indistinguishable and halves GPU use
+      const calm = this.displayPx < 130 && !this.talking && Math.abs(this.velocity[0]) + Math.abs(this.velocity[1]) < 20;
+      if (calm && this.sinceRender < 1 / 31) return;
+      const dt = Math.min(0.05, this.sinceRender);
+      this.sinceRender = 0;
       this.update(dt);
       this.renderer.render(this.scene, this.camera);
-      this.raf = requestAnimationFrame(loop);
+      this.watchPerformance(elapsed, calm);
     };
     this.raf = requestAnimationFrame(loop);
   }
@@ -479,12 +641,28 @@ export class MomoRenderer {
     this.running = false;
     cancelAnimationFrame(this.raf);
   }
+
+  /** Lowers resolution if this device is struggling. Never raises it mid-session. */
+  private watchPerformance(elapsed: number, calm: boolean) {
+    if (calm || elapsed > 0.25) return; // throttled frames and tab switches don't count
+    this.frames++;
+    if (elapsed > 0.024) this.slowFrames++;
+    if (this.frames < 120) return;
+    if (this.slowFrames / this.frames > 0.4 && this.quality > 0.6) {
+      this.quality = Math.max(0.6, this.quality - 0.2);
+      this.lastResize = 0;
+      this.setDisplaySize(this.displayPx);
+    }
+    this.frames = 0;
+    this.slowFrames = 0;
+  }
   renderOnce() {
     this.update(0.016);
     this.renderer.render(this.scene, this.camera);
   }
   dispose() {
     this.disposed = true;
+    clearTimeout(this.idleHandle);
     this.stop();
     this.scene.traverse((o) => {
       const m = o as THREE.Mesh;
@@ -493,7 +671,8 @@ export class MomoRenderer {
       if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
       else mat?.dispose();
     });
-    this.envTarget?.dispose();
+    this.envTargets.dark?.dispose();
+    this.envTargets.light?.dispose();
     this.pmrem.dispose();
     this.renderer.dispose();
   }
@@ -533,6 +712,17 @@ export class MomoRenderer {
           ? clamp(lvl, 0, 1)
           : 0.25 + 0.55 * Math.abs(Math.sin(this.t * 9.3)) * (0.55 + 0.45 * Math.sin(this.t * 3.7));
     }
+
+    // Character business: yawn, stretch, coffee
+    const acting = this.expression;
+    s.yawn = damp(s.yawn, acting === "yawning" ? 1 : 0, acting === "yawning" ? 3.2 : 7, dt);
+    s.stretch = damp(s.stretch, acting === "stretching" ? 1 : 0, 3.4, dt);
+    s.mug = damp(s.mug, acting === "coffee" ? 1 : 0, 6, dt);
+    mouthTarget = Math.max(mouthTarget, s.yawn);
+    // A sip every few seconds: the mug rises, tips, and the eyes close
+    const sipWave = 0.5 + 0.5 * Math.sin(this.t * 1.5 - 1.2);
+    const sip = acting === "coffee" && !this.reduced ? clamp((sipWave - 0.62) / 0.26, 0, 1) : 0;
+    const sipEase = sip * sip * (3 - 2 * sip);
 
     // Ease every parameter toward its pose
     const k = 7;
@@ -578,7 +768,29 @@ export class MomoRenderer {
       s.yaw + idleRot,
       s.tilt + idleRot * 0.6,
     );
-    this.head.scale.setScalar(breathe);
+    // Squash and stretch keeps the volume roughly constant, like a soft body
+    const pull = s.stretch * (0.075 + Math.sin(t * 3) * 0.012) * r + s.yawn * 0.025 * r;
+    this.head.scale.set(breathe * (1 - pull * 0.7), breathe * (1 + pull), breathe * (1 - pull * 0.35));
+
+    // Reflections drift slowly and respond to the cursor: the highlights feel alive
+    this.liquidTime.value = t;
+    s.envYaw = damp(s.envYaw, this.pointer[0] * 0.55 * r, 2.4, dt);
+    s.envPitch = damp(s.envPitch, this.pointer[1] * 0.22 * r, 2.4, dt);
+    this.scene.environmentRotation.set(s.envPitch, s.envYaw + (this.reduced ? 0 : Math.sin(t * 0.13) * 0.5), 0);
+
+    // Mug
+    this.mug.visible = s.mug > 0.015;
+    if (this.mug.visible) {
+      this.mug.scale.setScalar(s.mug * 0.92);
+      this.mug.position.set(0.68 - sipEase * 0.56, -0.72 + sipEase * 0.2, 0.72 + sipEase * 0.32);
+      this.mug.rotation.set(sipEase * 0.32, -0.3, sipEase * 0.62);
+      for (const p of this.steam) {
+        const f = (t * 0.42 + p.phase) % 1;
+        p.mesh.position.set(Math.sin(f * 7 + p.phase * 6) * 0.045, 0.27 + f * 0.36, 0);
+        p.mesh.scale.setScalar(0.7 + f * 1.5);
+        p.mat.opacity = Math.sin(f * Math.PI) * 0.26 * (1 - sipEase);
+      }
+    }
 
     // Ears
     const twL = this.twitchL.step(0, dt);
@@ -589,7 +801,7 @@ export class MomoRenderer {
     // Eyes
     const confusedSquint = this.expression === "confused" ? 0.28 : 0;
     for (const e of this.eyes) {
-      const up = clamp(Math.max(s.lidUp + (e.side === 1 ? confusedSquint : 0), this.blink), 0, 1);
+      const up = clamp(Math.max(s.lidUp + (e.side === 1 ? confusedSquint : 0), this.blink, sipEase * 0.94), 0, 1);
       const low = clamp(s.lidLow, 0, 1);
       // upper lid: −1.45 (open, tipped back) → +1.62 (closed); lower lid mirrors
       e.lidUp.rotation.x = -1.45 + up * 3.07;
@@ -605,7 +817,7 @@ export class MomoRenderer {
     }
 
     // Mouth
-    this.mouthOpen.scale.set(1 + s.mouth * 0.2, 0.05 + s.mouth * 0.95, 1);
+    this.mouthOpen.scale.set(1 + s.mouth * 0.2 + s.yawn * 0.3, 0.05 + s.mouth * 0.95 + s.yawn * 0.75, 1);
     this.mouthOpen.visible = s.mouth > 0.03;
 
     for (const b of this.blush) b.opacity = s.blush * 0.55;
