@@ -1034,3 +1034,7 @@ export class SnowScene {
     });
   }
 }
+  private at(along: number, y: number, side = 0) {
+    return this.v2.copy(this.mouth).addScaledVector(this.D, along).addScaledVector(this.L, side).setY(y).clone();
+  }
+
