@@ -143,9 +143,9 @@ void main() {
   p += normalize(d + 1e-4) * uGust * 3.2 * exp(-dist * 0.32);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   gl_Position = projectionMatrix * mv;
-  float size = 0.035 + aRand.z * 0.055;
-  gl_PointSize = min(size * uPixel / -mv.z, 26.0);
-  vAlpha = smoothstep(0.0, 0.6, p.y) * smoothstep(12.0, 10.5, p.y) * smoothstep(0.6, 2.5, -mv.z);
+  float size = uSize * (0.55 + aRand.z * 0.9);
+  gl_PointSize = aRand.y < uDensity ? clamp(size * uPixel / -mv.z, 0.0, 44.0) : 0.0;
+  vAlpha = smoothstep(0.0, 0.5, p.y) * smoothstep(uBox.y, uBox.y - 1.5, p.y) * smoothstep(0.8, 3.0, -mv.z);
 }`;
 
 const FLAKE_FRAG = /* glsl */ `
