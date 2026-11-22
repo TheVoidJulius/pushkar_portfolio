@@ -972,7 +972,7 @@ export class SnowScene {
 
     // paw prints: revealed one by one, then slowly snowed over
     this.pawAmt = r ? this.pawTarget : damp(this.pawAmt, this.pawTarget, 1.2, dt);
-    if (this.pawAmt > 0.98) this.pawFade = Math.max(0.25, this.pawFade - dt * 0.02);
+    if (this.pawAmt > 0.98) this.pawFade = Math.max(0.3, this.pawFade - dt * 0.02);
     const n = this.paws.length;
     this.paws.forEach((pw, i) => {
       pw.mat.opacity = clamp(this.pawAmt * (n + 1) - i, 0, 1) * L.pawOpacity * this.pawFade;
