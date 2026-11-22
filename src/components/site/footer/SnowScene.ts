@@ -633,7 +633,7 @@ export class SnowScene {
 
   private buildSnow(count: number) {
     const pos = new Float32Array(count * 3);
-    const rnd = new Float32Array(count * 3);
+    const r = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
       pos[i * 3] = (rnd() * 2 - 1) * o.x;
       pos[i * 3 + 1] = rnd() * o.y;
