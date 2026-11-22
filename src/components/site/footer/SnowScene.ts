@@ -1223,3 +1223,7 @@ export class SnowScene {
   private warmed = false;
   private pendingStart = false;
     pts.renderOrder = 5;
+        uWind: { value: 0 },
+        uFall: { value: o.fall },
+        uSize: { value: o.size },
+        uDensity: { value: 1 },
