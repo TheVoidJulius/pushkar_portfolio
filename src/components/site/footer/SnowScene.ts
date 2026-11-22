@@ -1007,11 +1007,12 @@ export class SnowScene {
     if (!this.onFrame) return;
     const door = this.spot(new THREE.Vector3(0, 0.71, 1.32), 1.42);
     this.onFrame({
-      path: this.spot(new THREE.Vector3(-2.35, 0.8, 2.9), 1.45),
-      door: this.spot(new THREE.Vector3(0, 0.78, 1.55), 1.2),
-      inside: this.spot(new THREE.Vector3(0, 0.7, 1.1), 0.5),
-      out: this.spot(new THREE.Vector3(0, 1.1, 2.7), 1.9),
-      doorRect: { x: door.x - door.s * 0.33, y: door.y - door.s / 2, w: door.s * 0.66, h: door.s },
+      path: this.spot(pathP.setY(this.height(pathP.x, pathP.z) + 0.55), 1.2),
+      door: this.spot(this.at(0.6, 0.5), 1.0),
+      inside: this.spot(this.at(-0.7, 0.45), 0.4),
+      out: this.spot(this.at(1.2, 0.85), 1.6),
+      doorRect: { x: x0, y: y0, w: x1 - x0, h: y1 - y0 },
+      assembled: 1 - clamp(this.liftNow, 0, 1),
     });
   }
 }
