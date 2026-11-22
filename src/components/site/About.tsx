@@ -12,7 +12,7 @@ export function About({ about, name, showAssistant }: { about: AboutContent; nam
         {showAssistant && <MomoLine id="about" size={100} className="text-left" />}
         <FadeUp>
           <h2 id="about-title">
-            <SectionPill n={4}>About</SectionPill>
+            <SectionPill n={5}>About</SectionPill>
           </h2>
         </FadeUp>
       </div>
