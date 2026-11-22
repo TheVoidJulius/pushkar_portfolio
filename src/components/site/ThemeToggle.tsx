@@ -10,6 +10,50 @@ let activeTransition: ViewTransitionLike | null = null;
 /** Where the theme is heading while a transition is still applying it. */
 let pendingTheme: Theme | null = null;
 
+const DURATION = 720;
+const STEPS = 24;
+
+/** Shape of the flood at progress t (0..1): radius and how much its edge ripples. */
+function floodAt(t: number, radius: number) {
+  const grow = 1 - Math.pow(1 - t, 3); // fast out of the click, easing into the edges
+  return { r: grow * radius * 1.12, wobble: Math.pow(1 - t, 1.2), phase: t * 5 };
+}
+
+/**
+ * The molten blob's outline as a CSS polygon: a circle whose edge ripples.
+ * The ripple fades to nothing as it grows, so it settles into a clean circle.
+ */
+function blob(cx: number, cy: number, r: number, wobble: number, phase: number, n = 96) {
+  const pts: string[] = [];
+  for (let k = 0; k < n; k++) {
+    const a = (k / n) * Math.PI * 2;
+    const f =
+      1 +
+      wobble *
+        (0.075 * Math.sin(3 * a + phase * 1.3) + 0.045 * Math.sin(5 * a - phase * 1.7 + 1.1) + 0.028 * Math.sin(8 * a + phase * 2.2 + 2.3));
+    const rr = Math.max(0, r * f);
+    pts.push(`${(cx + rr * Math.cos(a)).toFixed(1)}px ${(cy + rr * Math.sin(a)).toFixed(1)}px`);
+  }
+  return `polygon(${pts.join(",")})`;
+}
+
+/**
+ * The new theme pours out of the click point as a wobbling liquid blob.
+ *
+ * Performance note (measured): in a view transition, every extra layer we
+ * add (a chrome rim, a droplet splash) costs ~400 ms of one-time setup on a
+ * visit's first theme switch, which reads as a freeze. The blob is just an
+ * animated clip on the page snapshot, so it stays smooth even the first time.
+ */
+function runLiquidReveal(root: HTMLElement, x: number, y: number, radius: number) {
+  const frames: string[] = [];
+  for (let i = 0; i <= STEPS; i++) {
+    const { r, wobble, phase } = floodAt(i / STEPS, radius);
+    frames.push(blob(x, y, r, wobble, phase));
+  }
+  root.animate({ clipPath: frames }, { duration: DURATION, easing: "linear", fill: "both", pseudoElement: "::view-transition-new(root)" });
+}
+
 /** Flips the theme. Quick repeat clicks each count, even mid-transition. */
 export function toggleTheme(origin?: { x: number; y: number }) {
   const current = pendingTheme ?? (document.documentElement.dataset.theme === "dark" ? "dark" : "light");
@@ -51,19 +95,32 @@ export function applyTheme(next: Theme, origin?: { x: number; y: number }) {
   root.style.setProperty("--vt-y", `${y}px`);
   root.style.setProperty("--vt-radius", `${radius}px`);
   root.classList.add("theme-reveal");
+  // Liquid blob via Web Animations on the transition's pseudo-elements; the
+  // CSS circle iris stays as the fallback if that isn't supported.
+  const liquid = typeof root.animate === "function";
+  if (liquid) root.classList.add("theme-liquid");
 
-  // Exists only in the "after" snapshot: the chrome ring riding the reveal's edge
+  // Fallback path only: the CSS iris's chrome ring, riding the reveal's edge
   const sheen = document.createElement("div");
   sheen.className = "theme-sheen";
   sheen.setAttribute("aria-hidden", "true");
 
   const transition = start.call(document, () => {
     root.dataset.theme = next;
-    document.body.appendChild(sheen);
+    if (!liquid) document.body.appendChild(sheen);
   });
   activeTransition = transition;
   // A quick second toggle skips this one, which rejects `ready`. That's expected.
-  void transition.ready.catch(() => {});
+  void transition.ready
+    .then(() => {
+      if (!liquid) return;
+      try {
+        runLiquidReveal(root, x, y, radius);
+      } catch {
+        root.classList.remove("theme-liquid"); // fall back to the CSS iris
+      }
+    })
+    .catch(() => {});
   void transition.finished
     .catch(() => {})
     .finally(() => {
@@ -71,7 +128,7 @@ export function applyTheme(next: Theme, origin?: { x: number; y: number }) {
       if (activeTransition !== transition) return;
       activeTransition = null;
       pendingTheme = null;
-      root.classList.remove("theme-reveal");
+      root.classList.remove("theme-reveal", "theme-liquid");
     });
 }
 
