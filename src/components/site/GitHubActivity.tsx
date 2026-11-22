@@ -7,6 +7,8 @@ import { MomoLine } from "../momo/MomoLine";
 import { FadeUp, SectionPill } from "./Chrome";
 import { CommitBonsai } from "./github/CommitBonsai";
 import { SocialIcon } from "./icons";
+import { BLOSSOMS, useBonsai } from "./github/useBonsai";
+import { SOCIAL_LINES } from "./social/lines";
 
 type State = { status: "idle" | "loading" } | { status: "ready"; data: Activity } | { status: "error" };
 
