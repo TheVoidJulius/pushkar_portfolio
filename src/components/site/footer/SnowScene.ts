@@ -839,8 +839,7 @@ export class SnowScene {
       this.door.x = -1.7;
       return;
     }
-    this.door.v = -16;
-    this.squash.v += 6;
+    this.door.v = -18;
     this.camShake = 1;
     this.gust = 1;
   }
