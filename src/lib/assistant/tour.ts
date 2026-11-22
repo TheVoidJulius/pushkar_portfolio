@@ -86,7 +86,7 @@ export function buildLines(c: PortfolioContent): Record<SectionId, MomoLineSpec>
       id: "contact",
       section: "contact",
       mood: "happy",
-      texts: [`That's the whole tour! Say hello to ${owner} below, or tap me and ask me anything.`],
+      texts: [`That's the whole tour! Say hello to ${owner} below, and whatever you do, don't knock on my door.`],
     },
   };
 }
