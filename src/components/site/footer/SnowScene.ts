@@ -53,8 +53,8 @@ type Palette = {
   path: string;
   paw: string;
   pawOpacity: number;
-  moon: string;
-  moonOpacity: number;
+  ink: string;
+  neon: number;
 };
 
 const LOOKS: Record<Mode, Look> = {
