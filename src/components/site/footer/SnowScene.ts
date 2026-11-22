@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { HOT_TEMP, type Weather } from "./weather";
 
 /**
  * The footer: Mikuro's igloo on a sculpted snow field. The dome is built
