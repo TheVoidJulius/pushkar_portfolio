@@ -9,6 +9,7 @@ import { MomoLine } from "../momo/MomoLine";
 import { FadeUp } from "./Chrome";
 import { SnowHouse } from "./footer/SnowHouse";
 import { SocialIcon } from "./icons";
+import { VisitorMap } from "./social/visitors/VisitorMap";
 
 type Errors = Partial<Record<"name" | "email" | "subject" | "message", string>>;
 
@@ -79,6 +80,7 @@ export function Contact({
                 ))}
               </ul>
             )}
+            <VisitorMap />
           </FadeUp>
         </div>
 
