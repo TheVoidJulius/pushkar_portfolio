@@ -771,18 +771,10 @@ export class SnowScene {
     });
   }
 
-  private moonTexture() {
-    return canvasTexture(256, 256, (g) => {
-      const halo = g.createRadialGradient(128, 128, 30, 128, 128, 128);
-      halo.addColorStop(0, "rgba(255,255,255,0.5)");
-      halo.addColorStop(1, "rgba(255,255,255,0)");
-      g.fillStyle = halo;
-      g.fillRect(0, 0, 256, 256);
-      g.fillStyle = "#ffffff";
-      g.beginPath();
-      g.arc(128, 128, 38, 0, Math.PI * 2);
-      g.fill();
-    });
+  setTheme(dark: boolean) {
+    this.dark = dark;
+    this.applyLook();
+    if (!this.running) this.renderOnce();
   }
 
   setWeather(w: Weather) {
