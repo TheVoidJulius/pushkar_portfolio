@@ -921,8 +921,14 @@ export class SnowScene {
     const r = this.reduced;
     if (!r) this.t += dt;
     const t = this.t;
+    const w = this.weather;
+    const L = this.look;
 
-    // camera: frame the house on any aspect, drift with the pointer
+    // --- camera: a slow crane down as the section scrolls in, pointer parallax
+    this.scrollEased = r ? 1 : dt ? damp(this.scrollEased, this.scroll, 4, dt) : this.scroll;
+    const p = smooth(0, 1, this.scrollEased);
+    this.ptr.x = damp(this.ptr.x, r ? 0 : this.pointer[0], 2.2, dt);
+    this.ptr.y = damp(this.ptr.y, r ? 0 : this.pointer[1], 2.2, dt);
     const aspect = this.w / this.h;
     const tanH = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     // keep the igloo + tunnel (≈ 4 units either side) in frame on any aspect
