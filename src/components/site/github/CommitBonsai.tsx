@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 
 import { BLOSSOMS } from "./useBonsai";
