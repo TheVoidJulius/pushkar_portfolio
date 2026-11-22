@@ -681,11 +681,38 @@ export class SnowScene {
       pos[i * 3 + 1] = 5 + Math.random() * 24;
       pos[i * 3 + 2] = -45 - Math.random() * 10;
     }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: "#dfe6ff", size: 0.16, transparent: true, opacity: 0.8, fog: false, depthWrite: false }));
-    this.scene.add(pts);
-    return pts;
+    (this.stars.material as THREE.PointsMaterial).opacity = L.stars * (haze || cond === "fog" || rain ? 0.15 : 1);
+    this.stars.visible = L.stars > 0;
+
+    // particles
+    const f = this.flakes.uniforms;
+    f.uColor.value.set(L.flake);
+    f.uOpacity.value = L.flakeOpacity;
+    f.uDensity.value = cond === "snow" ? 1 : rain ? 0.2 : cond === "fog" ? 0.35 : haze ? 0.45 : 0.6;
+    const s = this.sleet.uniforms;
+    s.uColor.value.set(night ? "#9fb0d8" : "#c9d3e0");
+    s.uOpacity.value = rain ? (cond === "storm" ? 0.55 : 0.4) : 0;
+    s.uDensity.value = cond === "storm" ? 1 : 0.65;
+    this.sleet.visible = rain;
+    const d = this.drift.uniforms;
+    d.uColor.value.set(L.flake);
+
+    // labels & connectors: ink on the pale look, white at night
+    const ink = col(L.ink);
+    for (const l of this.labels) (l.material as THREE.SpriteMaterial).color.copy(ink);
+    (this.labelLines.material as THREE.LineBasicMaterial).color.copy(ink);
+    (this.labelDots.material as THREE.PointsMaterial).color.copy(ink);
+
+    for (const p of this.paws) p.mat.color.set(L.paw);
+    this.neonMat.opacity = L.neon;
+
+    // heat
+    this.dripMesh.visible = hot && !this.reduced;
+    this.puddle.visible = hot;
+    this.puddleMat.color.set(night ? "#1f2a40" : "#6e7c90");
+    this.wet = hot ? 1 : rain ? 0.6 : 0;
+    this.iceUniforms.uWet.value = this.wet;
+    this.iceMat.roughness = hot ? 0.2 : 0.55;
   }
 
   // -------------------------------------------------------------------
