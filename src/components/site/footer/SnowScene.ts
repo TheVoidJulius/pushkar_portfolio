@@ -1170,3 +1170,8 @@ export class SnowScene {
   }
     this.radial.dispose();
     this.pendingStart = false;
+    // Rendering before the shaders are compiled would block the main thread
+    if (!this.warmed) {
+      this.pendingStart = true;
+      return;
+    }
