@@ -583,11 +583,12 @@ export class SnowScene {
   }
 
   private buildPaws() {
-    // A curving trail from the left edge of the scene to the door
-    const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-5.2, 0, 6.2), new THREE.Vector3(-1.6, 0, 4.2), new THREE.Vector3(0.05, 0, 1.75));
-    const N = 11;
-    const pad = new THREE.CircleGeometry(0.075, 16);
-    const toe = new THREE.CircleGeometry(0.032, 10);
+    const end = this.mouth.clone().addScaledVector(this.D, 0.7);
+    const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-6.2, 0, 8.4), new THREE.Vector3(-1.2, 0, 6.6), end);
+    this.pathCurve = curve;
+    const N = 14;
+    const pad = new THREE.CircleGeometry(0.085, 16);
+    const toe = new THREE.CircleGeometry(0.035, 10);
     for (let i = 0; i < N; i++) {
       const t = i / (N - 1);
       const p = curve.getPoint(t);
