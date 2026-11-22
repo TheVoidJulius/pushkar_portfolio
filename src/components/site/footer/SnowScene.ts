@@ -1545,6 +1545,11 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
     this.report();
   }
 
+  /** For add-on layers (the snow guestbook): the scene graph, camera, terrain and current look. */
+  layerHost() {
+    return { scene: this.scene, camera: this.camera, height: (x: number, z: number) => this.height(x, z), mouth: this.mouth, R: this.R, look: () => this.look };
+  }
+
   dispose() {
     this.stop();
     this.disposed = true;

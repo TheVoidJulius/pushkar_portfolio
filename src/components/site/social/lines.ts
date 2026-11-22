@@ -4,6 +4,8 @@ export const SOCIAL_LINES = {
   bonsaiLocal: { mood: "gentle", text: "I'll remember that one on this device. The tree is a bit shy online today." },
   catsFriend: { mood: "excited", text: "Someone else is here, and they brought a ghost cat. Say hi with your cursor." },
   catsCities: { mood: "happy", text: "Look at the little globe. Every glowing dot is a city a cat came from today." },
+  snowMark: { mood: "happy", text: "You left a mark in my snow! Everyone who visits will see it." },
+  snowMarkLocal: { mood: "gentle", text: "Pretty! The snow will remember that one on this device." },
 } as const;
 
 /** One festive line per session while a festival is on (keyed by festival id). */
