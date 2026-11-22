@@ -71,6 +71,7 @@ export function TopNav({ showAssistant }: { showAssistant: boolean }) {
         </button>
       </nav>
 
+      <NowOrb />
       <AnimatePresence>
         {menu && (
           <motion.div
