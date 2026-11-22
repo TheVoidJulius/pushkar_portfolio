@@ -824,7 +824,7 @@ export class SnowScene {
 
   setDoor(open: boolean) {
     this.doorOpen = open;
-    if (this.reduced) this.door.x = open ? -1.7 : 0;
+    if (this.reduced) this.door.x = open ? -1.9 : 0;
   }
 
   knock() {
