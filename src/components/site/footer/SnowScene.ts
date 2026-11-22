@@ -98,8 +98,9 @@ const PALETTES: Record<"dark" | "light", Palette> = {
   },
 };
 
-const NEON_PINK = "#ff4f9a";
-const NEON_CYAN = "#4ff0ff";
+const WARM = "#ff9a4f";
+const NEON = "#ff4f9a";
+const LABELS = ["73", "38", "91", "57", "25", "64", "12"];
 
 // ---------------------------------------------------------------------
 // Shaders
