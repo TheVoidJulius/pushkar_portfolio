@@ -415,3 +415,5 @@ function FallbackHouse() {
     </svg>
   );
 }
+      <path d="M540 430 L540 360 A60 60 0 0 1 660 360 L660 430Z" fill={ice} stroke={line} strokeWidth="3" />
+      <path d="M560 430 L560 368 A40 40 0 0 1 640 368 L640 430Z" fill="#ff9a4f" />
