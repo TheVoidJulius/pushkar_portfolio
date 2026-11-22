@@ -8,11 +8,13 @@ import { useAssistant, type StageDirection } from "../../momo/AssistantProvider"
 import { useTheme } from "../ThemeToggle";
 import { playKnock } from "./knock";
 import type { SceneSpots, SnowScene } from "./SnowScene";
+import { applyOverride, fallbackWeather, weatherJoke, weatherReadout, type Weather } from "./weather";
 
 /**
- * The footer: a snowy night and a little neon cyber-house. When you reach it,
- * Mikuro pads through the snow, goes inside and falls asleep. Knock on the
- * door and she bursts out, furious, and hauls you back to the top.
+ * The footer: Mikuro's igloo on a snow field, under New Delhi's live weather.
+ * When you reach it, Mikuro pads through the snow, crawls inside and falls
+ * asleep. Knock on the ice door and she bursts out, furious, and hauls you
+ * back to the top.
  */
 
 type Phase = "outside" | "entering" | "asleep" | "knocking" | "angry" | "carrying";
@@ -33,6 +35,8 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
   const [failed, setFailed] = useState(false);
   const [knocks, setKnocks] = useState(0);
   const [shout, setShout] = useState<string | null>(null);
+  const [weather, setWeather] = useState<Weather | null>(null);
+  const assembledRef = useRef<HTMLSpanElement>(null);
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
   const visits = useRef(0);
   const inView = useRef(false);
@@ -96,6 +100,42 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
         d.style.width = `${r.w.toFixed(1)}px`;
         d.style.height = `${r.h.toFixed(1)}px`;
       }
+      const a = assembledRef.current;
+      if (a) {
+        const txt = String(Math.round(spots.assembled * 100)).padStart(3, "0");
+        if (a.textContent !== txt) a.textContent = txt;
+      }
+    };
+
+    // Scroll progress through the section drives the camera and the blocks
+    const progress = () => {
+      const r = section.getBoundingClientRect();
+      return Math.min(1, Math.max(0, (innerHeight - r.top) / Math.max(1, Math.min(r.height, innerHeight))));
+    };
+    const onScroll = () => scene?.setScroll(progress());
+    const onPointer = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      const r = host.getBoundingClientRect();
+      scene?.setPointer(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1);
+    };
+
+    // New Delhi, right now (?weather=rain|fog|haze|heat|storm|clear to test)
+    let weatherAsked = false;
+    let weatherNow: Weather | null = null;
+    const askWeather = () => {
+      if (weatherAsked) return;
+      weatherAsked = true;
+      const override = new URLSearchParams(location.search).get("weather");
+      fetch("/api/weather")
+        .then((r) => (r.ok ? (r.json() as Promise<Weather>) : fallbackWeather()))
+        .catch(() => fallbackWeather())
+        .then((w) => {
+          if (cancelled) return;
+          const next = applyOverride(w, override);
+          setWeather(next);
+          weatherNow = next;
+          scene?.setWeather(next);
+        });
     };
 
     const create = () => {
@@ -116,19 +156,30 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
           Object.assign(scene.canvas.style, { width: "100%", height: "100%", display: "block" });
           host.appendChild(scene.canvas);
           scene.onFrame = place;
+          if (weatherNow) scene.setWeather(weatherNow);
+          scene.setScroll(progress());
           sceneRef.current = scene;
           const size = () => scene?.setSize(host.clientWidth, host.clientHeight);
           size();
           ro = new ResizeObserver(size);
           ro.observe(host);
-          if (inView.current) scene.start();
+          void scene.warm().then(() => {
+            if (inView.current) sceneRef.current?.start();
+          });
           setReady(true);
         })
         .catch(() => setFailed(true));
     };
 
     // Build ahead of time, so the scene is ready by the time you get there
-    const near = new IntersectionObserver(([e]) => e?.isIntersecting && create(), { rootMargin: "900px 0px" });
+    const near = new IntersectionObserver(
+      ([e]) => {
+        if (!e?.isIntersecting) return;
+        askWeather();
+        create();
+      },
+      { rootMargin: "900px 0px" },
+    );
     near.observe(section);
     const seen = new IntersectionObserver(
       ([e]) => {
@@ -143,7 +194,13 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
     seen.observe(section);
     const onVis = () => (document.hidden ? sceneRef.current?.stop() : inView.current && sceneRef.current?.start());
     document.addEventListener("visibilitychange", onVis);
+    addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("resize", onScroll);
+    section.addEventListener("pointermove", onPointer);
     return () => {
+      removeEventListener("scroll", onScroll);
+      removeEventListener("resize", onScroll);
+      section.removeEventListener("pointermove", onPointer);
       cancelled = true;
       near.disconnect();
       seen.disconnect();
@@ -270,25 +327,56 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
   const mikuro = a.settings.name || "Mikuro";
   const dark = theme === "dark";
   const year = new Date().getFullYear();
+  // The scene is lit for New Delhi's clock: after sunset it's blue hour (or night)
+  const dim = dark || weather?.isDay === false;
+  const hud = dim ? "text-white/80" : "text-[#20252d]/75";
+  const hudSoft = dim ? "text-white/55" : "text-[#20252d]/50";
+
+  const hint =
+    phase === "asleep"
+      ? "She's asleep. Knock on the ice door →"
+      : phase === "knocking"
+        ? "…"
+        : phase === "angry" || phase === "carrying"
+          ? "You've done it now."
+          : "Scroll down to discover.";
 
   return (
-    <section
-      ref={sectionRef}
-      aria-label={`A snowy night outside ${mikuro}'s house`}
-      className="relative isolate overflow-hidden"
-    >
+    <section ref={sectionRef} aria-label={`${mikuro}'s igloo in the snow`} className="relative isolate overflow-hidden">
       <div
-        className="relative h-[68vh] min-h-[460px] w-full sm:h-[min(88vh,820px)] sm:min-h-[520px]"
+        className="relative h-[72vh] min-h-[480px] w-full sm:h-[min(90vh,840px)] sm:min-h-[540px]"
         style={{
-        background: dark
-          ? "linear-gradient(180deg, var(--bg) 0%, #0a0e20 24%, #11173a 58%, #151b38 100%)"
-          : "linear-gradient(180deg, var(--bg) 0%, #f4eff8 26%, #ece5f2 60%, #e7e0ee 100%)",
+          background: dark
+            ? "linear-gradient(180deg, var(--bg) 0%, #070b16 30%, #151c32 70%, #1a2238 100%)"
+            : "linear-gradient(180deg, var(--bg) 0%, #c9ced6 30%, #dfe2e7 60%, #e9edf2 100%)",
         }}
       >
         <div ref={hostRef} className="absolute inset-0" aria-hidden />
-        {failed && <FallbackHouse />}
+        {failed && <FallbackIgloo dark={dark} />}
 
-        {/* Where Mikuro flies to: positioned every frame from the 3D scene */}
+        {/* The page fades into the sky, and the snow back into the page */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[var(--bg)] to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-[var(--bg)]" />
+
+        {/* HUD: tiny mono notes in the corners */}
+        <div className={`pointer-events-none absolute top-24 left-4 font-mono text-[11px] leading-[1.6] sm:top-28 sm:left-8 sm:text-[12px] ${hud}`}>
+          <p>{"// "}{mikuro}&apos;s igloo</p>
+          <p className={hudSoft}>
+            ice blocks · <span ref={assembledRef}>000</span>% assembled
+          </p>
+        </div>
+        <div className={`pointer-events-none absolute top-24 right-4 max-w-[58vw] text-right font-mono text-[11px] leading-[1.6] sm:top-28 sm:right-8 sm:max-w-none sm:text-[12px] ${hud}`}>
+          <p>{"////// "}{weather ? weatherReadout(weather) : "New Delhi · reading the sky…"}</p>
+          {weather && <p className={`hidden sm:block ${hudSoft}`}>{weatherJoke(weather)}</p>}
+        </div>
+        <div className={`absolute bottom-24 left-4 font-mono text-[11px] leading-[1.7] sm:bottom-28 sm:left-8 sm:text-[12px] ${hud}`}>
+          <p aria-hidden className="max-w-[16ch] sm:max-w-none">{hint}</p>
+          <button type="button" onClick={a.toggleMute} className={`mt-1 inline-flex items-center gap-1.5 transition hover:opacity-100 ${hudSoft}`}>
+            <span aria-hidden>{a.muted ? "◁×" : "◁)"}</span> Sound: {a.muted ? "Off" : "On"}
+          </button>
+        </div>
+
+        {/* Where Mikuro walks to: positioned every frame from the 3D scene */}
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           {ANCHORS.map((id) => (
             <div
@@ -303,16 +391,16 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
           ))}
         </div>
 
-        {/* The door is a real button: click, tap or press Enter to knock */}
+        {/* The ice door is a real button: click, tap or press Enter to knock */}
         <button
           ref={doorRef}
           type="button"
           onClick={knock}
           disabled={!sleepingNow}
-          aria-label={sleepingNow ? `Knock on ${mikuro}'s door (she will take you back to the top)` : `${mikuro}'s front door`}
-          className={`absolute top-0 left-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+          aria-label={sleepingNow ? `Knock on ${mikuro}'s ice door (she will take you back to the top)` : `${mikuro}'s ice door`}
+          className={`absolute top-0 left-0 rounded-t-full outline-none focus-visible:ring-2 focus-visible:ring-accent ${
             sleepingNow ? "cursor-pointer" : "cursor-default"
-          } ${failed ? "!top-[52%] !left-[46%] !h-[22%] !w-[8%] !transform-none" : ""}`}
+          } ${failed ? "!top-[56%] !left-[55%] !h-[16%] !w-[9%] !transform-none" : ""}`}
         >
           <AnimatePresence>
             {sleepingNow && (
@@ -322,9 +410,13 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ delay: 0.9, duration: 0.4 }}
-                className="pointer-events-none absolute bottom-full left-1/2 mb-[42%] -translate-x-1/2 whitespace-nowrap"
+                className="pointer-events-none absolute bottom-full left-1/2 mb-1 flex -translate-x-1/2 flex-col items-center"
               >
-                <span className="snow-hint block rounded-full px-3 py-1 font-mono text-[12px]">knock knock?</span>
+                <span className="rounded-full border border-white/25 bg-black/45 px-2.5 py-1 font-mono text-[11px] whitespace-nowrap text-white backdrop-blur-sm">
+                  knock knock?
+                </span>
+                <span className="h-7 w-px bg-white/60" />
+                <span className="size-1.5 rounded-full bg-white/80" />
               </motion.span>
             )}
           </AnimatePresence>
@@ -336,7 +428,8 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
                 animate={{ opacity: 1, scale: 1, rotate: -4 }}
                 exit={{ opacity: 0, scale: 1.2 }}
                 transition={{ type: "spring", stiffness: 600, damping: 18 }}
-                className="snow-knock pointer-events-none absolute top-[18%] left-full ml-2 whitespace-nowrap font-mono text-[15px] font-bold"
+                className="pointer-events-none absolute top-[10%] left-full ml-2 font-mono text-[15px] font-bold whitespace-nowrap text-white"
+                style={{ textShadow: "0 0 10px #ff9a4f, 0 0 22px #ff6a2a, 0 1px 2px rgba(0,0,0,.5)" }}
               >
                 knock knock!
               </motion.span>
@@ -356,9 +449,6 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
             )}
           </AnimatePresence>
         </button>
-
-        {/* The fold at the bottom: snow fades into the page */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-[var(--bg)]" />
       </div>
 
       {/* Carried back to the top: Mikuro holds this spot while the page scrolls */}
@@ -369,7 +459,7 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
       />
 
       <p className="sr-only" aria-live="polite">
-        {phase === "asleep" ? `${mikuro} is asleep inside. Knock on the door to wake her.` : ""}
+        {phase === "asleep" ? `${mikuro} is asleep inside her igloo. Knock on the ice door to wake her.` : ""}
         {phase === "angry" ? `${mikuro} is not happy about being woken up.` : ""}
       </p>
 
@@ -388,30 +478,28 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
 
 /** Rough spots for Mikuro over the flat illustration, when WebGL is unavailable. */
 const FALLBACK_SPOTS: Record<(typeof ANCHORS)[number], string> = {
-  path: "!top-[50%] !left-[22%] !size-[110px] !transform-none",
-  door: "!top-[50%] !left-[45%] !size-[100px] !transform-none",
-  inside: "!top-[55%] !left-[47%] !size-[40px] !transform-none",
-  out: "!top-[46%] !left-[42%] !size-[150px] !transform-none",
+  path: "!top-[54%] !left-[30%] !size-[110px] !transform-none",
+  door: "!top-[54%] !left-[52%] !size-[100px] !transform-none",
+  inside: "!top-[60%] !left-[57%] !size-[40px] !transform-none",
+  out: "!top-[50%] !left-[54%] !size-[150px] !transform-none",
 };
 
-/** A flat stand-in for the 3D scene (no WebGL). */
-function FallbackHouse() {
+/** A flat stand-in for the 3D scene (no WebGL): an igloo on a snow field. */
+function FallbackIgloo({ dark }: { dark: boolean }) {
+  const snow = dark ? "#aab6d4" : "#eef1f5";
+  const ice = dark ? "#b9c5e3" : "#f4f7fb";
+  const line = dark ? "#7d8bb3" : "#c3cad6";
   return (
     <svg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 h-full w-full" aria-hidden>
-      <rect x="0" y="420" width="1000" height="180" fill="#eef2fb" />
-      <ellipse cx="500" cy="430" rx="620" ry="40" fill="#eef2fb" />
-      <rect x="380" y="270" width="240" height="160" fill="#1d2133" />
-      <polygon points="360,275 500,190 640,275" fill="#121522" />
-      <polygon points="360,268 500,183 640,268" fill="none" stroke="#ffffff" strokeWidth="10" strokeLinejoin="round" />
-      <rect x="465" y="320" width="70" height="110" fill="#121522" stroke="#ff4f9a" strokeWidth="4" />
-      <rect x="398" y="310" width="50" height="42" fill="#ffc9a8" stroke="#4ff0ff" strokeWidth="3" />
-      <rect x="552" y="310" width="50" height="42" fill="#ffc9a8" stroke="#4ff0ff" strokeWidth="3" />
-      <text x="500" y="305" textAnchor="middle" fontSize="20" fontWeight="800" fill="#ff8fc0" fontFamily="system-ui">
-        MIKURO
-      </text>
-      {[120, 210, 800, 890].map((x, i) => (
-        <polygon key={x} points={`${x - 45},430 ${x},${300 - i * 10} ${x + 45},430`} fill="#2d5550" />
+      <path d="M0 330 L140 250 L260 300 L420 210 L560 290 L700 230 L860 300 L1000 260 L1000 600 L0 600Z" fill={dark ? "#2a3352" : "#d3d8df"} />
+      <rect x="0" y="420" width="1000" height="180" fill={snow} />
+      <ellipse cx="500" cy="425" rx="640" ry="44" fill={snow} />
+      <path d="M330 430 A170 180 0 0 1 670 430Z" fill={ice} stroke={line} strokeWidth="3" />
+      {[400, 370, 340, 310, 280].map((y, i) => (
+        <line key={y} x1={330 + i * 14} y1={y} x2={670 - i * 14} y2={y} stroke={line} strokeWidth="2" />
       ))}
+      <path d="M540 430 L540 360 A60 60 0 0 1 660 360 L660 430Z" fill={ice} stroke={line} strokeWidth="3" />
+      <path d="M560 430 L560 368 A40 40 0 0 1 640 368 L640 430Z" fill="#ff9a4f" />
     </svg>
   );
 }

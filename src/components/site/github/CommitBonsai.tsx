@@ -1,6 +1,8 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import { BLOSSOMS } from "./useBonsai";
 
 /* ═════════════════════════════════════════════════════════════════════
    Commit Bonsai
@@ -29,6 +31,12 @@ export interface CommitBonsaiProps {
   season?: Season | "auto";
   label?: string;
   className?: string;
+  /** Visitor blossoms grown on the branch tips (placed deterministically from the id). */
+  waterings?: { id: string; blossom: number }[];
+  /** The newest blossom id: it pops in with a little spring. */
+  freshId?: string | null;
+  /** Bump to play the watering-can animation. */
+  pourKey?: number;
 }
 
 /* ─────────────────────────── data ─────────────────────────── */
@@ -240,7 +248,7 @@ export function seasonFor(date: Date): Season {
 
 /* ─────────────────────────── component ─────────────────────────── */
 
-export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, season = "auto", label, className = "" }: CommitBonsaiProps) {
+export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, season = "auto", label, className = "", waterings, freshId, pourKey = 0 }: CommitBonsaiProps) {
   const n = Math.max(8, Math.min(80, weeks));
   const data = useMemo(() => toWeeks(contributions, n), [contributions, n]);
   const tree = useMemo(() => grow(seed, n), [seed, n]);
@@ -252,6 +260,18 @@ export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, seaso
   );
   const S = season === "auto" ? seasonFor(latestDay) : season;
   const max = Math.max(1, ...data.map((w) => w.count));
+  // Same row id -> same tip and offset for everyone
+  const placed = useMemo(() => {
+    const leafy = tree.tips.map((_, i) => i).filter((i) => (data[i]?.count ?? 0) > 0);
+    const pool = leafy.length ? leafy : tree.tips.map((_, i) => i);
+    return (waterings ?? []).slice(0, 120).map((w) => {
+      const h = hash(w.id);
+      const tip = tree.tips[pool[h % pool.length]];
+      const dx = (((h >>> 8) % 100) / 100 - 0.5) * 9;
+      const dy = -(((h >>> 16) % 100) / 100) * 6 - 1;
+      return { ...w, x: tip.x + dx, y: tip.y + dy, tilt: (((h >>> 4) % 40) - 20) };
+    });
+  }, [waterings, tree, data]);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [hover, setHover] = useState<number | null>(null);
@@ -516,6 +536,25 @@ export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, seaso
           onPointerLeave={() => setHover(null)}
           className="block aspect-[128/112] w-full cursor-crosshair [image-rendering:pixelated]"
         />
+        {placed.length > 0 && (
+          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden [container-type:inline-size]">
+            {placed.map((b) => (
+              <motion.span
+                key={b.id}
+                initial={b.id === freshId ? { scale: 0, rotate: -40, opacity: 0 } : false}
+                animate={{ scale: 1, rotate: b.tilt, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 12, delay: b.id === freshId ? 0.9 : 0 }}
+                className="absolute -translate-x-1/2 -translate-y-1/2 leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,.25)]"
+                style={{ left: `${(b.x / W) * 100}%`, top: `${(b.y / H) * 100}%`, fontSize: "4.4cqw" }}
+              >
+                {BLOSSOMS[b.blossom] ?? BLOSSOMS[0]}
+              </motion.span>
+            ))}
+          </div>
+        )}
+        <AnimatePresence>
+          {pourKey > 0 && <Pour key={pourKey} />}
+        </AnimatePresence>
         {hw && ht && (
           <div
             className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+14px)] rounded-lg border border-line bg-bg-elevated px-2 py-1 whitespace-nowrap text-ink shadow-soft"
@@ -560,6 +599,43 @@ export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, seaso
         <span className="ml-auto">← past · now →</span>
       </div>
     </div>
+  );
+}
+
+/** Watering can tips over the crown and drops fall onto the branches. */
+function Pour() {
+  return (
+    <motion.div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 z-20 overflow-hidden"
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.svg
+        viewBox="0 0 64 48"
+        className="absolute top-[3%] right-[6%] w-[22%] text-ink drop-shadow-md"
+        initial={{ x: 40, y: -10, rotate: 0, opacity: 0 }}
+        animate={{ x: [40, 0, 0, 0, 40], y: [-10, 0, 0, 0, -10], rotate: [0, 0, -28, -28, 0], opacity: [0, 1, 1, 1, 0] }}
+        transition={{ duration: 2.1, times: [0, 0.18, 0.35, 0.8, 1], ease: "easeInOut" }}
+        style={{ transformOrigin: "50% 80%" }}
+      >
+        <path d="M14 18h30l-3 24a4 4 0 0 1-4 3H21a4 4 0 0 1-4-3z" fill="#8fb4e8" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" />
+        <path d="M14 22 4 12l-1 6 11 8" fill="#8fb4e8" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" />
+        <path d="M44 24c6 0 9 3 9 8s-4 8-9 8" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+        <path d="M18 18c0-7 4-11 11-11s11 4 11 11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      </motion.svg>
+      {Array.from({ length: 12 }, (_, i) => (
+        <motion.span
+          key={i}
+          className="absolute size-[7px] rounded-full bg-[#7fb2f0]"
+          style={{ left: `${30 + ((i * 37) % 38)}%`, top: "14%", borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%" }}
+          initial={{ opacity: 0, y: 0 }}
+          animate={{ opacity: [0, 1, 1, 0], y: [0, 90 + (i % 4) * 28] }}
+          transition={{ delay: 0.7 + (i % 6) * 0.1 + (i > 5 ? 0.35 : 0), duration: 0.75, ease: "easeIn" }}
+        />
+      ))}
+    </motion.div>
   );
 }
 

@@ -1,11 +1,14 @@
 "use client";
 
 import { ArrowUpRight } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GitHubActivity as Activity } from "@/lib/github";
+import { useAssistant } from "../momo/AssistantProvider";
 import { MomoLine } from "../momo/MomoLine";
 import { FadeUp, SectionPill } from "./Chrome";
 import { CommitBonsai } from "./github/CommitBonsai";
+import { BLOSSOMS, useBonsai } from "./github/useBonsai";
+import { SOCIAL_LINES } from "./social/lines";
 import { SocialIcon } from "./icons";
 
 type State = { status: "idle" | "loading" } | { status: "ready"; data: Activity } | { status: "error" };
@@ -51,6 +54,31 @@ export function GitHubActivity({ showAssistant }: { showAssistant: boolean }) {
   }, []);
 
   const data = state.status === "ready" ? state.data : null;
+
+  /* water the tree */
+  const bonsai = useBonsai(state.status !== "idle");
+  const { showQuip } = useAssistant();
+  const [picking, setPicking] = useState(false);
+  const [pour, setPour] = useState(0);
+  const [note, setNote] = useState("");
+  const [localOnly, setLocalOnly] = useState(false);
+  const water = useCallback(
+    async (b: number) => {
+      setPicking(false);
+      setPour((k) => k + 1);
+      const res = await bonsai.water(b);
+      if (res === "rate_limited") {
+        setNote("The tree has had plenty for now. Try again in a few minutes.");
+        return;
+      }
+      setNote("");
+      setLocalOnly(res === "local");
+      const line = res === "local" ? SOCIAL_LINES.bonsaiLocal : SOCIAL_LINES.bonsaiWatered;
+      showQuip({ id: res === "local" ? "bonsaiLocal" : "bonsaiWatered", ...line });
+    },
+    [bonsai, showQuip],
+  );
+  const everLocal = localOnly || (!bonsai.configured && bonsai.items.length > 0);
   // The last 52 weeks only, so the tree and the numbers agree
   const year = useMemo(() => {
     if (!data) return null;
@@ -106,12 +134,61 @@ export function GitHubActivity({ showAssistant }: { showAssistant: boolean }) {
               </a>
               {data && <span className="font-mono text-[12px] text-ink-3">updated {ago(data.updatedAt)}</span>}
             </div>
+
+            {data && (
+              <div className="mt-6 max-w-md">
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPicking((v) => !v)}
+                    aria-expanded={picking}
+                    aria-controls="bonsai-blossoms"
+                    className="chrome-btn text-[14.5px] font-medium"
+                  >
+                    Water the tree <span aria-hidden className="ml-1.5">💧</span>
+                  </button>
+                  <span className="chip chip-mono" role="status">
+                    {bonsai.total === 0
+                      ? "Not watered yet"
+                      : `Watered ${bonsai.total} time${bonsai.total === 1 ? "" : "s"}${bonsai.last ? ` · last by a visitor ${ago(bonsai.last)}` : ""}`}
+                  </span>
+                </div>
+                {picking && (
+                  <div id="bonsai-blossoms" role="group" aria-label="Pick a blossom to grow" className="mt-3 flex flex-wrap gap-2">
+                    {BLOSSOMS.map((e, i) => (
+                      <button
+                        key={e}
+                        type="button"
+                        onClick={() => water(i)}
+                        aria-label={`Water and grow blossom ${i + 1} of ${BLOSSOMS.length}`}
+                        className="float-btn text-[20px] transition hover:-translate-y-0.5"
+                      >
+                        <span aria-hidden>{e}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {(note || everLocal) && (
+                  <p className="mt-2 text-[12px] text-ink-3" aria-live="polite">
+                    {note || "Saved on this device"}
+                  </p>
+                )}
+              </div>
+            )}
           </FadeUp>
         </div>
 
         <FadeUp className="flex justify-center md:justify-end">
           {data ? (
-            <CommitBonsai contributions={data.contributions} seed={data.user} weeks={52} label={`${data.user}'s bonsai`} />
+            <CommitBonsai
+              contributions={data.contributions}
+              seed={data.user}
+              weeks={52}
+              label={`${data.user}'s bonsai`}
+              waterings={bonsai.items}
+              freshId={bonsai.fresh}
+              pourKey={pour}
+            />
           ) : (
             <div
               className="grid aspect-[560/640] w-full max-w-[560px] place-items-center rounded-[22px] border border-line bg-bg-elevated p-6 text-center text-ink-3 shadow-soft"

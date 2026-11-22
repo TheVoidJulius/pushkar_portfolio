@@ -15,6 +15,7 @@ import { ExperienceDial } from "./ExperienceDial";
 import { GitHubActivity } from "./GitHubActivity";
 import { Hero } from "./Hero";
 import { Skills } from "./Skills";
+import { VisitorCats } from "./social/VisitorCats";
 import { SmoothScroll } from "./SmoothScroll";
 import { Work } from "./Work";
 
@@ -38,6 +39,7 @@ export function PublicSite({ content, previewBanner }: { content: PortfolioConte
       </main>
       <Contact contact={content.contact} name={content.profile.name} footerNote={content.site.footer_note} showAssistant={show} />
       <MusicPlayer />
+      <VisitorCats />
       {show && (
         <>
           <BottomChips />

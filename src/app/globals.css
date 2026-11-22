@@ -927,27 +927,3 @@ html[data-intro] body::before {
     animation: none;
   }
 }
-
-/* ---------------------------------------------------------------------
-   Footer: the snow house
-   --------------------------------------------------------------------- */
-.snow-hint {
-  color: #fff;
-  background: rgba(20, 24, 48, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 0 18px rgba(255, 79, 154, 0.35);
-  animation: snow-hint-bob 2.2s ease-in-out infinite;
-}
-.snow-knock {
-  color: #fff;
-  text-shadow: 0 0 10px #ff4f9a, 0 0 22px #ff4f9a;
-}
-@keyframes snow-hint-bob {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -4px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .snow-hint { animation: none; }
-}

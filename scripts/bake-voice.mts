@@ -11,6 +11,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SCENE_LINES } from "../src/lib/assistant/scenes";
+import { NOW_LINES } from "../src/components/site/NowOrb";
+import { SOCIAL_LINES } from "../src/components/site/social/lines";
 import { buildLines } from "../src/lib/assistant/tour";
 import type { PortfolioContent } from "../src/lib/types";
 
@@ -48,7 +50,7 @@ const content = JSON.parse(readFileSync(join(root, "supabase", "seed-content.jso
 const narration: Line[] = Object.values(buildLines(content)).flatMap((spec) => spec.texts.map((text) => ({ mood: spec.mood, text })));
 const quips = Object.values(JSON.parse(readFileSync(join(root, "src", "lib", "assistant", "mikuro-lines.json"), "utf8")) as Record<string, Line[]>).flat();
 const all = new Map<string, Line>();
-for (const l of [...narration, ...quips, ...Object.values(SCENE_LINES)]) if (l.text?.trim()) all.set(l.text, l);
+for (const l of [...narration, ...quips, ...Object.values(SCENE_LINES), ...Object.values(NOW_LINES), ...Object.values(SOCIAL_LINES)]) if (l.text?.trim()) all.set(l.text, l);
 const lines = [...all.values()];
 
 const previous = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, "utf8")) : {};

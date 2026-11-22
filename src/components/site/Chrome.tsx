@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { SECTION_LABELS, SECTIONS } from "@/lib/assistant/protocol";
 import { lockScroll, scrollToSection } from "@/lib/scroll";
 import { MusicButton } from "../music/MusicPlayer";
+import { NowOrb } from "./NowOrb";
 import { useAssistant } from "../momo/AssistantProvider";
 import { replayIntro } from "./introControl";
 import { toggleTheme, useTheme } from "./ThemeToggle";
@@ -70,6 +71,7 @@ export function TopNav({ showAssistant }: { showAssistant: boolean }) {
           </span>
         </button>
       </nav>
+      <NowOrb />
 
       <AnimatePresence>
         {menu && (
