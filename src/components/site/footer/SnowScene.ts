@@ -646,8 +646,8 @@ export class SnowScene {
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     geo.setAttribute("aRand", new THREE.BufferAttribute(rnd, 3));
     const mat = new THREE.ShaderMaterial({
-      vertexShader: SNOW_VERT,
-      fragmentShader: SNOW_FRAG,
+      vertexShader: FLAKE_VERT,
+      fragmentShader: FLAKE_FRAG,
       transparent: true,
       depthWrite: false,
       uniforms: {
