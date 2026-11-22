@@ -667,6 +667,15 @@ export class SnowScene {
     this.labelDots.renderOrder = 19;
     this.labelDots.frustumCulled = false;
     this.scene.add(this.labelLines, this.labelDots);
+      uniforms: {
+        uTop: { value: new THREE.Color() },
+        uHorizon: { value: new THREE.Color() },
+        uSun: { value: new THREE.Color() },
+        uSunDir: { value: new THREE.Vector3(0, 0.3, -1) },
+        uDisc: { value: 0 },
+        uHalo: { value: 0 },
+        uFlash: { value: 0 },
+      },
   }
 
   /** Warm light pooling on the snow outside the entrance. */
