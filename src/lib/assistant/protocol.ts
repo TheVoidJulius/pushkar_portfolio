@@ -6,7 +6,7 @@
 export const MOODS = ["happy", "excited", "curious", "gentle", "playful", "thinking", "confused", "surprised"] as const;
 export type Mood = (typeof MOODS)[number];
 
-export const SECTIONS = ["hero", "work", "skills", "experience", "about", "contact"] as const;
+export const SECTIONS = ["hero", "work", "skills", "experience", "github", "about", "contact"] as const;
 export type SectionId = (typeof SECTIONS)[number];
 
 export const SECTION_LABELS: Record<SectionId, string> = {
@@ -14,6 +14,7 @@ export const SECTION_LABELS: Record<SectionId, string> = {
   work: "Work",
   skills: "Skills",
   experience: "Experience",
+  github: "GitHub",
   about: "About",
   contact: "Contact",
 };

@@ -28,7 +28,8 @@ function BlurWords({ text, delay = 0, className = "", wordClassName = "" }: { te
 
 function go(href: string) {
   if (href.startsWith("#")) scrollToSection(href.slice(1));
-  else window.open(href, /^https?:/.test(href) ? "_blank" : "_self");
+  else if (/^https?:/.test(href)) window.open(href, "_blank", "noopener,noreferrer");
+  else window.location.assign(href);
 }
 
 export function Hero({ profile, showAssistant }: { profile: Profile; showAssistant: boolean }) {

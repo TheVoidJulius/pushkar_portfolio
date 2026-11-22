@@ -292,6 +292,112 @@ html.lenis body {
     transform: translate3d(42%, 0, 0) scaleX(0.9);
   }
 }
+/* ---------------------------------------------------------------------
+   Chrome warp (experience dial). Gradients and blurs are static; only
+   opacity/transform are animated, so it all stays on the compositor.
+   --------------------------------------------------------------------- */
+:root {
+  --chrome-cyan: 56, 214, 255;
+  --chrome-violet: 138, 92, 255;
+  --chrome-magenta: 236, 72, 180;
+  --ghost-blend: multiply;
+}
+:root[data-theme="dark"] {
+  --ghost-blend: screen;
+}
+.chrome-glow {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(var(--chrome-cyan), 0.95), rgba(var(--chrome-cyan), 0.35) 55%, transparent);
+  filter: blur(18px);
+  will-change: opacity, transform;
+}
+.chrome-glow-top {
+  top: -70px;
+}
+.chrome-glow-bottom {
+  bottom: -70px;
+}
+.chrome-flare {
+  position: absolute;
+  top: 12%;
+  bottom: 12%;
+  width: min(22vw, 260px);
+  will-change: opacity, transform;
+  filter: blur(6px);
+}
+/* A funnel of light hugging the screen edge: cyan rim, violet/magenta body */
+.chrome-flare-left {
+  left: 0;
+  background:
+    radial-gradient(120% 60% at 0% 50%, transparent 58%, rgba(var(--chrome-cyan), 0.9) 62%, rgba(var(--chrome-violet), 0.55) 70%, transparent 82%),
+    radial-gradient(70% 45% at 0% 50%, rgba(var(--chrome-magenta), 0.55), transparent 70%);
+}
+.chrome-flare-right {
+  right: 0;
+  background:
+    radial-gradient(120% 60% at 100% 50%, transparent 58%, rgba(var(--chrome-cyan), 0.9) 62%, rgba(var(--chrome-violet), 0.55) 70%, transparent 82%),
+    radial-gradient(70% 45% at 100% 50%, rgba(var(--chrome-violet), 0.55), transparent 70%);
+}
+.chrome-rim {
+  box-shadow:
+    0 0 0 1.5px rgba(var(--chrome-cyan), 0.85),
+    0 0 28px 4px rgba(var(--chrome-cyan), 0.55),
+    inset 0 0 36px 2px rgba(var(--chrome-violet), 0.35);
+  will-change: opacity;
+}
+.dial-ghost {
+  mix-blend-mode: var(--ghost-blend);
+}
+.dial-ghost line,
+.dial-ghost text {
+  color: inherit !important;
+  fill: currentColor !important;
+}
+.dial-ghost-cyan {
+  color: rgb(var(--chrome-cyan));
+}
+.dial-ghost-magenta {
+  color: rgb(var(--chrome-magenta));
+}
+/* Iridescent version of the warp streak for the role card */
+.chrome-streak {
+  background: linear-gradient(
+    100deg,
+    transparent 36%,
+    rgba(var(--chrome-cyan), 0.35) 45%,
+    rgba(255, 255, 255, 0.75) 50%,
+    rgba(var(--chrome-magenta), 0.3) 55%,
+    transparent 64%
+  );
+  mix-blend-mode: normal;
+  opacity: 0.8;
+}
+/* RGB split that snaps back into focus as a new role lands */
+.chroma-split {
+  animation: chroma-split 650ms var(--ease-out-quint) both;
+}
+@keyframes chroma-split {
+  from {
+    text-shadow:
+      -5px 0 rgba(var(--chrome-cyan), 0.85),
+      5px 0 rgba(var(--chrome-magenta), 0.75);
+  }
+  to {
+    text-shadow:
+      0 0 rgba(var(--chrome-cyan), 0),
+      0 0 rgba(var(--chrome-magenta), 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chroma-split {
+    animation: none;
+  }
+}
+
 @keyframes warp-sweep-back {
   from {
     opacity: 0.2;
@@ -459,4 +565,289 @@ html[data-intro] body::before {
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* =====================================================================
+   Music player: Apple-style liquid glass
+   Frosted + saturated backdrop, a specular highlight that follows the
+   pointer (--lx/--ly), a bright rim, and soft inner light. Chromium adds
+   edge refraction on top (see components/music/LiquidGlass.tsx).
+   ===================================================================== */
+.liquid-glass {
+  --glass-fill: rgba(255, 255, 255, 0.46);
+  --glass-hi: rgba(255, 255, 255, 0.95);
+  --glass-lo: rgba(255, 255, 255, 0.32);
+  --glass-glow: rgba(255, 255, 255, 0.3);
+  --glass-spec: rgba(255, 255, 255, 0.7);
+  isolation: isolate;
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(18px) saturate(185%);
+  backdrop-filter: blur(18px) saturate(185%);
+  box-shadow:
+    inset 0 1px 0.5px var(--glass-hi),
+    inset 0 -1px 1px var(--glass-lo),
+    inset 0 0 26px var(--glass-glow),
+    0 30px 70px -28px rgba(22, 22, 21, 0.38),
+    0 2px 10px rgba(22, 22, 21, 0.06);
+}
+:root[data-theme="dark"] .liquid-glass {
+  --glass-fill: rgba(30, 30, 32, 0.5);
+  --glass-hi: rgba(255, 255, 255, 0.26);
+  --glass-lo: rgba(255, 255, 255, 0.08);
+  --glass-glow: rgba(255, 255, 255, 0.05);
+  --glass-spec: rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0.5px var(--glass-hi),
+    inset 0 -1px 1px var(--glass-lo),
+    inset 0 0 26px var(--glass-glow),
+    0 30px 70px -26px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+/* Specular highlight */
+.liquid-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(260px circle at var(--lx, 22%) var(--ly, -8%), var(--glass-spec), transparent 62%);
+  mix-blend-mode: soft-light;
+}
+/* Rim light: bright at the top-left and bottom-right edges, like curved glass */
+.liquid-glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(140deg, var(--glass-hi), rgba(255, 255, 255, 0.12) 30%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.14) 72%, var(--glass-hi));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .liquid-glass {
+    --glass-fill: var(--bg-elevated);
+  }
+}
+
+/* Smaller glass for buttons and chips inside the panel */
+.glass-pill {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow:
+    inset 0 1px 0.5px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(22, 22, 21, 0.08),
+    0 0 0 0.5px rgba(22, 22, 21, 0.08);
+  transition:
+    background-color 200ms var(--ease-out-quint),
+    transform 200ms var(--ease-out-quint),
+    box-shadow 200ms var(--ease-out-quint);
+}
+.glass-pill:hover {
+  background: rgba(255, 255, 255, 0.72);
+}
+.glass-pill:active {
+  transform: scale(0.96);
+}
+:root[data-theme="dark"] .glass-pill {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0.5px rgba(255, 255, 255, 0.18),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.3),
+    0 0 0 0.5px rgba(255, 255, 255, 0.08);
+}
+:root[data-theme="dark"] .glass-pill:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+.glass-pill:focus-visible,
+.transport-btn:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--ink) 45%, transparent);
+  outline-offset: 2px;
+}
+.glass-tip {
+  background: rgba(255, 255, 255, 0.86);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0.5px rgba(255, 255, 255, 0.95),
+    0 10px 24px -10px rgba(22, 22, 21, 0.35),
+    0 0 0 0.5px rgba(22, 22, 21, 0.1);
+}
+:root[data-theme="dark"] .glass-tip {
+  background: rgba(38, 38, 40, 0.88);
+  box-shadow:
+    inset 0 1px 0.5px rgba(255, 255, 255, 0.2),
+    0 10px 24px -10px rgba(0, 0, 0, 0.8),
+    0 0 0 0.5px rgba(255, 255, 255, 0.08);
+}
+.glass-knob {
+  background: linear-gradient(180deg, #fff, #ececee);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.08);
+}
+.transport-btn {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  color: var(--ink-2);
+  transition:
+    color 160ms,
+    transform 160ms var(--ease-out-quint),
+    background-color 160ms;
+}
+.transport-btn:hover {
+  color: var(--ink);
+  background: color-mix(in oklab, var(--ink) 7%, transparent);
+}
+.transport-btn:active {
+  transform: scale(0.9);
+}
+
+/* Covers get a soft reflection, like records standing on glass */
+.cover-reflect {
+  -webkit-box-reflect: below 3px linear-gradient(transparent 76%, rgba(255, 255, 255, 0.26));
+}
+
+/* Vinyl: grooves, sheen and a label printed with the cover */
+.vinyl {
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 31%, rgba(255, 255, 255, 0.05) 31.5%, transparent 32.5%),
+    repeating-radial-gradient(circle at 50% 50%, #0d0d0f 0 1.4px, #1b1b1e 1.6px 2.6px),
+    #111;
+  box-shadow:
+    0 14px 30px -14px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 2px #070708,
+    inset 0 0 0 4px #1f1f22;
+}
+.vinyl::after {
+  /* the light catching the grooves; stays put while the record turns */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 20deg, transparent 0 10%, rgba(255, 255, 255, 0.14) 14%, transparent 20% 52%, rgba(255, 255, 255, 0.1) 58%, transparent 64%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.vinyl-label {
+  position: absolute;
+  inset: 31%;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.45);
+}
+.vinyl-label::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14%;
+  height: 14%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.vinyl-mini {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 44px;
+}
+.vinyl-spin {
+  animation: vinyl-spin 1.8s linear infinite;
+}
+@keyframes vinyl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Equaliser in the nav button */
+.eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.eq > span {
+  width: 2.5px;
+  height: 35%;
+  border-radius: 2px;
+  background: currentColor;
+  transition: height 300ms var(--ease-out-quint);
+}
+.eq > span:nth-child(2) {
+  height: 70%;
+}
+.eq > span:nth-child(3) {
+  height: 50%;
+}
+.eq > span:nth-child(4) {
+  height: 85%;
+}
+.eq-on > span {
+  animation: eq-bounce 820ms ease-in-out infinite alternate;
+}
+.eq-on > span:nth-child(2) {
+  animation-delay: -300ms;
+}
+.eq-on > span:nth-child(3) {
+  animation-delay: -560ms;
+}
+.eq-on > span:nth-child(4) {
+  animation-delay: -150ms;
+}
+@keyframes eq-bounce {
+  from {
+    height: 18%;
+  }
+  to {
+    height: 100%;
+  }
+}
+.eq-sm {
+  height: 10px;
+}
+.eq-sm > span {
+  width: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .eq-on > span,
+  .vinyl-spin {
+    animation: none;
+  }
+}
+
+/* The grip on the panel's left edge, which lights up as you drag toward the side */
+.music-grip {
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  width: 4px;
+  height: 38px;
+  margin-top: -19px;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--ink) 18%, transparent);
+  transition:
+    background-color 200ms,
+    height 200ms var(--ease-out-quint),
+    margin 200ms var(--ease-out-quint);
+}
+.music-grip-on {
+  height: 64px;
+  margin-top: -32px;
+  background: color-mix(in oklab, var(--accent) 80%, transparent);
 }

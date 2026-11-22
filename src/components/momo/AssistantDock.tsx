@@ -52,6 +52,7 @@ function StatusLine() {
   if (a.listening) [text, tone] = ["Listening…", "bg-accent"];
   else if (a.pending) [text, tone] = ["Thinking…", "bg-lavender"];
   else if (a.voiceStatus === "loading") [text, tone] = ["Clearing throat…", "bg-amber"];
+  else if (a.musicOn) [text, tone] = ["Text only · music is playing", "bg-lavender"];
   else if (a.talking) [text, tone] = [`Speaking${a.voiceEngine === "browser" ? " · browser voice" : ""}`, "bg-accent"];
   else if (a.settings.voice_enabled && !a.voiceAvailable) [text, tone] = ["Text only · voice offline", "bg-ink-3"];
   else if (a.muted) [text, tone] = ["Voice muted", "bg-ink-3"];

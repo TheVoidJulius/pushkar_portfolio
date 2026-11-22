@@ -111,6 +111,11 @@ export function MomoFlight() {
       target ??= rectOf("dock");
       const wrap = wrapRef.current;
       if (!target || !wrap) return;
+      // Read every layout value before writing any style, or the browser has to
+      // recalculate layout mid-frame (a forced reflow, every frame)
+      const bubble = bubbleRef.current;
+      const bw = bubble?.offsetWidth ?? 0;
+      const bh = bubble?.offsetHeight ?? 0;
       const ts = Math.min(target.width, target.height);
       const tx = target.left + (target.width - ts) / 2;
       const ty = target.top + (target.height - ts) / 2;
@@ -131,10 +136,9 @@ export function MomoFlight() {
       if (wrap.style.opacity !== "1") wrap.style.opacity = "1";
 
       // The speech bubble rides alongside, staying inside the viewport
-      const bubble = bubbleRef.current;
       if (bubble) {
-        const w = bubble.offsetWidth;
-        const h = bubble.offsetHeight;
+        const w = bw;
+        const h = bh;
         const above = pos.y - h - BUBBLE_GAP;
         const bx = Math.max(12, Math.min(innerWidth - w - 12, pos.x + pos.s / 2 - w / 2));
         const by = above > 56 ? above : Math.min(innerHeight - h - 12, pos.y + pos.s + BUBBLE_GAP);

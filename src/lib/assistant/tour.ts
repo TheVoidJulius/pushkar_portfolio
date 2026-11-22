@@ -70,6 +70,12 @@ export function buildLines(c: PortfolioContent): Record<SectionId, MomoLineSpec>
           : `The timeline is coming soon.`,
       ],
     },
+    github: {
+      id: "github",
+      section: "github",
+      mood: "curious",
+      texts: [`${owner}'s commits, grown into a bonsai. Bare twigs are the lazy weeks. I counted.`],
+    },
     about: {
       id: "about",
       section: "about",

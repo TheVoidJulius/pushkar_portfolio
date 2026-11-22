@@ -6,11 +6,13 @@ import { AssistantDock } from "../momo/AssistantDock";
 import { AssistantProvider } from "../momo/AssistantProvider";
 import { MikuroLife } from "../momo/MikuroLife";
 import { MomoFlight } from "../momo/MomoFlight";
+import { MusicPlayer } from "../music/MusicPlayer";
 import { About } from "./About";
 import { BottomChips, TopNav } from "./Chrome";
 import { CinematicIntro } from "./CinematicIntro";
 import { Contact } from "./Contact";
 import { ExperienceDial } from "./ExperienceDial";
+import { GitHubActivity } from "./GitHubActivity";
 import { Hero } from "./Hero";
 import { Skills } from "./Skills";
 import { SmoothScroll } from "./SmoothScroll";
@@ -31,9 +33,11 @@ export function PublicSite({ content, previewBanner }: { content: PortfolioConte
         <Work projects={content.projects} showAssistant={show} />
         <Skills categories={content.skillCategories} showAssistant={show} />
         <ExperienceDial items={content.experiences} showAssistant={show} />
+        <GitHubActivity showAssistant={show} />
         <About about={content.about} name={content.profile.name} showAssistant={show} />
       </main>
       <Contact contact={content.contact} name={content.profile.name} footerNote={content.site.footer_note} showAssistant={show} />
+      <MusicPlayer />
       {show && (
         <>
           <BottomChips />

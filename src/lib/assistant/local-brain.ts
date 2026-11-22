@@ -179,6 +179,7 @@ function answer(raw: string, c: PortfolioContent): Answer {
     [["project*", "work"], "work"],
     [["skills"], "skills"],
     [["experience", "timeline"], "experience"],
+    [["github", "commit*", "bonsai", "contribution*"], "github"],
     [["about"], "about"],
     [["contact", "footer"], "contact"],
   ];

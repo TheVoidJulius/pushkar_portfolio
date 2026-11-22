@@ -55,5 +55,10 @@
   "theme": [
     { "id": "theme-1", "mood": "playful", "text": "Bold choice. I look good in both." },
     { "id": "theme-2", "mood": "curious", "text": "Ooh. New lighting. Get my good side." }
+  ],
+  "musicStart": [
+    { "id": "music-1", "mood": "happy", "text": "Ooh, good taste. I'll keep it down. Subtitles only." },
+    { "id": "music-2", "mood": "playful", "text": "You put a record on. I'll whisper. In text." },
+    { "id": "music-3", "mood": "gentle", "text": "Music's on, so I'm going quiet. Read my lips." }
   ]
 }

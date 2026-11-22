@@ -60,6 +60,9 @@ export function buildKnowledge(c: PortfolioContent): string {
     if (e.technologies.length) lines.push(`  Tech: ${e.technologies.join(", ")}`);
   }
 
+  lines.push("\n## GitHub activity (section id: github)");
+  lines.push("A pixel bonsai grown from the owner's real GitHub contributions over the last 52 weeks: each branch tip is a week, leaves are commits, blossoms mark weeks with a commit every day. Exact numbers are shown in that section.");
+
   const a = c.about;
   lines.push("\n## About (section id: about)");
   if (a.headline) lines.push(`Headline: ${a.headline}`);
