@@ -14,12 +14,14 @@ function rng(seed) {
 }
 
 const covers = {
-  lantern: { a: "#1d1b3a", b: "#ff9f43", c: "#ffd38a", motif: "rings" },
-  tidepool: { a: "#06283d", b: "#1fb5c9", c: "#c2fff5", motif: "waves" },
-  fieldnote: { a: "#f3ede2", b: "#6b8f71", c: "#2f3e33", motif: "lines" },
-  switchboard: { a: "#111418", b: "#7c5cff", c: "#46e0a8", motif: "grid" },
-  sprout: { a: "#eaf6e4", b: "#3c9a5f", c: "#ff8a65", motif: "leaves" },
-  paperplanes: { a: "#fdf6ec", b: "#e5484d", c: "#1f2a44", motif: "planes" },
+  octova: { a: "#140d1f", b: "#ff6b3d", c: "#ffd166", motif: "lines" },
+  khetkaaj: { a: "#0f2416", b: "#5bbf6a", c: "#e9c46a", motif: "leaves" },
+  breakdsa: { a: "#171923", b: "#315edb", c: "#ef668e", motif: "grid" },
+  versus: { a: "#11152b", b: "#f218bd", c: "#21e6d0", motif: "rings" },
+  igris: { a: "#0b0f1a", b: "#4cc9f0", c: "#c2fff5", motif: "waves" },
+  veloura: { a: "#1b1412", b: "#c8a27a", c: "#f5e6d3", motif: "grid" },
+  nivaran: { a: "#09120d", b: "#39c98a", c: "#f4c94f", motif: "planes" },
+  attendance: { a: "#f3ede2", b: "#3b6ef5", c: "#2f3e33", motif: "lines" },
 };
 
 function cover(name, { a, b, c, motif }, seed) {
@@ -65,7 +67,11 @@ function cover(name, { a, b, c, motif }, seed) {
 let seed = 7;
 for (const [name, spec] of Object.entries(covers)) cover(name, spec, seed++ * 977);
 
-const logos = { brightloop: ["B", "#ff7a59", "#fff4ef"], paperkite: ["P", "#3b6ef5", "#eef3ff"], halcyon: ["H", "#16a37f", "#e9fbf5"] };
+const logos = {
+  krmu: ["K", "#b8322f", "#fdeeee"],
+  prodigy: ["P", "#3b6ef5", "#eef3ff"],
+  hackiiitd: ["H", "#16a37f", "#e9fbf5"],
+};
 for (const [name, [letter, fg, bg]] of Object.entries(logos)) {
   writeFileSync(
     path.join(out, `logo-${name}.svg`),
