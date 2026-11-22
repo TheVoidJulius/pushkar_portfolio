@@ -484,6 +484,8 @@ export class SnowScene {
     this.mobile = opts.mobile;
     this.dark = opts.dark;
     this.renderer = new THREE.WebGLRenderer({ antialias: !opts.mobile, alpha: false, powerPreference: "high-performance" });
+    // Shader error checks force the page to wait on the GPU (seconds on first load); dev only
+    this.renderer.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, opts.mobile ? 1.25 : 1.5));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
