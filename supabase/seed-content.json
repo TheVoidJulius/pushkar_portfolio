@@ -12,7 +12,7 @@
     "description": "I build web products with an AI core: RAG and LLM apps, streaming chat and voice interfaces, and practical tools that solve one clear problem. Right now that means Octova, a Hinglish-first AI captioning tool for Indian creators, alongside a steady run of hackathon builds and Next.js experiments, from the first problem sketch to the deployed product.",
     "location": "New Delhi, India",
     "availability": "Open to internships, freelance builds and hackathon teams",
-    "profile_image_url": "/placeholders/profile.svg",
+    "profile_image_url": "/images/pushkar-hero.webp",
     "cta_primary_label": "See my work",
     "cta_primary_href": "#work",
     "cta_secondary_label": "Get in touch",
@@ -615,7 +615,7 @@
         "description": "TRYST, IIT Delhi and Mediaverse."
       }
     ],
-    "image_url": "/placeholders/about.svg"
+    "image_url": "/images/pushkar-about.webp"
   },
   "contact": {
     "email": "pushkarpanwar0001@gmail.com",
