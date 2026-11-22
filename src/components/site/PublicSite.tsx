@@ -15,6 +15,7 @@ import { ExperienceDial } from "./ExperienceDial";
 import { GitHubActivity } from "./GitHubActivity";
 import { Hero } from "./Hero";
 import { Skills } from "./Skills";
+import { VisitorCats } from "./social/VisitorCats";
 import { SmoothScroll } from "./SmoothScroll";
 import { Work } from "./Work";
 
