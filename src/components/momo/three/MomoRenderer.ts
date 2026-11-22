@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { onOutfitChange, readOutfit, type OutfitId } from "../wardrobe/outfits";
+import { Wardrobe } from "../wardrobe/rig";
 
 /**
  * Mikuro — a procedurally modelled liquid-chrome cat rendered with Three.js.
@@ -227,6 +229,8 @@ export class MomoRenderer {
   private raf = 0;
   private running = false;
   private disposed = false;
+  private wardrobe: Wardrobe | null = null;
+  private unfollowOutfit = () => {};
 
   constructor(opts: RendererOptions = {}) {
     const size = opts.size ?? 512;
@@ -260,6 +264,10 @@ export class MomoRenderer {
     this.setTheme(Boolean(opts.dark));
     this.root.add(this.head);
     this.scene.add(this.root);
+
+    // Mikuro's wardrobe: dressed before the first compile, later changes compile in the background
+    this.dress(readOutfit(), false);
+    this.unfollowOutfit = onOutfitChange((id) => this.setOutfit(id));
 
     // Shaders compile in the background (KHR_parallel_shader_compile); drawing
     // before that would make the page wait on the GPU for up to seconds.
@@ -626,6 +634,18 @@ export class MomoRenderer {
   setVelocity(vx: number, vy: number) {
     this.velocity = [vx, vy];
   }
+  /** Puts on an outfit (see ../wardrobe). Chrome, the default, adds nothing. */
+  setOutfit(id: OutfitId) {
+    this.dress(id, true);
+  }
+  private dress(id: OutfitId, background: boolean) {
+    if (this.disposed || (!this.wardrobe && id === "chrome")) return;
+    this.wardrobe ??= new Wardrobe(this.head, this.chrome);
+    const compile = background ? (o: THREE.Object3D) => this.renderer.compileAsync(o, this.camera, this.scene) : null;
+    this.wardrobe.wear(id, compile, () => {
+      if (this.compiled && !this.running) this.renderer.render(this.scene, this.camera);
+    });
+  }
   poke() {
     if (this.reduced) return;
     this.bob.kick(2.4);
@@ -681,6 +701,8 @@ export class MomoRenderer {
     this.disposed = true;
     clearTimeout(this.idleHandle);
     this.stop();
+    this.unfollowOutfit();
+    this.wardrobe?.dispose();
     this.scene.traverse((o) => {
       const m = o as THREE.Mesh;
       m.geometry?.dispose();
