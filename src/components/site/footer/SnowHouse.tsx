@@ -198,6 +198,9 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
     });
     later(5200, () => {
       scene.setDoor(false);
+      removeEventListener("scroll", onScroll);
+      removeEventListener("resize", onScroll);
+      section.removeEventListener("pointermove", onPointer);
       scene.setSleeping(true);
       setPhase("asleep");
     });
