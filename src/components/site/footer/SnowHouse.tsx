@@ -156,6 +156,8 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
       cancelled = true;
       near.disconnect();
       seen.disconnect();
+          if (weatherNow) scene.setWeather(weatherNow);
+          scene.setScroll(progress());
       ro?.disconnect();
       document.removeEventListener("visibilitychange", onVis);
       scene?.canvas.remove();
