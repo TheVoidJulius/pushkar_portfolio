@@ -228,8 +228,9 @@ export class SnowScene {
 
   constructor(opts: { dark: boolean; reduced: boolean; mobile: boolean }) {
     this.reduced = opts.reduced;
-    this.palette = PALETTES[opts.dark ? "dark" : "light"];
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    this.mobile = opts.mobile;
+    this.dark = opts.dark;
+    this.renderer = new THREE.WebGLRenderer({ antialias: !opts.mobile, alpha: false, powerPreference: "high-performance" });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, opts.mobile ? 1.25 : 1.5));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
