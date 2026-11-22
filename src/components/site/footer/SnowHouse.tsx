@@ -100,6 +100,42 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
 
     const create = () => {
       if (scene || cancelled) return;
+      const a = assembledRef.current;
+      if (a) {
+        const txt = String(Math.round(spots.assembled * 100)).padStart(3, "0");
+        if (a.textContent !== txt) a.textContent = txt;
+      }
+    };
+
+    // Scroll progress through the section drives the camera and the blocks
+    const progress = () => {
+      const r = section.getBoundingClientRect();
+      return Math.min(1, Math.max(0, (innerHeight - r.top) / Math.max(1, Math.min(r.height, innerHeight))));
+    };
+    const onScroll = () => scene?.setScroll(progress());
+    const onPointer = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      const r = host.getBoundingClientRect();
+      scene?.setPointer(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1);
+    };
+
+    // New Delhi, right now (?weather=rain|fog|haze|heat|storm|clear to test)
+    let weatherAsked = false;
+    let weatherNow: Weather | null = null;
+    const askWeather = () => {
+      if (weatherAsked) return;
+      weatherAsked = true;
+      const override = new URLSearchParams(location.search).get("weather");
+      fetch("/api/weather")
+        .then((r) => (r.ok ? (r.json() as Promise<Weather>) : fallbackWeather()))
+        .catch(() => fallbackWeather())
+        .then((w) => {
+          if (cancelled) return;
+          const next = applyOverride(w, override);
+          setWeather(next);
+          weatherNow = next;
+          scene?.setWeather(next);
+        });
       void import("./SnowScene")
         .then(({ SnowScene }) => {
           if (cancelled) return;
