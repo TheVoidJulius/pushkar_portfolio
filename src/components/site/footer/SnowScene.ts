@@ -26,8 +26,7 @@ class Spring {
     public c: number,
   ) {}
   step(target: number, dt: number) {
-    // Sub-steps keep stiff springs stable on slow frames
-    const n = Math.ceil(dt / (1 / 240));
+    const n = Math.max(1, Math.ceil(dt / (1 / 240)));
     const h = dt / n;
     for (let i = 0; i < n; i++) {
       this.v += (-this.k * (this.x - target) - this.c * this.v) * h;
