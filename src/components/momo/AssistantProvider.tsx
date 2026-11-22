@@ -5,6 +5,7 @@ import { pickQuip, type MikuroAct, type MikuroEvent, type MikuroState, type Quip
 import { parseReply, readSignature, SECTIONS, type Mood, type SectionId } from "@/lib/assistant/protocol";
 import { buildLines, chatGreeting, type MomoLineSpec } from "@/lib/assistant/tour";
 import { scrollToSection } from "@/lib/scroll";
+import { useMusic } from "../music/controller";
 import type { AssistantSettings, PortfolioContent } from "@/lib/types";
 import { setLineProgress } from "./lineProgress";
 import type { Expression } from "./three/MomoRenderer";
@@ -90,6 +91,8 @@ type Ctx = {
   setAct: (a: MikuroAct | null) => void;
   quip: Quip | null;
   showQuip: (q: Quip | null, force?: boolean) => boolean;
+  /** Music is playing: Mikuro stays silent and talks in text only. */
+  musicOn: boolean;
   /** True while Mikuro is mid-narration and shouldn't be interrupted. */
   narrating: boolean;
   /** Temporary gaze override, used when Mikuro gets distracted. */
@@ -182,10 +185,12 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
   const lookRef = useRef({ x: 0, y: 0, until: 0 });
   const noticeRef = useRef<((e: MikuroEvent) => void) | null>(null);
   const remoteVoice = useRef(false);
-  const live = useRef({ muted, messages, audioUnlocked, activeLine, touring, lineState, act });
+  // The music player owns the sound while it plays; Mikuro switches to text only
+  const musicOn = useMusic((s) => s.playing);
+  const live = useRef({ muted, messages, audioUnlocked, activeLine, touring, lineState, act, music: musicOn });
   useEffect(() => {
-    live.current = { muted, messages, audioUnlocked, activeLine, touring, lineState, act };
-  }, [muted, messages, audioUnlocked, activeLine, touring, lineState, act]);
+    live.current = { muted, messages, audioUnlocked, activeLine, touring, lineState, act, music: musicOn };
+  }, [muted, messages, audioUnlocked, activeLine, touring, lineState, act, musicOn]);
 
   const setAct = useCallback((a: MikuroAct | null) => {
     live.current.act = a;
@@ -296,8 +301,8 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
       setLine(id, { index, progress: 0, done: false });
       setBaseExpression(MOOD_TO_EXPRESSION[spec.mood]);
 
-      const { muted: m, audioUnlocked: u } = live.current;
-      const withVoice = settings.voice_enabled && !m && u && remoteVoice.current;
+      const { muted: m, audioUnlocked: u, music: musicPlaying } = live.current;
+      const withVoice = settings.voice_enabled && !m && !musicPlaying && u && remoteVoice.current;
       const est = Math.max(1800, wordsOf(text) * (withVoice ? 360 : 300));
       let start = 0;
 
@@ -452,7 +457,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
   // ---------------------------------------------------------------------
   const speak = useCallback(
     (text: string, mood: Mood, signature?: string) => {
-      if (live.current.muted || !settings.voice_enabled) return;
+      if (live.current.muted || live.current.music || !settings.voice_enabled) return;
       void voice.speak(text, mood, signature);
     },
     [voice, settings.voice_enabled],
@@ -473,7 +478,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
       setQuip(q);
       quipTimer.current = setTimeout(() => setQuip(null), ms);
       const clip = clips.current[q.id];
-      if (clip && !live.current.muted && live.current.audioUnlocked) {
+      if (clip && !live.current.muted && !live.current.music && live.current.audioUnlocked) {
         void voice.playClip(clip);
       } else {
         setSilentTalk(true);
@@ -652,9 +657,20 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
     });
   }, [voice]);
 
+  // Music starts: Mikuro stops mid-sentence (the line finishes as text) and,
+  // if it isn't busy, says something about it, silently. When the music
+  // stops, the next thing Mikuro says is voiced again.
+  useEffect(() => {
+    if (!musicOn) return;
+    live.current.music = true;
+    voice.stop();
+    if (!narr.current.id && !live.current.messages.length) showQuip(pickQuip("musicStart"));
+  }, [musicOn, voice, showQuip]);
+
   const stopSpeaking = useCallback(() => voice.stop(), [voice]);
   const replay = useCallback(
     (m: ChatMessage) => {
+      if (live.current.music) return; // the music has the floor
       voice.unlock();
       void voice.speak(m.content, m.mood ?? "happy", m.signature);
     },
@@ -715,7 +731,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
     intro,
     introPlaying,
     skipIntro,
-    needsSound: settings.voice_enabled && voiceAvailable && (!audioUnlocked || muted),
+    needsSound: settings.voice_enabled && voiceAvailable && !musicOn && (!audioUnlocked || muted),
     enableSound,
     touring,
     startTour,
@@ -726,6 +742,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
     setAct,
     quip,
     showQuip,
+    musicOn,
     narrating,
     lookRef,
     notice,
