@@ -83,21 +83,21 @@ Anywhere you see an image box:
 
 Tips: use a portrait-shaped photo for the hero and About sections, and a landscape image (about 16:10) for project covers.
 
-## 6. Momo, your AI assistant
+## 6. Mikuro, your AI assistant
 
-Momo is a small, shiny 3D puffball cat. She greets visitors, talks about each section as they scroll, and answers questions using **only what's published on your site**. When you add a project, Momo knows about it straight away. If someone asks something your site doesn't cover, Momo says she doesn't know rather than making something up.
+Mikuro is a small, shiny 3D puffball cat. She greets visitors, talks about each section as they scroll, and answers questions using **only what's published on your site**. When you add a project, Mikuro knows about it straight away. If someone asks something your site doesn't cover, Mikuro says she doesn't know rather than making something up.
 
 On the **AI Assistant** page you can change:
 - **Name**, if you'd like to rename her.
 - **Greeting**: the first message visitors see and hear.
 - **Personality instructions**: how she talks (cheerful, formal, short answers…). Don't put facts about yourself here; they come from your sections automatically.
 - **Suggested questions**: up to 6 quick buttons shown when the chat opens.
-- **Narrate the page**: Momo introduces herself when your site opens, then talks about each section as visitors scroll. Her lines are written automatically from your content, so they stay up to date. Visitors can tap **Skip intro**, or choose **Play the tour** from the menu to have her walk them through everything.
+- **Narrate the page**: Mikuro introduces herself when your site opens, then talks about each section as visitors scroll. Her lines are written automatically from your content, so they stay up to date. Visitors can tap **Skip intro**, or choose **Play the tour** from the menu to have her walk them through everything.
 - **Greet visitors**: turns the welcome bubble on or off.
 - **Speak replies out loud**: turns her voice on or off. Visitors can always mute her too.
-- **Voice**: if your developer has connected ElevenLabs, click *Load my ElevenLabs voices*, choose one, adjust *Expressiveness* and *Speed*, save, then click **Hear Momo**. Without ElevenLabs, your visitors' browser voice is used. Leave *Accent* on **Japanese accent** for a Japanese-accented English voice (sounds best in Microsoft Edge), and adjust *Pitch* and *Speed* to taste.
+- **Voice**: if your developer has connected ElevenLabs, click *Load my ElevenLabs voices*, choose one, adjust *Expressiveness* and *Speed*, save, then click **Hear Mikuro**. Without ElevenLabs, your visitors' browser voice is used. Leave *Accent* on **Japanese accent** for a Japanese-accented English voice (sounds best in Microsoft Edge), and adjust *Pitch* and *Speed* to taste.
 
-To hide Momo completely, go to **Settings** and turn off *Show Momo on the site*.
+To hide Mikuro completely, go to **Settings** and turn off *Show Mikuro on the site*.
 
 ## 7. Settings
 
@@ -117,7 +117,7 @@ Visitors can switch themes with the ☀/🌙 button, and the site remembers thei
 | "Some values aren't valid" | A field is too long or a link is missing `https://`. Check the fields marked in red. |
 | An image won't upload | Check it's under 5 MB and is a PNG, JPG, WebP, GIF, AVIF or SVG. |
 | A change doesn't show on the site | Make sure you clicked **Save** (the bar should say "All changes saved") and that the project is **Published**. Then refresh the site. |
-| Momo's voice sounds robotic | That's the free browser voice. Ask your developer to connect ElevenLabs. |
+| Mikuro's voice sounds robotic | That's the free browser voice. Ask your developer to connect ElevenLabs. |
 
 ## 10. Accounts that belong to you
 
@@ -127,7 +127,7 @@ Your website runs on a few services, all in **your** name:
 - **Supabase**: stores your content, images and login.
 - **GitHub**: keeps the website's code.
 - **Your domain registrar**: your web address, if you use a custom one.
-- *(Optional)* **Anthropic**: Momo's smart conversation (paid per use).
-- *(Optional)* **ElevenLabs**: Momo's anime-style voice (paid plan).
+- *(Optional)* **Anthropic**: Mikuro's smart conversation (paid per use).
+- *(Optional)* **ElevenLabs**: Mikuro's anime-style voice (paid plan).
 
 Keep these logins safe. Nobody else needs them for you to update your site day to day.
