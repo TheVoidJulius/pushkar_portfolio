@@ -6,6 +6,7 @@ import { SCENE_LINES } from "@/lib/assistant/scenes";
 import { scrollToSection, scrollToY } from "@/lib/scroll";
 import { useAssistant, type StageDirection } from "../../momo/AssistantProvider";
 import { useTheme } from "../ThemeToggle";
+import { ChangingRoom } from "./ChangingRoom";
 import { playKnock } from "./knock";
 import { SnowGuestbook } from "./SnowGuestbook";
 import type { SceneSpots, SnowScene } from "./SnowScene";
@@ -376,6 +377,8 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
             <span aria-hidden>{a.muted ? "◁×" : "◁)"}</span> Sound: {a.muted ? "Off" : "On"}
           </button>
         </div>
+
+        <ChangingRoom name={mikuro} dim={dim} />
 
         {/* Where Mikuro walks to: positioned every frame from the 3D scene */}
         <div className="pointer-events-none absolute inset-0" aria-hidden>

@@ -19,3 +19,11 @@ export const FESTIVE_LINES = {
   newyear: { mood: "excited", text: "Happy New Year! Look up, there are fireworks over the igloo." },
   december: { mood: "happy", text: "It is December, so the snow is thicker and the igloo has fairy lights. Cosy." },
 } as const;
+
+/** What Mikuro says when she changes outfit in her wardrobe (see momo/wardrobe). */
+export const WARDROBE_LINES = {
+  chrome: { mood: "happy", text: "Back to classic chrome. Shiny, liquid, and very me." },
+  winter: { mood: "excited", text: "Beanie on, scarf on. Now I can stay out in the snow all night." },
+  hacker: { mood: "playful", text: "Hood up. I'm in. Don't ask what I'm hacking, it's just my cat flap." },
+  royal: { mood: "playful", text: "Solid gold and a bow tie. You may now address me as Your Majesty." },
+} as const;
