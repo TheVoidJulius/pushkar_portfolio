@@ -35,6 +35,8 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
   const [shout, setShout] = useState<string | null>(null);
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
   const visits = useRef(0);
+  const [weather, setWeather] = useState<Weather | null>(null);
+  const assembledRef = useRef<HTMLSpanElement>(null);
   const inView = useRef(false);
   const live = useRef(a);
   useEffect(() => {
