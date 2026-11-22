@@ -111,7 +111,15 @@ export function GitHubActivity({ showAssistant }: { showAssistant: boolean }) {
 
         <FadeUp className="flex justify-center md:justify-end">
           {data ? (
-            <CommitBonsai contributions={data.contributions} seed={data.user} weeks={52} label={`${data.user}'s bonsai`} />
+            <CommitBonsai
+              contributions={data.contributions}
+              seed={data.user}
+              weeks={52}
+              label={`${data.user}'s bonsai`}
+              waterings={bonsai.items}
+              freshId={bonsai.fresh}
+              pourKey={pour}
+            />
           ) : (
             <div
               className="grid aspect-[560/640] w-full max-w-[560px] place-items-center rounded-[22px] border border-line bg-bg-elevated p-6 text-center text-ink-3 shadow-soft"
