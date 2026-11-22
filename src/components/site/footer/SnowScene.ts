@@ -970,7 +970,7 @@ export class SnowScene {
     this.eyes.visible = this.eyesAmt > 0.01;
     for (const c of this.eyes.children) ((c as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = this.eyesAmt;
 
-    // paw prints: revealed one by one, then slowly snowed over
+    // --- paw prints appear one by one, then slowly snow over
     this.pawAmt = r ? this.pawTarget : damp(this.pawAmt, this.pawTarget, 1.2, dt);
     if (this.pawAmt > 0.98) this.pawFade = Math.max(0.3, this.pawFade - dt * 0.02);
     const n = this.paws.length;
