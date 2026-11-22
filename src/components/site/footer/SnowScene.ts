@@ -211,9 +211,9 @@ export class SnowScene {
   };
   private hemi: THREE.HemisphereLight;
   private key: THREE.DirectionalLight;
-  private porchLight: THREE.PointLight;
-  private snowMat: THREE.ShaderMaterial;
-  private moon: THREE.Sprite;
+  private warmLight: THREE.PointLight;
+  private sky: THREE.Mesh;
+  private skyMat: THREE.ShaderMaterial;
   private stars: THREE.Points;
   private snowMat: THREE.MeshStandardMaterial;
   private mountainMat: THREE.MeshStandardMaterial;
