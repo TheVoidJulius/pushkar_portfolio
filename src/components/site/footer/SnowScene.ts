@@ -21,30 +21,30 @@ import { HOT_TEMP, type Weather } from "./weather";
 export type ScreenSpot = { x: number; y: number; s: number };
 export type SceneSpots = Record<"path" | "door" | "inside" | "out", ScreenSpot> & {
   doorRect: { x: number; y: number; w: number; h: number };
+  /** 0 = blocks floating apart, 1 = igloo fully assembled */
+  assembled: number;
 };
+
+type Mode = "day" | "dusk" | "night";
 
 const damp = (cur: number, target: number, lambda: number, dt: number) => cur + (target - cur) * (1 - Math.exp(-lambda * dt));
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
-
-class Spring {
-  x = 0;
-  v = 0;
-  /** 0 = blocks floating apart, 1 = igloo fully assembled */
-  assembled: number;
-  constructor(
-    public k: number,
-    public c: number,
-  ) {}
-type Mode = "day" | "dusk" | "night";
-
-  step(target: number, dt: number) {
-    const n = Math.max(1, Math.ceil(dt / (1 / 240)));
-    const h = dt / n;
-    for (let i = 0; i < n; i++) {
 const smooth = (a: number, b: number, v: number) => {
   const t = clamp((v - a) / (b - a), 0, 1);
   return t * t * (3 - 2 * t);
 };
+
+class Spring {
+  x = 0;
+  v = 0;
+  constructor(
+    public k: number,
+    public c: number,
+  ) {}
+  step(target: number, dt: number) {
+    const n = Math.max(1, Math.ceil(dt / (1 / 240)));
+    const h = dt / n;
+    for (let i = 0; i < n; i++) {
       this.v += (-this.k * (this.x - target) - this.c * this.v) * h;
       this.x += this.v * h;
     }
@@ -102,7 +102,9 @@ type Look = {
   skyTop: string;
   horizon: string;
   fog: string;
+  fogDensity: number;
   snow: string;
+  snowRough: number;
   hemiSky: string;
   hemiGround: string;
   hemi: number;
@@ -165,10 +167,8 @@ const LOOKS: Record<Mode, Look> = {
     paw: "#7c8596",
     pawOpacity: 0.3,
     ink: "#1f242c",
-  fogDensity: number;
     neon: 0.4,
   },
-  snowRough: number;
   // Light theme after sunset in Delhi: blue hour, peach horizon
   dusk: {
     skyTop: "#4f6396",
@@ -198,6 +198,41 @@ const LOOKS: Record<Mode, Look> = {
     sunHalo: 0.45,
     mountain: "#a9a3bd",
     flake: "#ffffff",
+    flakeOpacity: 0.85,
+    paw: "#6e6a8c",
+    pawOpacity: 0.45,
+    ink: "#ffffff",
+    neon: 0.8,
+  },
+  // Dark theme: deep blue-grey night, moonlight, a warm glow inside
+  night: {
+    skyTop: "#04070f",
+    horizon: "#1a2340",
+    fog: "#141b31",
+    fogDensity: 0.013,
+    snow: "#aab6d4",
+    snowRough: 0.85,
+    hemiSky: "#5a6ea8",
+    hemiGround: "#0d1120",
+    hemi: 1.0,
+    key: "#a7b9ff",
+    keyI: 1.5,
+    keyDir: [6, 8, 3],
+    ice: "#b9c5e3",
+    rim: "#8ea8ff",
+    rimAmt: 0.32,
+    seam: "#ff8c3c",
+    seamAwake: 1.25,
+    seamAsleep: 0.8,
+    warm: 1.15,
+    mist: 0.5,
+    stars: 1,
+    sun: "#e6ecff",
+    sunDir: [0.5, 0.42, -0.76],
+    sunDisc: 1,
+    sunHalo: 0.22,
+    mountain: "#4a557a",
+    flake: "#eef2ff",
     flakeOpacity: 0.9,
     paw: "#27305a",
     pawOpacity: 0.55,
@@ -215,8 +250,13 @@ const LABELS = ["73", "38", "91", "57", "25", "64", "12"];
 // ---------------------------------------------------------------------
 const FLAKE_VERT = /* glsl */ `
 uniform float uTime;
+uniform float uWind;
+uniform float uFall;
+uniform float uSize;
+uniform float uDensity;
 uniform float uGust;
 uniform vec3 uGustOrigin;
+uniform vec3 uBox;
 uniform float uPixel;
 attribute vec3 aRand;
 varying float vAlpha;
@@ -239,6 +279,8 @@ void main() {
 const FLAKE_FRAG = /* glsl */ `
 uniform vec3 uColor;
 uniform float uOpacity;
+uniform float uSlant;
+uniform float uStreak;
 varying float vAlpha;
 void main() {
   vec2 c = gl_PointCoord - 0.5;
@@ -252,6 +294,36 @@ void main() {
   a *= vAlpha * uOpacity;
   if (a < 0.01) discard;
   gl_FragColor = vec4(uColor, a);
+  #include <colorspace_fragment>
+}`;
+
+const SKY_VERT = /* glsl */ `
+varying vec3 vDir;
+void main() {
+  vDir = normalize(position);
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mv;
+  gl_Position.z = gl_Position.w;
+}`;
+
+const SKY_FRAG = /* glsl */ `
+uniform vec3 uTop;
+uniform vec3 uHorizon;
+uniform vec3 uSun;
+uniform vec3 uSunDir;
+uniform float uDisc;
+uniform float uHalo;
+uniform float uFlash;
+varying vec3 vDir;
+void main() {
+  vec3 dir = normalize(vDir);
+  float h = dir.y;
+  vec3 c = mix(uHorizon, uTop, pow(smoothstep(-0.03, 0.75, h), 0.75));
+  float d = max(dot(dir, normalize(uSunDir)), 0.0);
+  c += uSun * (smoothstep(0.9993, 0.9996, d) * uDisc + pow(d, 28.0) * uHalo + pow(d, 4.0) * uHalo * 0.25);
+  c += vec3(0.75, 0.8, 1.0) * uFlash * (0.6 + 0.4 * smoothstep(0.0, 0.5, h));
+  gl_FragColor = vec4(c, 1.0);
+  #include <colorspace_fragment>
 }`;
 
 /** Gradient alpha for the mist bands and the warm light pool. */
@@ -300,6 +372,10 @@ export class SnowScene {
   private camera = new THREE.PerspectiveCamera(32, 1, 0.1, 400);
   private mobile: boolean;
   private reduced: boolean;
+  private dark: boolean;
+  private weather: Weather | null = null;
+  private mode: Mode = "day";
+  private look: Look = LOOKS.day;
   private w = 1;
   private h = 1;
   private raf = 0;
@@ -307,41 +383,17 @@ export class SnowScene {
   private disposed = false;
   private last = 0;
   private t = 0;
-    flakeOpacity: 0.85,
-    paw: "#6e6a8c",
-    pawOpacity: 0.45,
-    ink: "#ffffff",
-    neon: 0.8,
-  },
-  // Dark theme: deep blue-grey night, moonlight, a warm glow inside
-  night: {
-    skyTop: "#04070f",
-    horizon: "#1a2340",
-    fog: "#141b31",
-    fogDensity: 0.013,
-    snow: "#aab6d4",
-    snowRough: 0.85,
-    hemiSky: "#5a6ea8",
-    hemiGround: "#0d1120",
-    hemi: 1.0,
-    key: "#a7b9ff",
-    keyI: 1.5,
-    keyDir: [6, 8, 3],
-    ice: "#b9c5e3",
-    rim: "#8ea8ff",
-    rimAmt: 0.32,
-    seam: "#ff8c3c",
-    seamAwake: 1.25,
-    seamAsleep: 0.8,
-    warm: 1.15,
-    mist: 0.5,
-    stars: 1,
-    sun: "#e6ecff",
-    sunDir: [0.5, 0.42, -0.76],
-    sunDisc: 1,
-    sunHalo: 0.22,
-    mountain: "#4a557a",
-    flake: "#eef2ff",
+  private noise = makeNoise(7);
+  private noise2 = makeNoise(31);
+
+  // igloo geometry
+  private readonly R = 2.3;
+  private readonly H = 2.45;
+  private readonly doorYaw = 0.42;
+  private readonly mouthDist = 3.75;
+  private D = new THREE.Vector3();
+  private L = new THREE.Vector3();
+  private mouth = new THREE.Vector3();
 
   // story state
   private doorOpen = false;
@@ -375,17 +427,12 @@ export class SnowScene {
   private warmLight: THREE.PointLight;
   private sky: THREE.Mesh;
   private skyMat: THREE.ShaderMaterial;
-uniform float uWind;
-uniform float uFall;
-uniform float uSize;
-uniform float uDensity;
   private stars: THREE.Points;
   private snowMat: THREE.MeshStandardMaterial;
   private mountainMat: THREE.MeshStandardMaterial;
   private iceMat: THREE.MeshStandardMaterial;
   private iceUniforms = {
     uRim: { value: new THREE.Color() },
-uniform vec3 uBox;
     uSeam: { value: new THREE.Color() },
     uHalf: { value: new THREE.Vector3(0.3, 0.2, 0.17) },
     uWet: { value: 0 },
@@ -407,8 +454,6 @@ uniform vec3 uBox;
   private pool!: THREE.Mesh;
   private poolMat!: THREE.MeshBasicMaterial;
   private mouthGlow!: THREE.Sprite;
-uniform float uSlant;
-uniform float uStreak;
   private neonMat!: THREE.MeshBasicMaterial;
   private neonGlow!: THREE.Sprite;
   private flakes: THREE.ShaderMaterial;
@@ -426,41 +471,15 @@ uniform float uStreak;
   private q = new THREE.Quaternion();
   private q2 = new THREE.Quaternion();
   private v = new THREE.Vector3();
+  private v2 = new THREE.Vector3();
+  private s3 = new THREE.Vector3();
+  private target = new THREE.Vector3(0.5, 1.15, 0.7);
+  private lastLiftApplied = -1;
 
   /** Called after each rendered frame with fresh screen positions. */
   onFrame: ((spots: SceneSpots) => void) | null = null;
 
   constructor(opts: { dark: boolean; reduced: boolean; mobile: boolean }) {
-  #include <colorspace_fragment>
-}`;
-
-const SKY_VERT = /* glsl */ `
-varying vec3 vDir;
-void main() {
-  vDir = normalize(position);
-  vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  gl_Position = projectionMatrix * mv;
-  gl_Position.z = gl_Position.w;
-}`;
-
-const SKY_FRAG = /* glsl */ `
-uniform vec3 uTop;
-uniform vec3 uHorizon;
-uniform vec3 uSun;
-uniform vec3 uSunDir;
-uniform float uDisc;
-uniform float uHalo;
-uniform float uFlash;
-varying vec3 vDir;
-void main() {
-  vec3 dir = normalize(vDir);
-  float h = dir.y;
-  vec3 c = mix(uHorizon, uTop, pow(smoothstep(-0.03, 0.75, h), 0.75));
-  float d = max(dot(dir, normalize(uSunDir)), 0.0);
-  c += uSun * (smoothstep(0.9993, 0.9996, d) * uDisc + pow(d, 28.0) * uHalo + pow(d, 4.0) * uHalo * 0.25);
-  c += vec3(0.75, 0.8, 1.0) * uFlash * (0.6 + 0.4 * smoothstep(0.0, 0.5, h));
-  gl_FragColor = vec4(c, 1.0);
-  #include <colorspace_fragment>
     this.reduced = opts.reduced;
     this.mobile = opts.mobile;
     this.dark = opts.dark;
@@ -574,10 +593,6 @@ float sNoise(vec2 p) {
         .replace(
           "#include <emissivemap_fragment>",
           `#include <emissivemap_fragment>
-  private dark: boolean;
-  private weather: Weather | null = null;
-  private mode: Mode = "day";
-  private look: Look = LOOKS.day;
 {
   // the odd glint of ice crystals
   vec2 cell = floor(vWPos.xz * 22.0);
@@ -587,19 +602,10 @@ float sNoise(vec2 p) {
 }`,
         );
     };
+    return mat;
+  }
 
   private makeIceMaterial() {
-  private noise = makeNoise(7);
-  private noise2 = makeNoise(31);
-
-  // igloo geometry
-  private readonly R = 2.3;
-  private readonly H = 2.45;
-  private readonly doorYaw = 0.42;
-  private readonly mouthDist = 3.75;
-  private D = new THREE.Vector3();
-  private L = new THREE.Vector3();
-  private mouth = new THREE.Vector3();
     const mat = new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.55, metalness: 0 });
     const u = this.iceUniforms;
     mat.onBeforeCompile = (sh) => {
@@ -659,7 +665,17 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
       fragmentShader: SKY_FRAG,
       side: THREE.BackSide,
       depthWrite: false,
+      fog: false,
       toneMapped: false,
+      uniforms: {
+        uTop: { value: new THREE.Color() },
+        uHorizon: { value: new THREE.Color() },
+        uSun: { value: new THREE.Color() },
+        uSunDir: { value: new THREE.Vector3(0, 0.3, -1) },
+        uDisc: { value: 0 },
+        uHalo: { value: 0 },
+        uFlash: { value: 0 },
+      },
     });
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(300, 32, 16), mat);
     mesh.renderOrder = -10;
@@ -720,10 +736,6 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
     const bank = Math.exp(-(((r - this.R - 0.15) / 0.55) ** 2)) * 0.22 * smooth(0.45, 0.8, off);
     return h + bank - 0.02;
   }
-  private v2 = new THREE.Vector3();
-  private s3 = new THREE.Vector3();
-  private target = new THREE.Vector3(0.5, 1.15, 0.7);
-  private lastLiftApplied = -1;
 
   private buildTerrain() {
     const W = 150;
@@ -768,6 +780,7 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
       mesh.position.set(0, -2, b.z);
       this.scene.add(mesh);
     }
+  }
 
   private buildMist() {
     const tex = canvasTexture(4, 128, (g) => {
@@ -937,14 +950,34 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
           depth: (BD / 2) * b.scale.z,
         });
       }
+    });
+    mesh.computeBoundingSphere();
+    this.blocks = mesh;
+    this.scene.add(mesh);
+
+    // the warm inside, seen through the joints between blocks
+    const shell = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 18, 0, Math.PI * 2, 0, Math.PI / 2), this.glowMat);
+    shell.scale.set(R - BD - 0.02, H - BD - 0.02, R - BD - 0.02);
+    this.scene.add(shell);
+    const tunnel = new THREE.Mesh(new THREE.CylinderGeometry(rMid - BD / 2 - 0.02, rMid - BD / 2 - 0.02, segLen * segs + 0.6, 20, 1, true, -Math.PI / 2, Math.PI), this.tunnelGlowMat);
+    tunnel.rotation.set(Math.PI / 2, 0, 0);
+    const holder = new THREE.Group();
+    holder.add(tunnel);
+    holder.position.copy(D).multiplyScalar(this.mouthDist - (segLen * segs) / 2 - 0.2).setY(yc);
+    holder.rotation.y = this.doorYaw;
+    // the tunnel's lower walls
+    const walls = new THREE.Mesh(new THREE.PlaneGeometry(segLen * segs + 0.6, yc), this.tunnelGlowMat);
+    for (const side of [-1, 1]) {
+      const w = walls.clone();
+      w.rotation.y = Math.PI / 2;
+      w.position.set(side * (rMid - BD / 2 - 0.02), -yc / 2, 0);
+      holder.add(w);
     }
     const floor = new THREE.Mesh(new THREE.PlaneGeometry((rMid - BD / 2) * 2, segLen * segs + 0.6), this.tunnelGlowMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = -yc + 0.02;
     holder.add(floor);
     this.scene.add(holder);
-    return mat;
-  }
   }
 
   /** The ice-slab door in the tunnel mouth, hinged on one side. */
@@ -1020,18 +1053,8 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
       new THREE.PointsMaterial({ color: "#ffffff", size: 4.5, sizeAttenuation: false, transparent: true, depthTest: false, depthWrite: false, toneMapped: false, fog: false }),
     );
     this.labelDots.renderOrder = 19;
-      fog: false,
     this.labelDots.frustumCulled = false;
     this.scene.add(this.labelLines, this.labelDots);
-      uniforms: {
-        uTop: { value: new THREE.Color() },
-        uHorizon: { value: new THREE.Color() },
-        uSun: { value: new THREE.Color() },
-        uSunDir: { value: new THREE.Vector3(0, 0.3, -1) },
-        uDisc: { value: 0 },
-        uHalo: { value: 0 },
-        uFlash: { value: 0 },
-      },
   }
 
   /** Warm light pooling on the snow outside the entrance. */
@@ -1064,7 +1087,6 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
       const p = curve.getPoint(t);
       const tan = curve.getTangent(t);
       const side = i % 2 ? 1 : -1;
-  }
       const mat = new THREE.MeshBasicMaterial({ color: "#7c8596", transparent: true, opacity: 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
       const g = new THREE.Group();
       const padM = new THREE.Mesh(pad, mat);
@@ -1087,6 +1109,45 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
       this.scene.add(g);
       this.paws.push({ mesh: g, mat });
     }
+  }
+  private pathCurve!: THREE.QuadraticBezierCurve3;
+
+  /** Melting (hot days): drips running down the dome and a puddle. */
+  private buildMelt() {
+    const n = this.mobile ? 18 : 36;
+    const rnd = mulberry(23);
+    const mat = new THREE.MeshStandardMaterial({ color: "#d9efff", roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.85 });
+    this.dripMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(0.04, 8, 6), mat, n);
+    this.dripMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.dripMesh.visible = false;
+    this.dripMesh.frustumCulled = false;
+    for (let i = 0; i < n; i++) {
+      let phi = rnd() * Math.PI * 2;
+      if (Math.abs(Math.atan2(Math.sin(phi - this.doorYaw), Math.cos(phi - this.doorYaw))) < 0.5) phi += 1;
+      this.drips.push({ phi, theta: 0.6 + rnd() * 0.7, speed: 0, drop: 0, y: 0, wait: rnd() * 4 });
+    }
+    this.scene.add(this.dripMesh);
+    const soft = canvasTexture(
+      64,
+      64,
+      (g) => {
+        const r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+        r.addColorStop(0, "#fff");
+        r.addColorStop(0.72, "#ddd");
+        r.addColorStop(1, "#000");
+        g.fillStyle = r;
+        g.fillRect(0, 0, 64, 64);
+      },
+      false,
+    );
+    this.puddleMat = new THREE.MeshStandardMaterial({ color: "#5d6a7c", roughness: 0.04, metalness: 0.35, transparent: true, opacity: 0.6, alphaMap: soft, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 });
+    this.puddle = new THREE.Mesh(new THREE.CircleGeometry(1, 48), this.puddleMat);
+    this.puddle.rotation.x = -Math.PI / 2;
+    this.puddle.scale.set(this.R + 1.1, this.R + 1.6, 1);
+    this.puddle.position.set(0.25, 0.03, 0.35);
+    this.puddle.visible = false;
+    this.puddle.receiveShadow = true;
+    this.scene.add(this.puddle);
   }
 
   /** A tiny neon "MIKURO" on a stake by the entrance. */
@@ -1166,6 +1227,10 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
       depthWrite: false,
       uniforms: {
         uTime: { value: 0 },
+        uWind: { value: 0 },
+        uFall: { value: o.fall },
+        uSize: { value: o.size },
+        uDensity: { value: 1 },
         uGust: { value: 0 },
         uGustOrigin: { value: this.mouth.clone().setY(0.6) },
         uBox: { value: new THREE.Vector3(o.x, o.y, 0) },
@@ -1178,6 +1243,7 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
     });
     const pts = new THREE.Points(geo, mat);
     pts.frustumCulled = false;
+    pts.renderOrder = 5;
     this.scene.add(pts);
     return mat;
   }
@@ -1338,28 +1404,6 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
         if (this.disposed) return;
       }
       job.geo.computeVertexNormals();
-    });
-    mesh.computeBoundingSphere();
-    this.blocks = mesh;
-    this.scene.add(mesh);
-
-    // the warm inside, seen through the joints between blocks
-    const shell = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 18, 0, Math.PI * 2, 0, Math.PI / 2), this.glowMat);
-    shell.scale.set(R - BD - 0.02, H - BD - 0.02, R - BD - 0.02);
-    this.scene.add(shell);
-    const tunnel = new THREE.Mesh(new THREE.CylinderGeometry(rMid - BD / 2 - 0.02, rMid - BD / 2 - 0.02, segLen * segs + 0.6, 20, 1, true, -Math.PI / 2, Math.PI), this.tunnelGlowMat);
-    tunnel.rotation.set(Math.PI / 2, 0, 0);
-    const holder = new THREE.Group();
-    holder.add(tunnel);
-    holder.position.copy(D).multiplyScalar(this.mouthDist - (segLen * segs) / 2 - 0.2).setY(yc);
-    holder.rotation.y = this.doorYaw;
-    // the tunnel's lower walls
-    const walls = new THREE.Mesh(new THREE.PlaneGeometry(segLen * segs + 0.6, yc), this.tunnelGlowMat);
-    for (const side of [-1, 1]) {
-      const w = walls.clone();
-      w.rotation.y = Math.PI / 2;
-      w.position.set(side * (rMid - BD / 2 - 0.02), -yc / 2, 0);
-      holder.add(w);
       job.geo.computeBoundingSphere();
       await nextTask();
     }
@@ -1378,6 +1422,8 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
         else this.renderOnce();
       });
   }
+  private warmed = false;
+  private pendingStart = false;
 
   setTheme(dark: boolean) {
     this.dark = dark;
@@ -1420,6 +1466,8 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
     this.door.v = -18;
     this.camShake = 1;
     this.gust = 1;
+    this.burstClock = 0;
+    this.lift.v += 9;
   }
 
   setSleeping(on: boolean) {
@@ -1451,6 +1499,11 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
 
   start() {
     if (this.running || this.disposed) return;
+    // Rendering before the shaders are compiled would block the main thread
+    if (!this.warmed) {
+      this.pendingStart = true;
+      return;
+    }
     this.running = true;
     this.last = performance.now();
     const loop = (now: number) => {
@@ -1466,6 +1519,7 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
   }
 
   stop() {
+    this.pendingStart = false;
     this.running = false;
     cancelAnimationFrame(this.raf);
   }
@@ -1489,6 +1543,7 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
         mat.dispose();
       }
     });
+    this.radial.dispose();
     this.renderer.dispose();
     this.renderer.forceContextLoss();
   }
@@ -1606,45 +1661,6 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
     }
 
     // --- eyes in the tunnel
-  private pathCurve!: THREE.QuadraticBezierCurve3;
-
-  /** Melting (hot days): drips running down the dome and a puddle. */
-  private buildMelt() {
-    const n = this.mobile ? 18 : 36;
-    const rnd = mulberry(23);
-    const mat = new THREE.MeshStandardMaterial({ color: "#d9efff", roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.85 });
-    this.dripMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(0.04, 8, 6), mat, n);
-    this.dripMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    this.dripMesh.visible = false;
-    this.dripMesh.frustumCulled = false;
-    for (let i = 0; i < n; i++) {
-      let phi = rnd() * Math.PI * 2;
-      if (Math.abs(Math.atan2(Math.sin(phi - this.doorYaw), Math.cos(phi - this.doorYaw))) < 0.5) phi += 1;
-      this.drips.push({ phi, theta: 0.6 + rnd() * 0.7, speed: 0, drop: 0, y: 0, wait: rnd() * 4 });
-    }
-    this.scene.add(this.dripMesh);
-    const soft = canvasTexture(
-      64,
-      64,
-      (g) => {
-        const r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-        r.addColorStop(0, "#fff");
-        r.addColorStop(0.72, "#ddd");
-        r.addColorStop(1, "#000");
-        g.fillStyle = r;
-        g.fillRect(0, 0, 64, 64);
-      },
-      false,
-    );
-    this.puddleMat = new THREE.MeshStandardMaterial({ color: "#5d6a7c", roughness: 0.04, metalness: 0.35, transparent: true, opacity: 0.6, alphaMap: soft, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 });
-    this.puddle = new THREE.Mesh(new THREE.CircleGeometry(1, 48), this.puddleMat);
-    this.puddle.rotation.x = -Math.PI / 2;
-    this.puddle.scale.set(this.R + 1.1, this.R + 1.6, 1);
-    this.puddle.position.set(0.25, 0.03, 0.35);
-    this.puddle.visible = false;
-    this.puddle.receiveShadow = true;
-    this.scene.add(this.puddle);
-  }
     this.eyesAmt = damp(this.eyesAmt, this.eyesOn ? 1 : 0, 6, dt || 1);
     this.eyes.visible = this.eyesAmt > 0.01;
     for (const c of this.eyes.children) ((c as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = this.eyesAmt;
@@ -1694,6 +1710,12 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
       dots.setXYZ(i, this.v2.x, this.v2.y, this.v2.z);
       this.labels[i].position.copy(this.v2);
     });
+    dots.needsUpdate = true;
+    const lines = this.labelLines.geometry.attributes.position as THREE.BufferAttribute;
+    const pairs = this.labelLines.geometry.userData.pairs as number[];
+    pairs.forEach((idx, j) => lines.setXYZ(j, dots.getX(idx), dots.getY(idx), dots.getZ(idx)));
+    lines.needsUpdate = true;
+  }
 
   private setLabelOpacity(o: number) {
     const vis = o > 0.01;
@@ -1745,6 +1767,10 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
     return { x: (p.x * 0.5 + 0.5) * this.w, y: (-p.y * 0.5 + 0.5) * this.h, s: px };
   }
 
+  private at(along: number, y: number, side = 0) {
+    return this.v2.copy(this.mouth).addScaledVector(this.D, along).addScaledVector(this.L, side).setY(y).clone();
+  }
+
   private report() {
     if (!this.onFrame) return;
     // the doorway's bounding box on screen
@@ -1776,29 +1802,3 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
     });
   }
 }
-  private at(along: number, y: number, side = 0) {
-    return this.v2.copy(this.mouth).addScaledVector(this.D, along).addScaledVector(this.L, side).setY(y).clone();
-  }
-
-    dots.needsUpdate = true;
-    const lines = this.labelLines.geometry.attributes.position as THREE.BufferAttribute;
-    const pairs = this.labelLines.geometry.userData.pairs as number[];
-    pairs.forEach((idx, j) => lines.setXYZ(j, dots.getX(idx), dots.getY(idx), dots.getZ(idx)));
-    lines.needsUpdate = true;
-  }
-    this.radial.dispose();
-    this.pendingStart = false;
-    // Rendering before the shaders are compiled would block the main thread
-    if (!this.warmed) {
-      this.pendingStart = true;
-      return;
-    }
-    this.burstClock = 0;
-    this.lift.v += 9;
-  private warmed = false;
-  private pendingStart = false;
-    pts.renderOrder = 5;
-        uWind: { value: 0 },
-        uFall: { value: o.fall },
-        uSize: { value: o.size },
-        uDensity: { value: 1 },
