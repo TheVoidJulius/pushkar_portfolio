@@ -217,10 +217,16 @@ export class SnowScene {
   private stars: THREE.Points;
   private glows: { sprite: THREE.Sprite; base: number; flicker?: boolean }[] = [];
   private zzz: { sprite: THREE.Sprite; phase: number }[] = [];
-  private smoke: { sprite: THREE.Sprite; phase: number }[] = [];
-  private bulbs: { mat: THREE.MeshBasicMaterial; phase: number }[] = [];
-  private paws: Paw[] = [];
-  private eyes: THREE.Group;
+  private steam: { sprite: THREE.Sprite; phase: number }[] = [];
+  private paws: { mesh: THREE.Group; mat: THREE.MeshBasicMaterial }[] = [];
+  private drips: Drip[] = [];
+  private dripMesh!: THREE.InstancedMesh;
+  private puddle!: THREE.Mesh;
+  private puddleMat!: THREE.MeshStandardMaterial;
+  private radial = radialTexture();
+  private m4 = new THREE.Matrix4();
+  private q = new THREE.Quaternion();
+  private q2 = new THREE.Quaternion();
   private v = new THREE.Vector3();
 
   /** Called after each rendered frame with fresh screen positions. */
