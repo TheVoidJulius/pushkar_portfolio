@@ -25,6 +25,7 @@ export const EXPRESSIONS = [
   "yawning",
   "stretching",
   "smug",
+  "angry",
 ] as const;
 export type Expression = (typeof EXPRESSIONS)[number];
 
@@ -61,6 +62,7 @@ const POSES: Record<Expression, Pose> = {
   coffee: { lidUp: 0.46, lidLow: 0.22, eyeScale: 0.98, tilt: -0.07, pitch: 0.05, earSpread: 0.1, earFold: 0.1, earAsym: 0.05, iris: "#ffb547", glow: 0.9, blush: 0.4, gaze: [0.45, 0.55], pupil: 0.95, bob: 0, sway: 0.5 },
   yawning: { lidUp: 0.84, lidLow: 0.34, eyeScale: 0.96, tilt: 0.1, pitch: -0.2, earSpread: 0.16, earFold: 0.3, earAsym: 0, iris: "#ffb547", glow: 0.6, blush: 0.3, pupil: 0.9, bob: 0, sway: 0.3 },
   stretching: { lidUp: 0.72, lidLow: 0.42, eyeScale: 1, tilt: -0.05, pitch: -0.14, earSpread: -0.16, earFold: -0.22, earAsym: 0, iris: "#ffb547", glow: 0.9, blush: 0.4, pupil: 1, bob: 0.3, sway: 0.2 },
+  angry: { lidUp: 0.34, lidLow: 0.32, eyeScale: 1.04, tilt: 0, pitch: 0.12, earSpread: 0.42, earFold: 0.6, earAsym: 0, iris: "#ff3b30", glow: 2.3, blush: 0.85, pupil: 0.42, bob: 0.9, sway: 0.2 },
   smug: { lidUp: 0.42, lidLow: 0.2, eyeScale: 1, tilt: 0.13, pitch: -0.04, earSpread: 0.04, earFold: 0, earAsym: 0.1, iris: "#c9a2ff", glow: 1.2, blush: 0.3, gaze: [0.7, -0.1], pupil: 0.85, bob: 0.1, sway: 0.7 },
 };
 
@@ -158,6 +160,7 @@ export class MomoRenderer {
     lidUp: THREE.Mesh;
     lidLow: THREE.Mesh;
     lash: THREE.Mesh;
+    lidPivot: THREE.Group;
     side: 1 | -1;
   }[] = [];
   private mouthOpen!: THREE.Object3D;
@@ -207,6 +210,7 @@ export class MomoRenderer {
     stretch: 0,
     envYaw: 0,
     envPitch: 0,
+    angry: 0,
   };
   private iris = new THREE.Color("#ffb547");
   private irisTarget = new THREE.Color("#ffb547");
@@ -446,7 +450,7 @@ export class MomoRenderer {
       group.add(lash);
 
       this.head.add(group);
-      this.eyes.push({ group, iris, irisMat, pupil, lidUp, lidLow, lash, side });
+      this.eyes.push({ group, iris, irisMat, pupil, lidUp, lidLow, lidPivot, lash, side });
     }
 
     // Blush glow
@@ -740,6 +744,7 @@ export class MomoRenderer {
     s.blush = damp(s.blush, pose.blush, 4, dt);
     s.pupil = damp(s.pupil, pose.pupil, 8, dt);
     s.mouth = damp(s.mouth, mouthTarget, 22, dt);
+    s.angry = damp(s.angry, this.expression === "angry" ? 1 : 0, 9, dt);
     this.iris.lerp(this.irisTarget, 1 - Math.exp(-6 * dt));
 
     // Gaze & head follow the pointer (or the pose's fixed gaze)
@@ -768,7 +773,8 @@ export class MomoRenderer {
     this.head.rotation.set(
       s.pitch + this.pointer[1] * 0.16 * r + talkNod + idleRot * 0.4,
       s.yaw + idleRot,
-      s.tilt + idleRot * 0.6,
+      // Angry: a small furious tremble
+      s.tilt + idleRot * 0.6 + s.angry * Math.sin(t * 41) * 0.018 * r,
     );
     // Squash and stretch keeps the volume roughly constant, like a soft body
     const pull = s.stretch * (0.075 + Math.sin(t * 3) * 0.012) * r + s.yawn * 0.025 * r;
@@ -808,6 +814,8 @@ export class MomoRenderer {
       // upper lid: −1.45 (open, tipped back) → +1.62 (closed); lower lid mirrors
       e.lidUp.rotation.x = -1.45 + up * 3.07;
       e.lidLow.rotation.x = 1.45 - low * 2.3;
+      // Angry: the lids slant down toward the nose, a glare
+      e.lidPivot.rotation.z = -e.side * 0.5 * s.angry;
       const lashMat = e.lash.material as THREE.MeshStandardMaterial;
       lashMat.opacity = clamp((up - 0.8) / 0.15, 0, 1);
       e.lash.visible = lashMat.opacity > 0.01;
