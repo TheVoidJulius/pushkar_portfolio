@@ -8,6 +8,7 @@ import { useAssistant, type StageDirection } from "../../momo/AssistantProvider"
 import { useTheme } from "../ThemeToggle";
 import { playKnock } from "./knock";
 import type { SceneSpots, SnowScene } from "./SnowScene";
+import { applyOverride, fallbackWeather, weatherJoke, weatherReadout, type Weather } from "./weather";
 
 /**
  * The footer: Mikuro's igloo on a snow field, under New Delhi's live weather.
