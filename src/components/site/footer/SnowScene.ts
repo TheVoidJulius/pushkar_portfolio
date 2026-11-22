@@ -994,11 +994,9 @@ export class SnowScene {
     this.snowMat.uniforms.uGust.value = this.gust;
   }
 
-  private spot(local: THREE.Vector3, worldSize: number): ScreenSpot {
-    this.house.updateMatrixWorld();
-    const p = this.house.localToWorld(this.v.copy(local));
-    const dist = this.camera.position.distanceTo(p);
-    p.project(this.camera);
+  private spot(world: THREE.Vector3, worldSize: number): ScreenSpot {
+    const dist = this.camera.position.distanceTo(world);
+    const p = this.v.copy(world).project(this.camera);
     const px = (worldSize / (2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)) * dist)) * this.h;
     return { x: (p.x * 0.5 + 0.5) * this.w, y: (-p.y * 0.5 + 0.5) * this.h, s: px };
   }
