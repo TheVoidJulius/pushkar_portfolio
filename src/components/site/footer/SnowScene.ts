@@ -985,8 +985,7 @@ export class SnowScene {
       const f = r ? 1 : 0.85 + Math.sin(t * 7.3) * 0.05 + (Math.sin(t * 23) > 0.97 ? -0.4 : 0);
       (g.sprite.material as THREE.SpriteMaterial).opacity = g.base * f * (dark ? 1 : 0.6);
     }
-    this.mats.beacon.color.set(Math.sin(t * 3) > 0.2 || r ? "#ff3b4f" : "#4a1820");
-    for (const b of this.bulbs) b.mat.opacity = r ? 1 : 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 2.4 + b.phase));
+  }
 
   private updateDrips(dt: number) {
     const rc = this.R + 0.02;
