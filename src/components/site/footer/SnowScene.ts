@@ -757,18 +757,17 @@ export class SnowScene {
     });
   }
 
-  private neonSignTexture() {
-    return canvasTexture(512, 128, (g) => {
-      g.textAlign = "center";
-      g.textBaseline = "middle";
-      g.font = "800 82px ui-rounded, 'Segoe UI', system-ui, sans-serif";
-      g.shadowColor = NEON_PINK;
-      g.shadowBlur = 26;
-      g.fillStyle = "#ffd3e6";
-      g.fillText("MIKURO", 256, 66);
-      g.shadowBlur = 8;
-      g.fillText("MIKURO", 256, 66);
-    });
+  warm() {
+    this.update(0);
+    return this.sculpt()
+      .then(() => (this.disposed ? undefined : this.renderer.compileAsync(this.scene, this.camera)))
+      .catch(() => undefined)
+      .then(() => {
+        if (this.disposed) return;
+        this.warmed = true;
+        if (this.pendingStart) this.start();
+        else this.renderOnce();
+      });
   }
 
   setTheme(dark: boolean) {
