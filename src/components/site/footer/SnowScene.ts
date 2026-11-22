@@ -1005,7 +1005,25 @@ export class SnowScene {
 
   private report() {
     if (!this.onFrame) return;
-    const door = this.spot(new THREE.Vector3(0, 0.71, 1.32), 1.42);
+    // the doorway's bounding box on screen
+    let x0 = Infinity;
+    let y0 = Infinity;
+    let x1 = -Infinity;
+    let y1 = -Infinity;
+    for (const [side, y] of [
+      [-0.62, 0],
+      [0.62, 0],
+      [-0.62, 1.0],
+      [0.62, 1.0],
+      [0, 1.0],
+    ]) {
+      const s = this.spot(this.at(0.05, y, side), 1);
+      x0 = Math.min(x0, s.x);
+      x1 = Math.max(x1, s.x);
+      y0 = Math.min(y0, s.y);
+      y1 = Math.max(y1, s.y);
+    }
+    const pathP = this.pathCurve.getPoint(0.55);
     this.onFrame({
       path: this.spot(pathP.setY(this.height(pathP.x, pathP.z) + 0.55), 1.2),
       door: this.spot(this.at(0.6, 0.5), 1.0),
