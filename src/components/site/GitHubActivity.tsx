@@ -54,6 +54,31 @@ export function GitHubActivity({ showAssistant }: { showAssistant: boolean }) {
   // The last 52 weeks only, so the tree and the numbers agree
   const year = useMemo(() => {
     if (!data) return null;
+
+  /* water the tree */
+  const bonsai = useBonsai(state.status !== "idle");
+  const { showQuip } = useAssistant();
+  const [picking, setPicking] = useState(false);
+  const [pour, setPour] = useState(0);
+  const [note, setNote] = useState("");
+  const [localOnly, setLocalOnly] = useState(false);
+  const water = useCallback(
+    async (b: number) => {
+      setPicking(false);
+      setPour((k) => k + 1);
+      const res = await bonsai.water(b);
+      if (res === "rate_limited") {
+        setNote("The tree has had plenty for now. Try again in a few minutes.");
+        return;
+      }
+      setNote("");
+      setLocalOnly(res === "local");
+      const line = res === "local" ? SOCIAL_LINES.bonsaiLocal : SOCIAL_LINES.bonsaiWatered;
+      showQuip({ id: res === "local" ? "bonsaiLocal" : "bonsaiWatered", ...line });
+    },
+    [bonsai, showQuip],
+  );
+  const everLocal = localOnly || (!bonsai.configured && bonsai.items.length > 0);
     const active = data.contributions.filter((d) => d.count > 0).length;
     const busiest = data.contributions.reduce((a, d) => (d.count > a.count ? d : a), { date: "", count: 0 });
     const perDay = data.contributions.reduce((n, d) => n + d.count, 0) / Math.max(1, data.contributions.length);
