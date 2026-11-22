@@ -602,6 +602,8 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
     floor.position.y = -yc + 0.02;
     holder.add(floor);
     this.scene.add(holder);
+    return mat;
+  }
   }
 
   /** The ice-slab door in the tunnel mouth, hinged on one side. */
