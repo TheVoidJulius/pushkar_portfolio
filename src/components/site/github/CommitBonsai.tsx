@@ -260,6 +260,18 @@ export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, seaso
   useEffect(() => {
     hoverRef.current = hover;
     live.current = { data, tree, S, max };
+  // Same row id -> same tip and offset for everyone
+  const placed = useMemo(() => {
+    const leafy = tree.tips.map((_, i) => i).filter((i) => (data[i]?.count ?? 0) > 0);
+    const pool = leafy.length ? leafy : tree.tips.map((_, i) => i);
+    return (waterings ?? []).slice(0, 120).map((w) => {
+      const h = hash(w.id);
+      const tip = tree.tips[pool[h % pool.length]];
+      const dx = (((h >>> 8) % 100) / 100 - 0.5) * 9;
+      const dy = -(((h >>> 16) % 100) / 100) * 6 - 1;
+      return { ...w, x: tip.x + dx, y: tip.y + dy, tilt: (((h >>> 4) % 40) - 20) };
+    });
+  }, [waterings, tree, data]);
   }, [hover, data, tree, S, max]);
   // 0 until the tree first scrolls into view, then the moment it started growing
   const born = useRef(0);
