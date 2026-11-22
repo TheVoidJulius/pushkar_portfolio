@@ -391,39 +391,11 @@ export class SnowScene {
         H.add(ic);
       }
     }
-    // snow lump on the ridge
-    const ridge = new THREE.Mesh(new THREE.CapsuleGeometry(0.11, D + 0.2, 4, 10), m.snow);
-    ridge.rotation.x = Math.PI / 2;
-    ridge.position.set(0, BH + rise + 0.12, 0);
-    H.add(ridge);
-
-    // porthole in the gable (the zzz float out of it)
-    const port = new THREE.Mesh(new THREE.CircleGeometry(0.26, 40), m.porthole);
-    port.position.set(0, BH + 0.42, front + 0.005);
-    H.add(port);
-    const portRim = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.025, 8, 48), new THREE.MeshBasicMaterial({ color: NEON_CYAN, toneMapped: false }));
-    portRim.position.copy(port.position);
-    H.add(portRim);
-    this.glow(NEON_CYAN, 0, BH + 0.42, front + 0.05, 1.3, 1.3, 0.35, H);
-
-    // door, hinged on the left
-    const DW = 0.9;
-    const DH = 1.42;
-    const interior = new THREE.Mesh(new THREE.PlaneGeometry(DW - 0.02, DH - 0.02), m.interior);
-    interior.position.set(0, DH / 2, front - 0.01);
-    H.add(interior);
-    this.doorPivot.position.set(-DW / 2, 0, front + 0.01);
-    const door = new THREE.Mesh(new THREE.BoxGeometry(DW, DH, 0.07), m.bodyDark);
-    door.position.set(DW / 2, DH / 2, 0.035);
-    this.doorPivot.add(door);
-    this.neonBar(NEON_CYAN, 0.03, DH * 0.7, 0.02, DW * 0.82, DH * 0.5, 0.075, this.doorPivot);
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.3), m.doorSign);
-    sign.position.set(DW / 2 - 0.04, DH * 0.68, 0.073);
-    sign.rotation.z = -0.05;
-    this.doorPivot.add(sign);
-    const knocker = new THREE.Mesh(
-      new THREE.TorusGeometry(0.07, 0.016, 10, 28),
-      new THREE.MeshStandardMaterial({ color: "#e6e9f5", metalness: 1, roughness: 0.18 }),
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    const pts = new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({ color: "#e6ecff", size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0.8, fog: false, depthWrite: false }),
     );
     pts.renderOrder = -9;
     pts.frustumCulled = false;
