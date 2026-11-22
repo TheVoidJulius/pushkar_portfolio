@@ -1063,3 +1063,9 @@ export class SnowScene {
     return this.v2.copy(this.mouth).addScaledVector(this.D, along).addScaledVector(this.L, side).setY(y).clone();
   }
 
+    dots.needsUpdate = true;
+    const lines = this.labelLines.geometry.attributes.position as THREE.BufferAttribute;
+    const pairs = this.labelLines.geometry.userData.pairs as number[];
+    pairs.forEach((idx, j) => lines.setXYZ(j, dots.getX(idx), dots.getY(idx), dots.getZ(idx)));
+    lines.needsUpdate = true;
+  }
