@@ -10,9 +10,10 @@ import { playKnock } from "./knock";
 import type { SceneSpots, SnowScene } from "./SnowScene";
 
 /**
- * The footer: a snowy night and a little neon cyber-house. When you reach it,
- * Mikuro pads through the snow, goes inside and falls asleep. Knock on the
- * door and she bursts out, furious, and hauls you back to the top.
+ * The footer: Mikuro's igloo on a snow field, under New Delhi's live weather.
+ * When you reach it, Mikuro pads through the snow, crawls inside and falls
+ * asleep. Knock on the ice door and she bursts out, furious, and hauls you
+ * back to the top.
  */
 
 type Phase = "outside" | "entering" | "asleep" | "knocking" | "angry" | "carrying";
