@@ -929,7 +929,8 @@ export class SnowScene {
     this.cam.x = damp(this.cam.x, r ? 0 : this.pointer[0] * 0.7, 2.5, dt);
     this.cam.y = damp(this.cam.y, r ? 0 : this.pointer[1] * -0.3, 2.5, dt);
     this.camShake = damp(this.camShake, 0, 3.2, dt);
-    const shake = this.camShake * 0.09;
+    const shake = this.camShake * 0.08;
+    this.target.set(0.55, 1.05 + (1 - p) * 0.5 + (aspect < 0.9 ? 0.25 : 0), 0.9);
     this.camera.position.set(
       this.target.x + Math.sin(az) * Math.cos(el) * dist + Math.sin(t * 61) * shake,
       this.target.y + Math.sin(el) * dist + Math.cos(t * 53) * shake,
