@@ -383,6 +383,17 @@ float sNoise(vec2 p) {
     };
 
   private makeIceMaterial() {
+  private noise = makeNoise(7);
+  private noise2 = makeNoise(31);
+
+  // igloo geometry
+  private readonly R = 2.3;
+  private readonly H = 2.45;
+  private readonly doorYaw = 0.42;
+  private readonly mouthDist = 3.75;
+  private D = new THREE.Vector3();
+  private L = new THREE.Vector3();
+  private mouth = new THREE.Vector3();
     const mat = new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.55, metalness: 0 });
     const u = this.iceUniforms;
     mat.onBeforeCompile = (sh) => {
