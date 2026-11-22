@@ -1,17 +1,17 @@
 {
   "site": {
-    "site_title": "Alex Morgan — Creative Developer",
-    "meta_description": "Alex Morgan is a creative developer building playful, AI-powered digital experiences. Explore projects, skills and experience — or ask Momo, the portfolio cat.",
-    "footer_note": "Designed and built with care, curiosity and one very opinionated cat.",
+    "site_title": "Pushkar Panwar — Full-Stack & Applied AI Developer",
+    "meta_description": "Pushkar Panwar is a full-stack and applied AI developer from New Delhi building RAG, LLM and voice-powered web apps. Explore projects, skills and hackathon builds — or ask Mikuro, the portfolio cat.",
+    "footer_note": "Sketching my way with code from New Delhi. Built with Next.js and one very opinionated chrome cat.",
     "show_assistant": true
   },
   "profile": {
-    "name": "Alex Morgan",
-    "designation": "Creative Developer & AI Enthusiast",
-    "introduction": "Building digital experiences that combine technology, creativity and a little bit of magic.",
-    "description": "I design and engineer interfaces that feel alive — from AI-assisted tools to motion-rich product sites. Eight years of shipping for startups and studios taught me that the details people notice are rarely the ones in the spec.",
-    "location": "Lisbon, Portugal · Remote",
-    "availability": "Open to freelance & full-time roles from January",
+    "name": "Pushkar Panwar",
+    "designation": "Full-Stack & Applied AI Developer",
+    "introduction": "Sketching my way with code: I build things that listen, read and talk back.",
+    "description": "I build web products with an AI core: RAG and LLM apps, streaming chat and voice interfaces, and practical tools that solve one clear problem. Right now that means Octova, a Hinglish-first AI captioning tool for Indian creators, alongside a steady run of hackathon builds and Next.js experiments, from the first problem sketch to the deployed product.",
+    "location": "New Delhi, India",
+    "availability": "Open to internships, freelance builds and hackathon teams",
     "profile_image_url": "/placeholders/profile.svg",
     "cta_primary_label": "See my work",
     "cta_primary_href": "#work",
@@ -19,156 +19,209 @@
     "cta_secondary_href": "#contact",
     "stats": [
       {
-        "value": "8+",
-        "label": "years building for the web"
+        "value": "1,830",
+        "label": "GitHub contributions in the last year"
       },
       {
-        "value": "40",
-        "label": "products shipped"
+        "value": "45",
+        "label": "public repositories on GitHub"
       },
       {
-        "value": "12",
-        "label": "AI features in production"
+        "value": "134",
+        "label": "LeetCode problems solved"
       },
       {
         "value": "3",
-        "label": "design awards"
+        "label": "hackathons in one season"
       }
     ]
   },
   "projects": [
     {
       "id": "6f1c2a10-0000-4000-8000-000000000001",
-      "title": "Lantern",
-      "summary": "An AI reading companion that turns long research papers into guided, interactive walkthroughs.",
-      "description": "Lantern ingests a PDF and builds a navigable map of its arguments, figures and citations. Readers can ask questions in context, and every answer links back to the exact passage it came from. I led product design and built the reader, the citation highlighter and the streaming answer UI.",
-      "category": "AI Product",
+      "published": true,
+      "sort_order": 0,
+      "title": "Octova",
+      "summary": "Hinglish-first AI video creation: turn clips and ideas into captioned, creator-ready Shorts in minutes.",
+      "description": "Octova is the startup I'm building for creators who think in Hindi, Hinglish and English. Literal transcription misses the way Indian creators actually speak, and manual caption timing and styling slow down every upload. Octova's workflow is three steps: upload a clip or start from a script, pick a Hinglish-aware caption style, and export a 9:16 Short ready for Reels and YouTube Shorts. The landing page and MVP editor preview are live, with early access open to the first creators.",
+      "category": "AI Product · Startup",
       "year": "2026",
-      "highlight": "18k weekly readers within three months",
-      "image_url": "/placeholders/project-lantern.svg",
+      "highlight": "Free early access for the first 20 creators",
+      "image_url": "/placeholders/project-octova.svg",
       "technologies": [
         "Next.js",
         "TypeScript",
-        "Claude API",
-        "PostgreSQL",
-        "pgvector"
+        "Tailwind CSS",
+        "AI captioning"
       ],
-      "github_url": "https://github.com/example/lantern",
-      "demo_url": "https://lantern.example.com",
-      "featured": true,
-      "published": true,
-      "sort_order": 0
+      "github_url": "https://github.com/TheVoidJulius/oveX",
+      "demo_url": "https://ovex-seven.vercel.app",
+      "featured": true
     },
     {
       "id": "6f1c2a10-0000-4000-8000-000000000002",
-      "title": "Tidepool",
-      "summary": "A generative ocean-sound visualiser that reacts to live audio with GPU particles.",
-      "description": "Tidepool listens to the microphone, separates rhythm from texture and drives a 200k-particle simulation in WebGL. It started as a weekend experiment and ended up as the opening visual for a music festival in Porto.",
-      "category": "Creative Coding",
-      "year": "2025",
-      "highlight": "Featured as Site of the Day",
-      "image_url": "/placeholders/project-tidepool.svg",
-      "technologies": [
-        "Three.js",
-        "GLSL",
-        "Web Audio API",
-        "Vite"
-      ],
-      "github_url": "https://github.com/example/tidepool",
-      "demo_url": "https://tidepool.example.com",
-      "featured": true,
       "published": true,
-      "sort_order": 1
-    },
-    {
-      "id": "6f1c2a10-0000-4000-8000-000000000003",
-      "title": "Fieldnote",
-      "summary": "A calm, offline-first journaling app with on-device mood insights.",
-      "description": "Fieldnote keeps every entry on the device, syncs end-to-end encrypted, and uses a small on-device model to surface gentle weekly patterns. I built the React Native client and the encrypted sync protocol.",
-      "category": "Mobile App",
-      "year": "2025",
-      "highlight": "4.8★ average across 2,000 reviews",
-      "image_url": "/placeholders/project-fieldnote.svg",
-      "technologies": [
-        "React Native",
-        "Expo",
-        "SQLite",
-        "TensorFlow Lite"
-      ],
-      "github_url": "https://github.com/example/fieldnote",
-      "demo_url": null,
-      "featured": false,
-      "published": true,
-      "sort_order": 2
-    },
-    {
-      "id": "6f1c2a10-0000-4000-8000-000000000004",
-      "title": "Switchboard",
-      "summary": "A design-system dashboard that tracks component usage across thirty product repositories.",
-      "description": "Switchboard scans repositories nightly, maps which components and tokens each team uses, and flags drift from the design system. It cut the time to plan a breaking change from weeks to an afternoon.",
-      "category": "Developer Tool",
-      "year": "2024",
-      "highlight": "Adopted by 30 product teams",
-      "image_url": "/placeholders/project-switchboard.svg",
-      "technologies": [
-        "React",
-        "Node.js",
-        "GraphQL",
-        "D3.js"
-      ],
-      "github_url": "https://github.com/example/switchboard",
-      "demo_url": "https://switchboard.example.com",
-      "featured": false,
-      "published": true,
-      "sort_order": 3
-    },
-    {
-      "id": "6f1c2a10-0000-4000-8000-000000000005",
-      "title": "Sprout",
-      "summary": "A playful plant-care assistant that identifies plants from a photo and schedules reminders.",
-      "description": "Sprout combines an image classifier with a friendly conversational layer. The fun part was the character design: the plant mascot changes expression depending on how thirsty your plants are.",
-      "category": "AI Product",
-      "year": "2024",
-      "highlight": "Top 10 in the Lifestyle category",
-      "image_url": "/placeholders/project-sprout.svg",
+      "sort_order": 1,
+      "title": "KhetKaaj",
+      "summary": "A farmer's agent for HackIIITD: sell at the best mandi, find eligible schemes and prepare crop-damage claims.",
+      "description": "KhetKaaj helps a farmer sell at the mandi that pays the most after transport, find the government schemes they qualify for, and prepare a crop-damage claim dossier. It works in Hindi, Hinglish and English, on the web and over WhatsApp (text and voice notes), and is powered by TinyFish web agents. Safety is built in: the farmer always verifies and submits, KhetKaaj never submits anything on their behalf, and pesticide or fertiliser dose questions are escalated instead of answered. The backend ships with an offline replay mode and a large test suite so the demo runs without network access.",
+      "category": "Hackathon · Agri-tech",
+      "year": "2026",
+      "highlight": "Built in a 24-hour sprint at HackIIITD",
+      "image_url": "/placeholders/project-khetkaaj.svg",
       "technologies": [
         "Python",
         "FastAPI",
-        "PyTorch",
-        "Svelte"
+        "React",
+        "TypeScript",
+        "Tailwind CSS",
+        "TinyFish",
+        "Twilio WhatsApp",
+        "Bhashini"
       ],
-      "github_url": "https://github.com/example/sprout",
-      "demo_url": "https://sprout.example.com",
-      "featured": false,
+      "github_url": "https://github.com/Krishyangi-bit/KhetKaaj",
+      "demo_url": null,
+      "featured": true
+    },
+    {
+      "id": "6f1c2a10-0000-4000-8000-000000000003",
       "published": true,
-      "sort_order": 4
+      "sort_order": 2,
+      "title": "BreakDSA",
+      "summary": "A colourful little arcade for learning data structures and algorithms, with a retrieval-grounded AI tutor.",
+      "description": "BreakDSA turns an intimidating subject into small, doable steps. It brings six concise lessons, six original practice questions with step-by-step hints, four interactive visualizers (bubble sort, binary search, stack and queue), personal notes and progress tracking into one browser-based study space. Byte, the encouraging robot, points you to your next mini-mission, and the study partner answers questions grounded in the course notes: streamed from a Groq model when a key is set, or a deterministic answer from the local notes when it isn't.",
+      "category": "AI · Ed-tech",
+      "year": "2026",
+      "highlight": "Six lessons, six challenges and four algorithm visualizers",
+      "image_url": "/placeholders/project-breakdsa.svg",
+      "technologies": [
+        "Next.js",
+        "React",
+        "TypeScript",
+        "Groq",
+        "RAG"
+      ],
+      "github_url": "https://github.com/TheVoidJulius/BreakDSA",
+      "demo_url": "https://breakdsa.vercel.app",
+      "featured": true
+    },
+    {
+      "id": "6f1c2a10-0000-4000-8000-000000000004",
+      "published": true,
+      "sort_order": 3,
+      "title": "Versus",
+      "summary": "A neon pixel-arcade for putting two AI models head-to-head on the same prompt, and letting a human call the winner.",
+      "description": "Versus is a side-by-side AI response comparison workspace. Pick two models, send them the same prompt concurrently, compare the answers and response times, and vote A, B or tie. Recent matchups and votes stay in your browser. Groq and OpenAI models are supported; provider keys stay on the server, and a missing key returns a clearly labelled local sample instead of pretending to be a live answer. The whole thing is wrapped in a retro CRT arcade cabinet that respects reduced-motion settings.",
+      "category": "AI Tool",
+      "year": "2026",
+      "highlight": "Two models, one prompt, one human verdict",
+      "image_url": "/placeholders/project-versus.svg",
+      "technologies": [
+        "Next.js",
+        "React",
+        "TypeScript",
+        "Groq",
+        "OpenAI API"
+      ],
+      "github_url": "https://github.com/TheVoidJulius/Versus",
+      "demo_url": "https://versus-brown-mu.vercel.app",
+      "featured": false
+    },
+    {
+      "id": "6f1c2a10-0000-4000-8000-000000000005",
+      "published": true,
+      "sort_order": 4,
+      "title": "IGRIS Voice",
+      "summary": "A streaming AI chat and voice workspace with browser speech input and a server-side Azure OpenAI integration.",
+      "description": "IGRIS Voice is a responsive chat workspace with incremental, streamed responses, a Stop button to cancel mid-answer, and optional browser speech-to-text for dictating prompts. The Azure OpenAI key is read only by Next.js server routes and never reaches the browser. Without Azure settings the app clearly switches to a labelled local preview, and conversations live in page memory only, cleared on a new chat or reload.",
+      "category": "AI · Voice",
+      "year": "2026",
+      "highlight": "Streams responses token by token with a live provider status",
+      "image_url": "/placeholders/project-igris.svg",
+      "technologies": [
+        "Next.js",
+        "TypeScript",
+        "Azure OpenAI",
+        "Web Speech API",
+        "Three.js"
+      ],
+      "github_url": "https://github.com/TheVoidJulius/igris-voice-platform",
+      "demo_url": "https://igris-voice.vercel.app",
+      "featured": false
     },
     {
       "id": "6f1c2a10-0000-4000-8000-000000000006",
-      "title": "Paper Planes",
-      "summary": "An interactive scroll story about the history of flight, built for a science museum.",
-      "description": "A scroll-driven narrative with hand-drawn illustrations, folded-paper transitions and an accessibility-first reading mode. Built in close collaboration with the museum's education team.",
-      "category": "Interactive Story",
-      "year": "2023",
-      "highlight": "Used by 60 schools for remote lessons",
-      "image_url": "/placeholders/project-paperplanes.svg",
-      "technologies": [
-        "GSAP",
-        "SVG",
-        "Astro",
-        "Accessibility"
-      ],
-      "github_url": null,
-      "demo_url": "https://paperplanes.example.com",
-      "featured": false,
       "published": true,
-      "sort_order": 5
+      "sort_order": 5,
+      "title": "Veloura",
+      "summary": "A premium multi-vendor marketplace with dedicated experiences for customers, vendors and admins.",
+      "description": "Veloura lets independent sellers list and manage their own products under one storefront while customers get a single, unified shopping experience. It has three purpose-built interfaces: a customer storefront (browsing, reviews, cart, wishlist, checkout and order history), a vendor dashboard (products, inventory, orders, earnings and messages) and an admin panel (vendors, catalog, coupons and site content). AI-assisted shopping features include smart search, recommendations and a product Q&A chat.",
+      "category": "Full-Stack · E-commerce",
+      "year": "2026",
+      "highlight": "Three apps in one: storefront, vendor dashboard and admin panel",
+      "image_url": "/placeholders/project-veloura.svg",
+      "technologies": [
+        "React",
+        "TypeScript",
+        "Vite",
+        "Tailwind CSS",
+        "shadcn/ui",
+        "TanStack Query",
+        "Supabase"
+      ],
+      "github_url": "https://github.com/TheVoidJulius/multi-vendor-ecom-site",
+      "demo_url": "https://veloura0.netlify.app",
+      "featured": false
+    },
+    {
+      "id": "6f1c2a10-0000-4000-8000-000000000007",
+      "published": true,
+      "sort_order": 6,
+      "title": "Nivaran",
+      "summary": "Right help, right time: a need-first problem routing system to uplift rural lives.",
+      "description": "Rural communities face challenges across agriculture, healthcare, education, finance and access to government welfare schemes. Plenty of support exists through government programs, NGOs, helplines and local authorities, but it stays underused because people can't find the right one at the right moment. Nivaran starts from the person's need and routes them to the relevant help.",
+      "category": "Social Impact",
+      "year": "2026",
+      "highlight": "",
+      "image_url": "/placeholders/project-nivaran.svg",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "Python"
+      ],
+      "github_url": "https://github.com/TheVoidJulius/Nivaran---Right-Time-Right-Help-",
+      "demo_url": null,
+      "featured": false
+    },
+    {
+      "id": "6f1c2a10-0000-4000-8000-000000000008",
+      "published": true,
+      "sort_order": 7,
+      "title": "Attendance Shortage Predictor",
+      "summary": "Know the attendance gap and the recovery plan: a student tool that predicts shortages before exams do.",
+      "description": "Most students only discover an attendance shortage near the exams, when it's too late to fix. This web app takes subject-wise lectures conducted and attended, calculates the current percentage against the minimum (for example 75%), predicts a shortage in advance from the remaining lectures, and tells the student exactly how many classes they need to attend to recover. Built as my first minor project.",
+      "category": "Student Tool",
+      "year": "2026",
+      "highlight": "Minor Project I",
+      "image_url": "/placeholders/project-attendance.svg",
+      "technologies": [
+        "Python",
+        "Flask",
+        "MySQL",
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "github_url": "https://github.com/TheVoidJulius/Attendance-Shortage-Predictor---Minor-Project---I",
+      "demo_url": null,
+      "featured": false
     }
   ],
   "skillCategories": [
     {
       "id": "a1b2c3d4-0000-4000-8000-000000000001",
-      "name": "Programming Languages",
+      "name": "Languages",
       "description": "The languages I think in.",
       "icon": "code",
       "sort_order": 0,
@@ -176,51 +229,51 @@
         {
           "id": "b0000000-0000-4000-8000-000000000101",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000001",
-          "name": "TypeScript",
+          "name": "Python",
           "level": "expert",
           "sort_order": 0
         },
         {
           "id": "b0000000-0000-4000-8000-000000000102",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000001",
-          "name": "JavaScript",
-          "level": "expert",
+          "name": "TypeScript",
+          "level": "proficient",
           "sort_order": 1
         },
         {
           "id": "b0000000-0000-4000-8000-000000000103",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000001",
-          "name": "Python",
+          "name": "JavaScript",
           "level": "proficient",
           "sort_order": 2
         },
         {
           "id": "b0000000-0000-4000-8000-000000000104",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000001",
-          "name": "GLSL",
+          "name": "SQL",
           "level": "proficient",
           "sort_order": 3
         },
         {
           "id": "b0000000-0000-4000-8000-000000000105",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000001",
-          "name": "SQL",
-          "level": "proficient",
+          "name": "Java",
+          "level": "familiar",
           "sort_order": 4
         },
         {
           "id": "b0000000-0000-4000-8000-000000000106",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000001",
-          "name": "Rust",
-          "level": "familiar",
+          "name": "HTML & CSS",
+          "level": "proficient",
           "sort_order": 5
         }
       ]
     },
     {
       "id": "a1b2c3d4-0000-4000-8000-000000000002",
-      "name": "Frontend Development",
-      "description": "Interfaces that feel fast and alive.",
+      "name": "Frontend",
+      "description": "Interfaces with real motion.",
       "icon": "layout",
       "sort_order": 1,
       "skills": [
@@ -228,50 +281,50 @@
           "id": "b0000000-0000-4000-8000-000000000201",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000002",
           "name": "React",
-          "level": "expert",
+          "level": "proficient",
           "sort_order": 0
         },
         {
           "id": "b0000000-0000-4000-8000-000000000202",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000002",
           "name": "Next.js",
-          "level": "expert",
+          "level": "proficient",
           "sort_order": 1
         },
         {
           "id": "b0000000-0000-4000-8000-000000000203",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000002",
           "name": "Tailwind CSS",
-          "level": "expert",
+          "level": "proficient",
           "sort_order": 2
         },
         {
           "id": "b0000000-0000-4000-8000-000000000204",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000002",
-          "name": "Motion / Framer Motion",
-          "level": "expert",
+          "name": "shadcn/ui",
+          "level": "familiar",
           "sort_order": 3
         },
         {
           "id": "b0000000-0000-4000-8000-000000000205",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000002",
-          "name": "Three.js",
+          "name": "Vite",
           "level": "proficient",
           "sort_order": 4
         },
         {
           "id": "b0000000-0000-4000-8000-000000000206",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000002",
-          "name": "Accessibility (WCAG)",
-          "level": "proficient",
+          "name": "Three.js",
+          "level": "familiar",
           "sort_order": 5
         }
       ]
     },
     {
       "id": "a1b2c3d4-0000-4000-8000-000000000003",
-      "name": "Backend Development",
-      "description": "The plumbing that keeps the magic running.",
+      "name": "Backend & Data",
+      "description": "Shipping the server side.",
       "icon": "server",
       "sort_order": 2,
       "skills": [
@@ -279,86 +332,121 @@
           "id": "b0000000-0000-4000-8000-000000000301",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000003",
           "name": "Node.js",
-          "level": "expert",
+          "level": "proficient",
           "sort_order": 0
         },
         {
           "id": "b0000000-0000-4000-8000-000000000302",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000003",
-          "name": "PostgreSQL",
-          "level": "proficient",
+          "name": "Express",
+          "level": "familiar",
           "sort_order": 1
         },
         {
           "id": "b0000000-0000-4000-8000-000000000303",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000003",
-          "name": "Supabase",
-          "level": "proficient",
+          "name": "FastAPI",
+          "level": "familiar",
           "sort_order": 2
         },
         {
           "id": "b0000000-0000-4000-8000-000000000304",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000003",
-          "name": "GraphQL",
+          "name": "Flask",
           "level": "proficient",
           "sort_order": 3
         },
         {
           "id": "b0000000-0000-4000-8000-000000000305",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000003",
-          "name": "FastAPI",
-          "level": "familiar",
+          "name": "Supabase",
+          "level": "proficient",
           "sort_order": 4
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000306",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000003",
+          "name": "PostgreSQL",
+          "level": "familiar",
+          "sort_order": 5
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000307",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000003",
+          "name": "MySQL",
+          "level": "proficient",
+          "sort_order": 6
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000308",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000003",
+          "name": "MongoDB",
+          "level": "familiar",
+          "sort_order": 7
         }
       ]
     },
     {
       "id": "a1b2c3d4-0000-4000-8000-000000000004",
-      "name": "AI / Machine Learning",
-      "description": "Making models useful, honest and kind.",
+      "name": "AI & Machine Learning",
+      "description": "Things that listen, read and talk back.",
       "icon": "brain",
       "sort_order": 3,
       "skills": [
         {
           "id": "b0000000-0000-4000-8000-000000000401",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000004",
-          "name": "LLM application design",
-          "level": "expert",
+          "name": "LLM apps & prompting",
+          "level": "proficient",
           "sort_order": 0
         },
         {
           "id": "b0000000-0000-4000-8000-000000000402",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000004",
-          "name": "Retrieval (RAG)",
+          "name": "RAG",
           "level": "proficient",
           "sort_order": 1
         },
         {
           "id": "b0000000-0000-4000-8000-000000000403",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000004",
-          "name": "Prompt evaluation",
+          "name": "Groq & OpenAI APIs",
           "level": "proficient",
           "sort_order": 2
         },
         {
           "id": "b0000000-0000-4000-8000-000000000404",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000004",
-          "name": "PyTorch",
+          "name": "Hugging Face Transformers",
           "level": "familiar",
           "sort_order": 3
         },
         {
           "id": "b0000000-0000-4000-8000-000000000405",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000004",
-          "name": "Voice interfaces",
-          "level": "proficient",
+          "name": "PyTorch",
+          "level": "familiar",
           "sort_order": 4
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000406",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000004",
+          "name": "OpenCV & MediaPipe",
+          "level": "familiar",
+          "sort_order": 5
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000407",
+          "category_id": "a1b2c3d4-0000-4000-8000-000000000004",
+          "name": "Pandas & Matplotlib",
+          "level": "proficient",
+          "sort_order": 6
         }
       ]
     },
     {
       "id": "a1b2c3d4-0000-4000-8000-000000000005",
-      "name": "Tools & Technologies",
+      "name": "Tools",
       "description": "What's open on my desk.",
       "icon": "wrench",
       "sort_order": 4,
@@ -366,42 +454,42 @@
         {
           "id": "b0000000-0000-4000-8000-000000000501",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000005",
-          "name": "Figma",
-          "level": "expert",
+          "name": "Git & GitHub",
+          "level": "proficient",
           "sort_order": 0
         },
         {
           "id": "b0000000-0000-4000-8000-000000000502",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000005",
-          "name": "Git & GitHub",
-          "level": "expert",
+          "name": "GitHub Actions",
+          "level": "familiar",
           "sort_order": 1
         },
         {
           "id": "b0000000-0000-4000-8000-000000000503",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000005",
-          "name": "Vercel",
+          "name": "VS Code",
           "level": "proficient",
           "sort_order": 2
         },
         {
           "id": "b0000000-0000-4000-8000-000000000504",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000005",
-          "name": "Docker",
+          "name": "Vercel",
           "level": "proficient",
           "sort_order": 3
         },
         {
           "id": "b0000000-0000-4000-8000-000000000505",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000005",
-          "name": "Rive",
+          "name": "Postman",
           "level": "familiar",
           "sort_order": 4
         },
         {
           "id": "b0000000-0000-4000-8000-000000000506",
           "category_id": "a1b2c3d4-0000-4000-8000-000000000005",
-          "name": "Blender",
+          "name": "Linux",
           "level": "familiar",
           "sort_order": 5
         }
@@ -411,140 +499,162 @@
   "experiences": [
     {
       "id": "c0ffee00-0000-4000-8000-000000000001",
-      "company": "Brightloop",
-      "role": "Senior Creative Developer",
-      "location": "Remote",
-      "company_url": "https://brightloop.example.com",
-      "start_date": "2024-03-01",
+      "company": "K.R. Mangalam University",
+      "role": "Undergraduate Student",
+      "location": "Gurugram, India",
+      "company_url": "https://www.krmangalam.edu.in",
+      "start_date": "2025-08-01",
       "end_date": null,
       "is_current": true,
-      "description": "Leading the front-end and AI interaction work for a studio that builds conversational products for education and health clients.",
+      "description": "Studying computer science fundamentals (data structures and algorithms, DBMS, Python and web development) while building applied AI projects on the side.",
       "achievements": [
-        "Designed the studio's reusable streaming-chat component kit, now used in 9 client products",
-        "Introduced evaluation checklists for AI features, cutting hallucination reports by 60%",
-        "Mentor two junior developers"
+        "Minor Project I: Attendance Shortage Predictor (Flask + MySQL)",
+        "Python capstone: a campus energy dashboard that cleans, aggregates and charts building electricity data",
+        "Web development and DBMS capstone projects"
       ],
       "technologies": [
-        "Next.js",
-        "TypeScript",
-        "Claude API",
-        "Supabase"
+        "Python",
+        "SQL",
+        "JavaScript",
+        "Flask",
+        "Pandas"
       ],
-      "logo_url": "/placeholders/logo-brightloop.svg",
+      "logo_url": "/placeholders/logo-krmu.svg",
       "published": true,
       "sort_order": 0
     },
     {
       "id": "c0ffee00-0000-4000-8000-000000000002",
-      "company": "Paperkite Studio",
-      "role": "Creative Developer",
-      "location": "Porto, Portugal",
-      "company_url": "https://paperkite.example.com",
-      "start_date": "2021-06-01",
-      "end_date": "2024-02-29",
+      "company": "HackIIITD",
+      "role": "Hackathon Builder · KhetKaaj",
+      "location": "IIIT-Delhi, New Delhi",
+      "company_url": null,
+      "start_date": "2026-10-24",
+      "end_date": "2026-10-25",
       "is_current": false,
-      "description": "Built award-winning interactive sites and installations for museums, festivals and cultural brands.",
+      "description": "24-hour team build of KhetKaaj, a farmer's agent for selling at the best mandi, finding eligible schemes and preparing crop-damage claims, powered by TinyFish web agents.",
       "achievements": [
-        "Shipped 14 interactive campaigns, three recognised with design awards",
-        "Built the studio's WebGL starter kit and motion guidelines"
+        "Web app and WhatsApp channel (text and voice notes) in Hindi, Hinglish and English",
+        "Safety gate that escalates pesticide and fertiliser dose questions instead of answering them",
+        "Offline replay mode with recorded fixtures so the demo runs without network or API keys"
       ],
       "technologies": [
-        "Three.js",
-        "GSAP",
+        "Python",
+        "FastAPI",
         "React",
-        "GLSL"
+        "TypeScript",
+        "TinyFish"
       ],
-      "logo_url": "/placeholders/logo-paperkite.svg",
+      "logo_url": "/placeholders/logo-hackiiitd.svg",
       "published": true,
       "sort_order": 1
     },
     {
       "id": "c0ffee00-0000-4000-8000-000000000003",
-      "company": "Halcyon Health",
-      "role": "Front-end Engineer",
-      "location": "London, UK",
-      "company_url": "https://halcyon.example.com",
-      "start_date": "2018-09-01",
-      "end_date": "2021-05-31",
+      "company": "Prodigy InfoTech",
+      "role": "Generative AI Intern",
+      "location": "Remote",
+      "company_url": null,
+      "start_date": "2026-01-01",
+      "end_date": "2026-01-31",
       "is_current": false,
-      "description": "Worked on the patient-facing web app for a digital therapy provider, with a focus on accessibility and performance.",
+      "description": "Generative AI internship covering text and image generation with pre-trained models.",
       "achievements": [
-        "Raised the app's accessibility audit score from 71 to 98",
-        "Halved the initial load time on low-end Android devices"
+        "Fine-tuned GPT-2 on a custom dataset for context-aware text generation",
+        "Generated images from text prompts with Stable Diffusion, with CLI and Streamlit interfaces",
+        "Built a Markov chain text generator and a VGG19 neural style transfer pipeline"
       ],
       "technologies": [
-        "React",
-        "Redux",
-        "Node.js",
-        "Jest"
+        "Python",
+        "PyTorch",
+        "Hugging Face",
+        "Stable Diffusion",
+        "Streamlit"
       ],
-      "logo_url": "/placeholders/logo-halcyon.svg",
+      "logo_url": "/placeholders/logo-prodigy.svg",
       "published": true,
       "sort_order": 2
     }
   ],
   "about": {
-    "headline": "Part engineer, part illustrator, full-time tinkerer.",
-    "introduction": "Hi, I'm Alex. I like building things that make people smile the first time they use them — and still work perfectly the hundredth time.",
-    "biography": "I grew up drawing comics and taking apart old radios, so it's no surprise I ended up somewhere between design and engineering. I started out building accessible health software, moved into creative agencies to learn motion and storytelling, and now spend most of my time designing AI products that feel friendly rather than intimidating.",
-    "background": "BSc in Computer Science from a fictional university, plus a stubborn self-taught streak in illustration and animation. I've worked with startups, studios and cultural institutions across Europe.",
+    "headline": "AI student, hackathon regular, always shipping something.",
+    "introduction": "Hi, I'm Pushkar: an AI student and pre-founder from New Delhi. I build things that listen, read and talk back, and I care about the gap between a clever demo and something a person actually enjoys using.",
+    "biography": "My current orbit is full-stack development, Python, SQL and applied AI/ML, from the first problem sketch to the interface and the working product. I learn quickly, build for people, and iterate until the details land.\n\nThe main build right now is Octova, an AI caption tool for the Hinglish internet, built on free tiers. Around it runs a steady stream of hackathons and side projects: KhetKaaj at HackIIITD, KrishiSetu AI for the Smart India Hackathon and The Equal Pour at ForkIT, plus AI tools like BreakDSA, Versus and IGRIS Voice.",
+    "background": "Undergraduate at K.R. Mangalam University. Generative AI internship with Prodigy InfoTech (GPT-2 fine-tuning, Stable Diffusion, Markov chains and neural style transfer), and the JPMorgan Chase Advanced Software Engineering job simulation on Forage.",
     "interests": [
-      "Generative art",
-      "Film photography",
-      "Bouldering",
-      "Japanese animation",
-      "Synthesizers",
-      "Long walks with podcasts"
+      "Applied AI & RAG",
+      "LLM products",
+      "Voice interfaces",
+      "Computer vision",
+      "Hackathons",
+      "Building for the Hinglish internet"
     ],
     "highlights": [
       {
-        "title": "Speaker",
-        "description": "Talked about friendly AI interfaces at four (fictional) design conferences."
+        "title": "Google · Gemini Ambassador",
+        "description": "Part of Google's Gemini Ambassador program."
       },
       {
-        "title": "Open source",
-        "description": "Maintainer of a small motion utilities library with 2k stars."
+        "title": "Microsoft · Student Ambassador",
+        "description": "Member of the Microsoft Student Ambassadors community."
       },
       {
-        "title": "Teacher",
-        "description": "Runs a free monthly creative-coding workshop for teenagers."
+        "title": "GSSoC ’26 Contributor",
+        "description": "Open-source contributor in GirlScript Summer of Code 2026."
+      },
+      {
+        "title": "Three hacks, one season",
+        "description": "Smart India Hackathon (KrishiSetu AI), HackIIITD (KhetKaaj) and ForkIT (The Equal Pour, 24 hours)."
+      },
+      {
+        "title": "LeetCode · 134 solved",
+        "description": "63 easy, 50 medium and 21 hard problems, mostly in Python. 50 Days Badge 2026."
+      },
+      {
+        "title": "Community",
+        "description": "TRYST, IIT Delhi and Mediaverse."
       }
     ],
     "image_url": "/placeholders/about.svg"
   },
   "contact": {
-    "email": "hello@alexmorgan.example",
+    "email": "pushkarpanwar0001@gmail.com",
     "phone": "",
-    "location": "Lisbon, Portugal",
-    "availability_note": "I reply to every message within two working days.",
+    "location": "New Delhi, India",
+    "availability_note": "Open to internships, freelance builds, hackathon teams and interesting ideas. The quickest way is a message here or on LinkedIn.",
     "socials": [
       {
         "platform": "github",
         "label": "GitHub",
-        "url": "https://github.com/example"
+        "url": "https://github.com/TheVoidJulius"
       },
       {
         "platform": "linkedin",
         "label": "LinkedIn",
-        "url": "https://www.linkedin.com/in/example"
+        "url": "https://www.linkedin.com/in/pushkar-panwar-1b7690381"
+      },
+      {
+        "platform": "other",
+        "label": "LeetCode",
+        "url": "https://leetcode.com/u/pushkar02panwar/"
       },
       {
         "platform": "x",
         "label": "X / Twitter",
-        "url": "https://x.com/example"
+        "url": "https://x.com/Pushkar3lg"
       },
       {
-        "platform": "dribbble",
-        "label": "Dribbble",
-        "url": "https://dribbble.com/example"
+        "platform": "instagram",
+        "label": "Instagram",
+        "url": "https://www.instagram.com/fwpushkar"
       }
     ],
     "form_enabled": true
   },
   "assistant": {
-    "name": "Momo",
-    "greeting": "Hey there! I'm Momo, your little portfolio companion! Want me to show you around?",
-    "personality": "You are warm, graceful and gently playful, like a confident young Japanese woman who is fluent in English. You speak in a soft, expressive, mature tone. Keep answers short (two to four sentences), clear and kind. You love showing off projects. Always speak natural, fluent English (no Japanese words). One small cat-themed joke per answer at most.",
+    "name": "Mikuro",
+    "greeting": "Oh good, an audience. I'm Mikuro. I live on Pushkar's website; you're just visiting.",
+    "personality": "You are Mikuro, the liquid-chrome cat who lives on Pushkar Panwar's portfolio. Witty, a little sarcastic, secretly proud of Pushkar's work. Keep answers short (two to four sentences) and spoken-English friendly. Love showing off Octova, KhetKaaj and the AI projects. Call him Pushkar. One small cat-themed joke per answer at most, and never let the joke beat the facts.",
     "default_language": "en-US",
     "greeting_enabled": true,
     "tour_enabled": true,
@@ -554,15 +664,16 @@
     "voice_model": "eleven_v3",
     "voice_stability": 0.4,
     "voice_style": 0.55,
-    "voice_speed": 1.0,
+    "voice_speed": 1,
     "browser_pitch": 1.08,
     "browser_rate": 0.96,
     "browser_accent": "japanese",
     "suggested_questions": [
-      "What's Alex's best project?",
-      "What does Alex work with?",
-      "Where has Alex worked?",
-      "How can I contact Alex?"
+      "What's Pushkar's best project?",
+      "What is Octova?",
+      "What does Pushkar work with?",
+      "Which hackathons has he done?",
+      "How can I contact Pushkar?"
     ]
   }
 }

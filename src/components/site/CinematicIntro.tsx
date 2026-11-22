@@ -1,11 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useAssistant } from "../momo/AssistantProvider";
 import { INTRO_KEY, REPLAY_EVENT } from "./introControl";
 
 const DURATION = 3.1; // seconds, including the reveal into the hero
 const MAX_SHADER_WAIT_MS = 1200; // never hold visitors up for a slow GPU
+/** When the iris starts to open (the 3D Mikuro takes over from the silhouette). */
+const REVEAL_AT = 2.36;
 
 const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
 
@@ -15,7 +18,7 @@ const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`
  * height field lit by a procedural studio, so no textures need to load.
  */
 const FRAG = `precision highp float;
-uniform vec2 uRes; uniform float uT;
+uniform vec2 uRes; uniform float uT; uniform float uSleep;
 float smin(float a, float b, float k){ float h = clamp(.5 + .5*(b-a)/k, 0., 1.); return mix(b,a,h) - k*h*(1.-h); }
 float ease(float a, float b, float x){ float t = clamp((x-a)/(b-a),0.,1.); return t*t*(3.-2.*t); }
 float tri(vec2 p, vec2 a, vec2 b, vec2 c){
@@ -80,7 +83,7 @@ void main(){
     float fres = pow(1.-max(n.z,0.),3.);
     m += fres*vec3(.5,.54,.65);
     // eyes open just before the reveal
-    float eyes = ease(1.75,1.98,uT);
+    float eyes = ease(1.75,1.98,uT)*(1.-uSleep);
     vec2 cp = p/.74;
     vec2 q = vec2(abs(cp.x)-.125, cp.y+.015);
     float eye = length(q*vec2(1.,mix(9.,1.08,eyes))) - .056;
@@ -151,12 +154,26 @@ function shimmer() {
   }
 }
 
+type Stage = "terminal" | "shader";
+
+/**
+ * First visit: a terminal waits at `wake mikuro`. Enter (or a tap) dissolves
+ * it into chrome droplets that pool into Mikuro's sleeping silhouette; the
+ * real 3D Mikuro takes over in the same spot, wakes up, and the site's
+ * usual intro and narration carry on. Without the assistant, the chrome
+ * intro plays on its own.
+ */
 export function CinematicIntro() {
-  const { finishCinema } = useAssistant();
+  const { finishCinema, beginWake, wakeGesture, wakeUp, assistantVisible, ownerName, settings, muted, musicOn } = useAssistant();
   const [run, setRun] = useState(0); // 0 = not playing
+  const [stage, setStage] = useState<Stage>("terminal");
+  const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const titleRef = useRef<HTMLParagraphElement>(null);
   const skipRef = useRef<HTMLButtonElement>(null);
+  /** Mikuro was woken from the terminal (so she wakes up on screen at the end). */
+  const woke = useRef(false);
+  const useTerminal = assistantVisible;
 
   const end = useCallback(() => {
     try {
@@ -166,35 +183,57 @@ export function CinematicIntro() {
     }
     document.documentElement.removeAttribute("data-intro");
     setRun(0);
-    finishCinema();
-  }, [finishCinema]);
+    if (woke.current) wakeUp(); // harmless if the reveal already started it
+    else finishCinema();
+    woke.current = false;
+  }, [finishCinema, wakeUp]);
 
   // Decide on load: play once per session, never for reduced motion
   useEffect(() => {
     if (document.documentElement.hasAttribute("data-intro")) {
-      const t = setTimeout(() => setRun(1), 0);
+      const t = setTimeout(() => {
+        setStage(useTerminal ? "terminal" : "shader");
+        setRun(1);
+      }, 0);
       return () => clearTimeout(t);
     }
     finishCinema();
-  }, [finishCinema]);
+  }, [finishCinema, useTerminal]);
 
   useEffect(() => {
     const onReplay = () => {
       if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      shimmer();
+      if (!useTerminal) shimmer();
+      woke.current = false;
+      setStage(useTerminal ? "terminal" : "shader");
       setRun((n) => n + 1);
     };
     window.addEventListener(REPLAY_EVENT, onReplay);
     return () => window.removeEventListener(REPLAY_EVENT, onReplay);
-  }, []);
+  }, [useTerminal]);
+
+  // While the terminal shows, Mikuro waits asleep where the silhouette will form
+  useEffect(() => {
+    if (!run || stage !== "terminal") return;
+    beginWake();
+    document.documentElement.removeAttribute("data-intro"); // the terminal covers the page itself
+  }, [run, stage, beginWake]);
+
+  /** Enter pressed: runs inside the key/tap gesture, so audio is allowed. */
+  const onEnter = useCallback(() => {
+    woke.current = true;
+    wakeGesture();
+    if (!muted && !musicOn) shimmer();
+  }, [wakeGesture, muted, musicOn]);
+  const onWake = useCallback(() => setStage("shader"), []);
 
   useEffect(() => {
-    if (!run) return;
+    if (!run || stage !== "shader") return;
     const canvas = canvasRef.current;
     const gl = canvas?.getContext("webgl", { alpha: true, antialias: false, premultipliedAlpha: true, powerPreference: "high-performance" });
     const prog = gl ? compile(gl) : null;
     if (!canvas || !gl || !prog) {
-      const t = setTimeout(end, 0); // no WebGL: go straight to the site
+      const t = setTimeout(end, 0); // no WebGL: go straight to the site (and the wake-up)
       return () => clearTimeout(t);
     }
     // No real GPU (CPU rendering): a full-screen shader would only make people wait
@@ -218,6 +257,7 @@ export function CinematicIntro() {
     const parallel = gl.getExtension("KHR_parallel_shader_compile") as { COMPLETION_STATUS_KHR: number } | null;
     const waitStart = performance.now();
     let ready = false;
+    let revealed = false;
 
     // Starts light and only sharpens once the device proves it can keep up
     let detail = 0.5;
@@ -260,12 +300,20 @@ export function CinematicIntro() {
         gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
         uRes = gl.getUniformLocation(prog, "uRes");
         uT = gl.getUniformLocation(prog, "uT");
+        // Woken from the terminal: the silhouette keeps its eyes shut, the 3D Mikuro opens them
+        gl.uniform1f(gl.getUniformLocation(prog, "uSleep"), woke.current ? 1 : 0);
         gl.clearColor(0, 0, 0, 0);
         ready = true;
         resize();
+        if (rootRef.current) rootRef.current.style.background = "transparent"; // the canvas paints the dark now
       }
       start ||= now;
       const t = (now - start) / 1000;
+      // As the iris opens, the real Mikuro is waiting right behind the silhouette
+      if (!revealed && woke.current && t >= REVEAL_AT) {
+        revealed = true;
+        wakeUp();
+      }
       if (t >= DURATION) {
         end();
         return;
@@ -323,35 +371,242 @@ export function CinematicIntro() {
       gl.deleteProgram(prog);
       gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
-  }, [run, end]);
+  }, [run, stage, end, wakeUp]);
 
-  if (!run) return null;
   return (
-    // Keyed per run: a WebGL context can't be reused after being released
-    <div key={run} className="fixed inset-0 z-[210]" role="dialog" aria-label="Intro animation">
-      <canvas ref={canvasRef} aria-hidden className="absolute inset-0 h-full w-full" />
-      <p
-        ref={titleRef}
-        aria-hidden
-        className="pointer-events-none absolute top-[calc(50%+min(24vw,24vh)+6px)] left-1/2 font-mono text-[13px] whitespace-nowrap uppercase opacity-0 sm:text-[15px]"
-        style={{
-          background: "linear-gradient(105deg,#fff 10%,#8e909c 38%,#fff 52%,#71737e 74%,#e9eaf0)",
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-          color: "transparent",
-        }}
-      >
-        Mikuro
+    <>
+      {/* Where the sleeping 3D Mikuro waits: exactly behind the chrome silhouette */}
+      {useTerminal && (
+        <div
+          data-momo-anchor="wake"
+          aria-hidden
+          className="pointer-events-none fixed top-1/2 left-1/2 size-[64vmin] -translate-x-1/2 -translate-y-[54%]"
+        />
+      )}
+      {run ? (
+        // Keyed per run: a WebGL context can't be reused after being released
+        <div
+          key={run}
+          ref={rootRef}
+          className="fixed inset-0 z-[210]"
+          style={{ background: "#050507" }}
+          role="dialog"
+          aria-label={stage === "terminal" ? `Wake ${settings.name}` : "Intro animation"}
+        >
+          {stage === "shader" && <canvas ref={canvasRef} aria-hidden className="absolute inset-0 h-full w-full" />}
+          <AnimatePresence>
+            {stage === "terminal" && <Terminal key="terminal" owner={ownerName} name={settings.name} onEnter={onEnter} onWake={onWake} />}
+          </AnimatePresence>
+          {stage === "shader" && (
+            <p
+              ref={titleRef}
+              aria-hidden
+              className="pointer-events-none absolute top-[calc(50%+min(24vw,24vh)+6px)] left-1/2 font-mono text-[13px] whitespace-nowrap uppercase opacity-0 sm:text-[15px]"
+              style={{
+                background: "linear-gradient(105deg,#fff 10%,#8e909c 38%,#fff 52%,#71737e 74%,#e9eaf0)",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              {settings.name}
+            </p>
+          )}
+          <button
+            ref={skipRef}
+            type="button"
+            onPointerDown={end}
+            onClick={end}
+            className="absolute right-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-10 rounded-full border border-white/20 bg-black/40 px-4 py-2 text-[13px] text-white/75 transition-colors hover:bg-white/12 hover:text-white"
+          >
+            Skip intro
+          </button>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// The terminal
+// ---------------------------------------------------------------------------
+
+type Entry = { kind: "cmd" | "out"; text: string; tone?: "dim" | "accent" | "warn" | "ok" };
+
+const TONE: Record<NonNullable<Entry["tone"]>, string> = {
+  dim: "text-white/45",
+  accent: "text-[#ff8fbf]",
+  warn: "text-[#ffc25c]",
+  ok: "text-[#5ee0b0]",
+};
+
+const noop = () => () => {};
+const useHost = () => useSyncExternalStore(noop, () => window.location.host || "portfolio", () => "portfolio");
+const useCoarsePointer = () => useSyncExternalStore(noop, () => matchMedia("(pointer: coarse)").matches, () => false);
+
+function Terminal({ owner, name, onEnter, onWake }: { owner: string; name: string; onEnter: () => void; onWake: () => void }) {
+  const host = useHost();
+  const touch = useCoarsePointer();
+  const first = (owner.split(" ")[0] || "portfolio").toLowerCase();
+  const cat = name.toLowerCase();
+  const script = useMemo<Entry[]>(
+    () => [
+      { kind: "cmd", text: `ssh guest@${host}` },
+      { kind: "out", text: `Welcome to ${owner}'s portfolio.`, tone: "dim" },
+      { kind: "cmd", text: "ls" },
+      { kind: "out", text: "projects/  skills/  experience/  github/  about/  contact/" },
+      { kind: "cmd", text: `systemctl status ${cat}` },
+      { kind: "out", text: `● ${cat}.service — liquid-chrome companion`, tone: "accent" },
+      { kind: "out", text: "   Active: inactive (napping) since you arrived", tone: "warn" },
+      { kind: "out", text: "   Dreams: rendering in 3D, mostly about tuna", tone: "dim" },
+    ],
+    [host, owner, cat],
+  );
+  const command = `wake ${cat}`;
+  const wakeLines = useMemo<Entry[]>(
+    () => [
+      { kind: "out", text: "[ ok ] warming the chrome ··········· 37°C", tone: "ok" },
+      { kind: "out", text: "[ ok ] gathering droplets ··········· 6/6", tone: "ok" },
+      { kind: "out", text: `[ ok ] ✦ ${name} is waking up`, tone: "ok" },
+    ],
+    [name],
+  );
+
+  const [pos, setPos] = useState({ i: 0, c: 0 }); // entries shown / characters typed of the current command
+  const [phase, setPhase] = useState<"typing" | "ready" | "waking">("typing");
+  const [shownWake, setShownWake] = useState(0);
+  const total = script.length;
+
+  // Type the session out like someone is at the keyboard
+  useEffect(() => {
+    if (phase !== "typing") return;
+    const { i, c } = pos;
+    let ms: number;
+    let next: { i: number; c: number } | null;
+    if (i < total) {
+      const e = script[i];
+      if (e.kind === "cmd" && c < e.text.length) {
+        ms = c === 0 ? 160 : 14 + Math.random() * 22;
+        next = { i, c: c + 1 };
+      } else {
+        ms = e.kind === "cmd" ? 150 : 55;
+        next = { i: i + 1, c: 0 };
+      }
+    } else if (c < command.length) {
+      ms = c === 0 ? 380 : 45 + Math.random() * 45;
+      next = { i, c: c + 1 };
+    } else {
+      ms = 120;
+      next = null;
+    }
+    const t = setTimeout(() => (next ? setPos(next) : setPhase("ready")), ms);
+    return () => clearTimeout(t);
+  }, [pos, phase, script, total, command]);
+
+  const wake = useCallback(() => {
+    if (phase === "waking") return;
+    setPhase("waking");
+    setPos({ i: total, c: command.length }); // Enter mid-typing just finishes the line
+    onEnter();
+  }, [phase, total, command, onEnter]);
+
+  // The boot lines tick in, then the terminal dissolves into the chrome
+  useEffect(() => {
+    if (phase !== "waking") return;
+    if (shownWake < wakeLines.length) {
+      const t = setTimeout(() => setShownWake((n) => n + 1), 170);
+      return () => clearTimeout(t);
+    }
+    const t = setTimeout(onWake, 420);
+    return () => clearTimeout(t);
+  }, [phase, shownWake, wakeLines.length, onWake]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter") return;
+      // Enter on another button (e.g. Skip) belongs to that button
+      if ((e.target as HTMLElement | null)?.closest?.("button:not([data-wake])")) return;
+      e.preventDefault();
+      wake();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [wake]);
+
+  const promptTag = (
+    <span className="select-none">
+      <span className="text-[#7ee0ff]">guest@{first}</span>
+      <span className="text-white/40">:</span>
+      <span className="text-[#a99cff]">~</span>
+      <span className="text-white/40">$ </span>
+    </span>
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.55, filter: "blur(16px)", transition: { duration: 0.6, ease: [0.5, 0, 0.75, 0] } }}
+      transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+      className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-4"
+    >
+      {/* chrome glow pooling behind the window: where the droplets will come from */}
+      <span aria-hidden className="terminal-glow" />
+      <p className="sr-only">
+        {touch ? `Tap the button to wake ${name}.` : `Press Enter to wake ${name}.`} Or use Skip intro.
       </p>
-      <button
-        ref={skipRef}
+
+      <div aria-hidden className="terminal-window relative w-full max-w-[640px] overflow-hidden rounded-[18px]">
+        <div className="flex h-10 items-center gap-2 border-b border-white/[0.07] px-4">
+          <span className="size-3 rounded-full bg-[#ff5f57]" />
+          <span className="size-3 rounded-full bg-[#febc2e]" />
+          <span className="size-3 rounded-full bg-[#28c840]" />
+          <span className="flex-1 pr-12 text-center font-mono text-[12px] text-white/40">guest@{first} — ~ — zsh</span>
+        </div>
+        <div className="min-h-[270px] px-5 py-4 font-mono text-[12.5px] leading-[1.8] text-white/85 sm:text-[13.5px]">
+          {script.map((e, k) => {
+            if (k > pos.i || (k === pos.i && (e.kind === "out" || pos.c === 0))) return null;
+            const text = k === pos.i ? e.text.slice(0, pos.c) : e.text;
+            return (
+              <p key={k} className={`break-all whitespace-pre-wrap ${e.tone ? TONE[e.tone] : ""}`}>
+                {e.kind === "cmd" && promptTag}
+                {text}
+              </p>
+            );
+          })}
+          {pos.i >= total && (
+            <p className="whitespace-pre-wrap">
+              {promptTag}
+              <span className="terminal-cmd">{command.slice(0, pos.c)}</span>
+              {phase !== "waking" && <span className="terminal-cursor" />}
+            </p>
+          )}
+          {wakeLines.slice(0, shownWake).map((e, k) => (
+            <p key={`w${k}`} className={e.tone ? TONE[e.tone] : ""}>
+              {e.text}
+            </p>
+          ))}
+        </div>
+      </div>
+
+      <motion.button
         type="button"
-        onPointerDown={end}
-        onClick={end}
-        className="absolute right-4 bottom-[max(16px,env(safe-area-inset-bottom))] rounded-full border border-white/20 bg-black/40 px-4 py-2 text-[13px] text-white/75 transition-colors hover:bg-white/12 hover:text-white focus-visible:outline-white sm:right-6"
+        data-wake
+        onClick={wake}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: phase === "waking" ? 0 : 1, y: 0 }}
+        transition={{ delay: phase === "waking" ? 0 : 0.6, duration: 0.4 }}
+        className="terminal-hint inline-flex items-center gap-2.5 rounded-full px-5 py-2.5 text-[14px] text-white/85"
       >
-        Skip intro
-      </button>
-    </div>
+        {touch ? (
+          <>Tap to wake {name}</>
+        ) : (
+          <>
+            Press <kbd className="rounded-md border border-white/25 bg-white/10 px-2 py-0.5 font-mono text-[12.5px]">Enter ↵</kbd> to wake{" "}
+            {name}
+          </>
+        )}
+      </motion.button>
+    </motion.div>
   );
 }

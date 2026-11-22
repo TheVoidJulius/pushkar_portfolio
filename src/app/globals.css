@@ -474,6 +474,10 @@ html.theme-reveal::view-transition-new(theme-sheen) {
   mask-image: radial-gradient(circle at var(--vt-x) var(--vt-y), transparent calc(var(--vt-ring) - 34px), #000 calc(var(--vt-ring) - 9px), transparent var(--vt-ring));
   animation: theme-ring 580ms cubic-bezier(0.32, 0.72, 0, 1) both;
 }
+/* Liquid flood: the blob shape is animated from ThemeToggle.tsx */
+html.theme-liquid::view-transition-new(root) {
+  animation: none;
+}
 @keyframes theme-iris {
   from {
     clip-path: circle(0px at var(--vt-x) var(--vt-y));
@@ -850,4 +854,100 @@ html[data-intro] body::before {
   height: 64px;
   margin-top: -32px;
   background: color-mix(in oklab, var(--accent) 80%, transparent);
+}
+
+/* =====================================================================
+   Terminal wake-up intro
+   ===================================================================== */
+.terminal-window {
+  background: linear-gradient(180deg, rgba(30, 30, 36, 0.92), rgba(13, 13, 17, 0.94));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 50px 120px -40px rgba(56, 214, 255, 0.28),
+    0 30px 60px -30px rgba(0, 0, 0, 0.9);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.terminal-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(90vw, 760px);
+  height: min(60vh, 460px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, rgba(126, 224, 255, 0.12), transparent 70%),
+    radial-gradient(40% 50% at 30% 60%, rgba(169, 156, 255, 0.1), transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+}
+.terminal-cmd {
+  text-shadow: 0 0 10px rgba(126, 224, 255, 0.35);
+}
+.terminal-cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.15em;
+  margin-left: 1px;
+  vertical-align: -0.2em;
+  background: #e9fbff;
+  box-shadow: 0 0 10px rgba(126, 224, 255, 0.7);
+  animation: terminal-blink 1.05s steps(1) infinite;
+}
+@keyframes terminal-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.terminal-hint {
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  animation: terminal-pulse 2.4s ease-in-out infinite;
+}
+.terminal-hint:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+@keyframes terminal-pulse {
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      0 0 0 1px rgba(126, 224, 255, 0.35),
+      0 0 28px rgba(126, 224, 255, 0.25);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .terminal-cursor,
+  .terminal-hint {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Footer: the snow house
+   --------------------------------------------------------------------- */
+.snow-hint {
+  color: #fff;
+  background: rgba(20, 24, 48, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 0 18px rgba(255, 79, 154, 0.35);
+  animation: snow-hint-bob 2.2s ease-in-out infinite;
+}
+.snow-knock {
+  color: #fff;
+  text-shadow: 0 0 10px #ff4f9a, 0 0 22px #ff4f9a;
+}
+@keyframes snow-hint-bob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .snow-hint { animation: none; }
 }

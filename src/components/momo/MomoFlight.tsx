@@ -36,6 +36,11 @@ export function MomoFlight() {
     if (theme) rendererRef.current?.setTheme(theme === "dark");
   }, [theme]);
 
+  // Popping awake after the terminal intro: a little bounce
+  useEffect(() => {
+    if (a.wakeKey) rendererRef.current?.poke();
+  }, [a.wakeKey]);
+
   // Create the renderer lazily (Three.js is code-split)
   useEffect(() => {
     let r: MomoRenderer | null = null;
@@ -74,7 +79,7 @@ export function MomoFlight() {
   // Flight loop: ease position & size toward the active anchor every frame
   useEffect(() => {
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const pos = { x: -1, y: -1, s: 64, vx: 0, vy: 0 };
+    const pos = { x: -1, y: -1, s: 64, vx: 0, vy: 0, o: 1 };
     let pointer: [number, number] | null = null;
     let raf = 0;
     let last = performance.now();
@@ -108,6 +113,8 @@ export function MomoFlight() {
       let target = rectOf(live.current.anchor);
       // If the spot has scrolled away, wait politely in the corner
       if (target && (target.bottom < 0 || target.top > innerHeight)) target = null;
+      // An anchor can fade Mikuro out (e.g. she has gone inside the snow house)
+      const fadeTo = target ? Number(found.get(live.current.anchor)?.dataset.momoOpacity ?? 1) : 1;
       target ??= rectOf("dock");
       const wrap = wrapRef.current;
       if (!target || !wrap) return;
@@ -133,7 +140,12 @@ export function MomoFlight() {
         wrap.style.transform = transform;
         lastTransform = transform;
       }
-      if (wrap.style.opacity !== "1") wrap.style.opacity = "1";
+      pos.o = damp(pos.o, fadeTo, reduce ? 40 : 7, dt);
+      const opacity = pos.o > 0.995 ? "1" : pos.o.toFixed(3);
+      if (wrap.style.opacity !== opacity) wrap.style.opacity = opacity;
+      // Fully faded: hidden, so her click target can't sit over what's behind her
+      const visibility = pos.o < 0.03 ? "hidden" : "";
+      if (wrap.style.visibility !== visibility) wrap.style.visibility = visibility;
 
       // The speech bubble rides alongside, staying inside the viewport
       if (bubble) {
@@ -169,8 +181,7 @@ export function MomoFlight() {
     rendererRef.current?.poke();
     a.notice("click");
     if (a.needsSound) return a.enableSound();
-    if (a.open) a.poke();
-    else a.setOpen(true);
+    a.poke();
   };
 
   return (
@@ -185,7 +196,7 @@ export function MomoFlight() {
           type="button"
           onClick={onClick}
           onPointerEnter={(e) => e.pointerType === "mouse" && a.notice("hover")}
-          aria-label={a.needsSound ? `Turn on ${a.settings.name}'s voice` : a.open ? `Pet ${a.settings.name}` : `Chat with ${a.settings.name}`}
+          aria-label={a.needsSound ? `Turn on ${a.settings.name}'s voice` : `Pet ${a.settings.name}`}
           className="pointer-events-auto absolute inset-[8%] cursor-pointer rounded-full"
         />
         <div ref={hostRef} className="pointer-events-none relative h-full w-full" aria-hidden>

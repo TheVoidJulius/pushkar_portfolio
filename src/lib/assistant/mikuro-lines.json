@@ -50,7 +50,7 @@
   ],
   "dwell": [
     { "id": "dwell-1", "mood": "happy", "text": "You're still here? I respect the dedication." },
-    { "id": "dwell-2", "mood": "playful", "text": "At this point you should probably just send a message." }
+    { "id": "dwell-2", "mood": "playful", "text": "At this point you should probably just send him an email." }
   ],
   "theme": [
     { "id": "theme-1", "mood": "playful", "text": "Bold choice. I look good in both." },

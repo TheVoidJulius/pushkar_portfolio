@@ -5,9 +5,9 @@ import { Check, Copy, Loader2, Send } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import type { ContactDetails } from "@/lib/types";
 import { ContactSchema } from "@/lib/validation";
-import { scrollToSection } from "@/lib/scroll";
 import { MomoLine } from "../momo/MomoLine";
 import { FadeUp } from "./Chrome";
+import { SnowHouse } from "./footer/SnowHouse";
 import { SocialIcon } from "./icons";
 
 type Errors = Partial<Record<"name" | "email" | "subject" | "message", string>>;
@@ -25,7 +25,6 @@ export function Contact({
 }) {
   const [copied, setCopied] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
-  const year = new Date().getFullYear();
 
   const copy = async () => {
     try {
@@ -38,7 +37,8 @@ export function Contact({
   };
 
   return (
-    <footer id="contact" aria-labelledby="contact-title" className="container-page pt-28 pb-24 md:pt-40">
+    <footer id="contact" aria-labelledby="contact-title">
+      <div className="container-page pt-28 pb-10 md:pt-40">
       <div className="grid gap-14 md:grid-cols-[minmax(0,460px)_minmax(0,1fr)] md:gap-20">
         <div>
           {showAssistant && <MomoLine id="contact" size={108} className="-ml-2 mb-10" />}
@@ -98,15 +98,8 @@ export function Contact({
         </AnimatePresence>
       </div>
 
-      <div className="mt-28 flex flex-col gap-3 text-[13.5px] text-ink-3 sm:flex-row sm:items-center sm:justify-between">
-        <p>
-          © {year} {name}
-          {footerNote ? ` · ${footerNote}` : ""}
-        </p>
-        <button type="button" onClick={() => scrollToSection("hero")} className="font-mono text-[12.5px] transition hover:text-ink">
-          <span className="opacity-50">$</span> back to top ↑
-        </button>
       </div>
+      <SnowHouse name={name} footerNote={footerNote} />
     </footer>
   );
 }

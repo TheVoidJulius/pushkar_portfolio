@@ -48,7 +48,19 @@ export function TopNav({ showAssistant }: { showAssistant: boolean }) {
           className="float-btn"
           aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
         >
-          {theme === "dark" ? <Sun className="size-[15px]" strokeWidth={2.2} /> : <Moon className="size-[15px]" strokeWidth={2.2} />}
+          {/* The icon spins round as it swaps */}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={theme ?? "light"}
+              initial={{ rotate: -120, scale: 0.4, opacity: 0 }}
+              animate={{ rotate: 0, scale: 1, opacity: 1 }}
+              exit={{ rotate: 120, scale: 0.4, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 420, damping: 22 }}
+              className="grid place-items-center"
+            >
+              {theme === "dark" ? <Sun className="size-[15px]" strokeWidth={2.2} /> : <Moon className="size-[15px]" strokeWidth={2.2} />}
+            </motion.span>
+          </AnimatePresence>
         </button>
         <MusicButton />
         <button type="button" onClick={() => setMenu(true)} className="float-btn w-[54px]" aria-label="Open menu" aria-expanded={menu}>

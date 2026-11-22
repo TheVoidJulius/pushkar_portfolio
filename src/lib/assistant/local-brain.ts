@@ -81,7 +81,7 @@ function answer(raw: string, c: PortfolioContent): Answer {
     return {
       mood: "excited",
       goto: null,
-      text: `Hi hi! I'm ${me}. I can tell you about ${owner}'s projects, skills and experience, or take you anywhere on this page. What sounds fun?`,
+      text: `Oh, hello. I'm ${me}. I can tell you about ${owner}'s projects, skills and experience, or walk you anywhere on this page. Pick one.`,
     };
   }
 
@@ -89,7 +89,7 @@ function answer(raw: string, c: PortfolioContent): Answer {
     return {
       mood: "playful",
       goto: null,
-      text: `I'm ${me}, ${owner}'s little portfolio companion! I know everything on this website, and I'm happy to show you around. I'm better at that than at catching laser dots.`,
+      text: `I'm ${me}, a chrome cat who lives on ${owner}'s website and considers it my apartment. I know everything on it, so ask away. You're just visiting.`,
     };
   }
 
@@ -107,7 +107,7 @@ function answer(raw: string, c: PortfolioContent): Answer {
     return { mood: "happy", goto: "contact", text: `${email}${socials}. ${c.contact.availability_note}`.trim() };
   }
 
-  if (has(q, ["linkedin", "github", "twitter", "social*", "dribbble", "instagram"])) {
+  if (has(q, ["linkedin", "github", "leetcode", "twitter", "social*", "dribbble", "instagram"])) {
     const found = c.contact.socials.filter((s) => q.includes(norm(s.platform)) || q.includes(norm(s.label)));
     const pick = found.length ? found : c.contact.socials;
     if (!pick.length) return unknown(owner, "social links");

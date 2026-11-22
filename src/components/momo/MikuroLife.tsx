@@ -46,6 +46,7 @@ export function MikuroLife() {
       const s = live.current;
       return (
         s.cinemaDone &&
+        !s.stage &&
         !s.intro &&
         !s.open &&
         !s.pending &&
@@ -75,7 +76,7 @@ export function MikuroLife() {
       const now = Date.now();
       if ((cooldowns[trigger] ?? 0) > now) return;
       const s = live.current;
-      if (s.open || s.pending || s.listening || s.talking || s.narrating || !s.cinemaDone) return;
+      if (s.open || s.pending || s.listening || s.talking || s.narrating || s.stage || !s.cinemaDone) return;
       if (s.showQuip(pickQuip(trigger))) {
         cooldowns = { ...cooldowns, [trigger]: now + cooldownMs };
         lastQuip = now;
@@ -220,7 +221,10 @@ export function MikuroLife() {
     window.addEventListener("scroll", onScroll, { passive: true });
 
     // Theme switched
-    const themeWatch = new MutationObserver(() => later(() => respond("theme", 60_000), 650));
+    const themeWatch = new MutationObserver(() => {
+      if (!live.current.open) live.current.react("surprised", 900); // the lights just changed!
+      later(() => respond("theme", 60_000), 650);
+    });
     themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
     const noticeRef = live.current.noticeRef;

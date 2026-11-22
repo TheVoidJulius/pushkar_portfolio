@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "db:seed:generate": "node scripts/generate-seed.mjs",
     "placeholders": "node scripts/generate-placeholders.mjs",
-    "voice:bake": "node --env-file=.env.local scripts/bake-voice.mjs",
+    "voice:bake": "tsx --env-file=.env.local scripts/bake-voice.mts",
     "check:security": "node --env-file=.env.local scripts/rls-check.mjs"
   },
   "dependencies": {
@@ -38,6 +38,7 @@
     "eslint-config-next": "16.4.6",
     "playwright": "^1.65.1",
     "tailwindcss": "4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   },
   "engines": {
