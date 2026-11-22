@@ -159,7 +159,44 @@ void main() {
   gl_FragColor = vec4(uColor, a);
 }`;
 
-type Paw = { mesh: THREE.Group; mat: THREE.MeshBasicMaterial };
+/** Gradient alpha for the mist bands and the warm light pool. */
+function canvasTexture(w: number, h: number, draw: (g: CanvasRenderingContext2D) => void, srgb = true) {
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const g = c.getContext("2d")!;
+  draw(g);
+  const t = new THREE.CanvasTexture(c);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+const radialTexture = () =>
+  canvasTexture(128, 128, (g) => {
+    const r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    r.addColorStop(0, "rgba(255,255,255,1)");
+    r.addColorStop(0.3, "rgba(255,255,255,0.45)");
+    r.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = r;
+    g.fillRect(0, 0, 128, 128);
+  });
+
+type Floater = {
+  index: number;
+  pos: THREE.Vector3;
+  quat: THREE.Quaternion;
+  scale: THREE.Vector3;
+  normal: THREE.Vector3;
+  dir: THREE.Vector3;
+  dist: number;
+  axis: THREE.Vector3;
+  angle: number;
+  delay: number;
+  phase: number;
+  depth: number;
+};
+
+type Drip = { phi: number; theta: number; speed: number; drop: number; y: number; wait: number };
 
 export class SnowScene {
   readonly canvas: HTMLCanvasElement;
