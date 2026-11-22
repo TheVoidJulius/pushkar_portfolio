@@ -425,76 +425,84 @@ export class SnowScene {
       new THREE.TorusGeometry(0.07, 0.016, 10, 28),
       new THREE.MeshStandardMaterial({ color: "#e6e9f5", metalness: 1, roughness: 0.18 }),
     );
-    knocker.position.set(DW / 2, DH * 0.44, 0.09);
-    this.doorPivot.add(knocker);
-    H.add(this.doorPivot);
-    // frame
-    this.neonBar(NEON_PINK, 0.04, DH + 0.04, 0.04, -DW / 2 - 0.03, DH / 2, front + 0.02, H);
-    this.neonBar(NEON_PINK, 0.04, DH + 0.04, 0.04, DW / 2 + 0.03, DH / 2, front + 0.02, H);
-    this.neonBar(NEON_PINK, DW + 0.1, 0.04, 0.04, 0, DH + 0.03, front + 0.02, H);
-    this.glow(NEON_PINK, 0, DH / 2, front + 0.08, 2.0, 2.4, 0.22, H);
+    pts.renderOrder = -9;
+    pts.frustumCulled = false;
+    this.scene.add(pts);
+    return pts;
+  }
 
-    // neon name sign above the door
-    const neon = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.375), m.neonSign);
-    neon.position.set(0, DH + 0.3, front + 0.02);
-    H.add(neon);
-    this.glow(NEON_PINK, 0, DH + 0.3, front + 0.1, 2.6, 0.9, 0.42, H, true);
+  /** Terrain height: drifts, ripples of dunes, a flat pad for the igloo. */
+  height(x: number, z: number) {
+    const n = this.noise;
+    const r = Math.hypot(x, z);
+    let h = 0;
+    h += (n(x * 0.045, z * 0.045) + n(x * 0.11 + 5.2, z * 0.11 - 1.7) * 0.45) * 0.95;
+    // wind-carved drift ridges, stretched across the wind
+    const dr = n(x * 0.022 + 13.1, z * 0.1 - 4.2);
+    h += Math.pow(1 - Math.abs(dr), 3) * 0.75;
+    // gentler in front, where the camera looks across the snow
+    h *= 1 - smooth(1, 9, z) * 0.45;
+    // a rise behind the igloo
+    const back = smooth(-4, -40, z);
+    const ridged = 1 - Math.abs(this.noise2(x * 0.035, z * 0.035));
+    h += back * (ridged * ridged * 3.2 + n(x * 0.02, z * 0.02) * 1.4 + 0.9);
+    // a big soft dune framing the bottom left
+    h += 1.6 * Math.exp(-((x + 7.5) ** 2) / 14 - ((z - 6.5) ** 2) / 7);
+    h += 0.9 * Math.exp(-((x - 8.5) ** 2) / 10 - ((z - 3.5) ** 2) / 9);
+    // flat pad under the igloo and in front of the entrance
+    const mx = x - this.mouth.x * 1.15;
+    const mz = z - this.mouth.z * 1.15;
+    const pad = Math.min(smooth(3.0, 6.8, r), smooth(1.6, 4.2, Math.hypot(mx, mz)));
+    h *= pad;
+    // snow banked against the base, except at the tunnel
+    const ang = Math.atan2(x, z);
+    const off = Math.abs(Math.atan2(Math.sin(ang - this.doorYaw), Math.cos(ang - this.doorYaw)));
+    const bank = Math.exp(-(((r - this.R - 0.15) / 0.55) ** 2)) * 0.22 * smooth(0.45, 0.8, off);
+    return h + bank - 0.02;
+  }
 
-    // windows
-    for (const side of [-1, 1]) {
-      const x = side * 1.12;
-      const win = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.58), m.window);
-      win.position.set(x, 1.22, front + 0.006);
-      H.add(win);
-      this.neonBar(NEON_CYAN, 0.78, 0.03, 0.03, x, 1.52, front + 0.02, H);
-      this.neonBar(NEON_CYAN, 0.78, 0.03, 0.03, x, 0.92, front + 0.02, H);
-      // snow on the sill
-      const sill = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.66, 4, 8), m.snow);
-      sill.rotation.z = Math.PI / 2;
-      sill.position.set(x, 0.89, front + 0.06);
-      H.add(sill);
-      this.glow(NEON_CYAN, x, 1.22, front + 0.12, 1.5, 1.2, 0.3, H);
-    }
+  private buildTerrain() {
+    const W = 150;
+    const Dp = 95;
+    const geo = new THREE.PlaneGeometry(W, Dp, this.mobile ? 150 : 240, this.mobile ? 100 : 160);
+    geo.rotateX(-Math.PI / 2);
+    geo.translate(0, 0, -22);
+    // heights are filled in a few slices at a time by sculpt(), off the main path
+    this.sculptJobs.push({ geo, f: (x, z) => this.height(x, z) });
+    const mesh = new THREE.Mesh(geo, this.snowMat);
+    mesh.receiveShadow = true;
+    this.scene.add(mesh);
+  }
 
-    // chimney with smoke
-    const chim = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.8, 0.34), m.bodyDark);
-    chim.position.set(-1.0, BH + 0.78, -0.45);
-    H.add(chim);
-    const chimSnow = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.09, 0.42), m.snow);
-    chimSnow.position.set(-1.0, BH + 1.22, -0.45);
-    H.add(chimSnow);
-    const smokeMap = this.glowMap;
-    for (let i = 0; i < 5; i++) {
-      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeMap, color: "#c9cfe6", transparent: true, opacity: 0, depthWrite: false }));
-      s.position.set(-1.0, BH + 1.3, -0.45);
-      H.add(s);
-      this.smoke.push({ sprite: s, phase: i / 5 });
-    }
-
-    // antenna with a blinking beacon
-    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.9, 8), m.bodyDark);
-    mast.position.set(1.05, BH + 0.95, -0.2);
-    H.add(mast);
-    const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 8), m.beacon);
-    beacon.position.set(1.05, BH + 1.42, -0.2);
-    H.add(beacon);
-    this.glow("#ff3b4f", 1.05, BH + 1.42, -0.15, 0.6, 0.6, 0.6, H, true);
-    const dish = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2.6), m.body);
-    dish.rotation.set(-1.0, 0, 0.5);
-    dish.position.set(1.05, BH + 1.1, -0.1);
-    H.add(dish);
-
-    // snow drifts against the walls
-    for (const [x, z, sx] of [
-      [-1.5, front + 0.1, 0.9],
-      [1.45, front + 0.12, 1.0],
-      [-W / 2 - 0.1, 0.3, 0.7],
-      [W / 2 + 0.1, -0.2, 0.8],
-    ]) {
-      const drift = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 10), m.snow);
-      drift.scale.set(sx, 0.24, 0.42);
-      drift.position.set(x, 0, z);
-      H.add(drift);
+  private buildMountains() {
+    const bands = [
+      { z: -78, amp: 16, f: 0.028, seed: 3, x: 0 },
+      { z: -112, amp: 26, f: 0.018, seed: 11, x: 30 },
+      { z: -150, amp: 38, f: 0.012, seed: 19, x: -40 },
+    ];
+    for (const b of bands) {
+      const nz = makeNoise(b.seed);
+      const geo = new THREE.PlaneGeometry(420, 46, this.mobile ? 120 : 200, 18);
+      geo.rotateX(-Math.PI / 2);
+      const f = (xl: number, zl: number) => {
+        const x = xl + b.x;
+        const t = (zl + 23) / 46;
+        let ridge = 0;
+        let a = 1;
+        let fr = b.f;
+        for (let o = 0; o < 5; o++) {
+          const v = 1 - Math.abs(nz(x * fr, zl * fr + o * 7));
+          ridge += v * v * a;
+          a *= 0.5;
+          fr *= 2.1;
+        }
+        const bell = Math.sin(Math.PI * clamp(t, 0, 1)) ** 0.8;
+        return (ridge * 0.62 - 0.12) * b.amp * bell;
+      };
+      this.sculptJobs.push({ geo, f });
+      const mesh = new THREE.Mesh(geo, this.mountainMat);
+      mesh.position.set(0, -2, b.z);
+      this.scene.add(mesh);
     }
 
   private buildMist() {
