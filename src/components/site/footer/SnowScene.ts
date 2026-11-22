@@ -948,10 +948,32 @@ export class SnowScene {
     // sleeping: dim windows, warm night light inside, zzz and smoke
     this.sleepAmt = damp(this.sleepAmt, this.sleeping ? 1 : 0, 2.2, dt || 1);
     const s = this.sleepAmt;
-    this.mats.window.color.setRGB(1 - s * 0.55, 1 - s * 0.6, 1 - s * 0.35);
-    this.mats.interior.color.set("#ffb36b").lerp(new THREE.Color("#3b2a66"), s);
-    this.mats.doorSign.opacity = 0.15 + s * 0.85;
-    this.porchLight.intensity = 6 - s * 3.5 + (this.doorOpen ? 4 : 0);
+    const open = clamp(-angle / 1.9, 0, 1);
+    const seamAmt = L.seamAwake + (L.seamAsleep - L.seamAwake) * s;
+    const breath = r ? 1 : 0.94 + Math.sin(t * 1.3) * 0.04 + Math.sin(t * 7.1) * 0.015;
+    const seam = this.glowMat.color.set(L.seam).multiplyScalar(seamAmt * breath);
+    this.iceUniforms.uSeam.value.copy(seam).multiplyScalar(0.4);
+    this.tunnelGlowMat.color.set(WARM).multiplyScalar((0.55 + open * 0.9) * L.warm * breath);
+    this.warmLight.intensity = (1.4 + open * 15 + (1 - s) * 1.2) * L.warm * breath;
+    this.warmLight.position.copy(this.mouth).addScaledVector(this.D, -0.55 + open * 0.95).setY(0.6);
+    this.poolMat.opacity = (0.06 + open * 0.3 + (1 - s) * 0.04) * L.warm;
+    (this.mouthGlow.material as THREE.SpriteMaterial).opacity = (0.12 + open * 0.45) * L.warm;
+    this.doorMat.emissiveIntensity = (0.05 + (1 - s) * 0.04) * L.warm;
+    (this.neonGlow.material as THREE.SpriteMaterial).opacity = L.neon * 0.35 * (r ? 1 : 0.9 + Math.sin(t * 7.3) * 0.05 + (Math.sin(t * 23) > 0.97 ? -0.35 : 0));
+
+    // --- blocks floating apart / settling
+    if (this.burstClock >= 0) {
+      this.burstClock += dt;
+      if (this.burstClock > 9) this.burstClock = -1;
+    }
+    const burstLift = (this.burstClock < 0 ? 0 : this.burstClock < 2.6 ? 1 : Math.exp(-(this.burstClock - 2.6) * 0.65)) * 0.78;
+    const scrollLift = 1 - smooth(0.3, 0.94, this.scrollEased);
+    const liftTarget = r ? 0 : Math.max(scrollLift, burstLift);
+    this.liftNow = r || !dt ? liftTarget : this.lift.step(liftTarget, dt);
+    this.placeFloaters(t);
+
+    // --- zzz and steam from the vent
+    const top = this.H + 0.1;
     for (const z of this.zzz) {
       const f = (t * 0.3 + z.phase) % 1;
       z.sprite.position.set(0.15 + f * 0.8 + Math.sin(f * 6 + z.phase * 5) * 0.08, top - 0.05 + f * 1.1, 0.3);
