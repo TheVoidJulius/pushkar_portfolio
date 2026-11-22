@@ -953,10 +953,10 @@ export class SnowScene {
     this.mats.doorSign.opacity = 0.15 + s * 0.85;
     this.porchLight.intensity = 6 - s * 3.5 + (this.doorOpen ? 4 : 0);
     for (const z of this.zzz) {
-      const f = (t * 0.33 + z.phase) % 1;
-      z.sprite.position.set(0.15 + f * 0.9 + Math.sin(f * 6 + z.phase * 5) * 0.08, 2.55 + f * 1.4, 1.42);
-      z.sprite.scale.setScalar(0.18 + f * 0.32);
-      (z.sprite.material as THREE.SpriteMaterial).opacity = Math.sin(f * Math.PI) * s * 0.95;
+      const f = (t * 0.3 + z.phase) % 1;
+      z.sprite.position.set(0.15 + f * 0.8 + Math.sin(f * 6 + z.phase * 5) * 0.08, top - 0.05 + f * 1.1, 0.3);
+      z.sprite.scale.setScalar(0.18 + f * 0.3);
+      (z.sprite.material as THREE.SpriteMaterial).opacity = Math.sin(f * Math.PI) * s * (1 - this.liftNow) * 0.95;
     }
     for (const st of this.steam) {
       const f = (t * 0.12 + st.phase) % 1;
