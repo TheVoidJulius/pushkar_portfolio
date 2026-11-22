@@ -794,28 +794,9 @@ export class SnowScene {
     if (!this.running) this.renderOnce();
   }
 
-  private applyTheme() {
-    const p = this.palette;
-    (this.scene.fog as THREE.Fog).color.set(p.fog);
-    this.hemi.color.set(p.hemiSky);
-    this.hemi.groundColor.set(p.hemiGround);
-    this.hemi.intensity = p.hemi;
-    this.key.color.set(p.key);
-    this.key.intensity = p.keyI;
-    this.mats.snow.color.set(p.snow);
-    this.mats.body.color.set(p.body);
-    this.mats.bodyDark.color.set(p.bodyDark);
-    this.mats.pine.color.set(p.pine);
-    this.mats.path.color.set(p.path);
-    for (const paw of this.paws) paw.mat.color.set(p.paw);
-    this.snowMat.uniforms.uColor.value.set(p.flake);
-    this.snowMat.uniforms.uOpacity.value = p.flakeOpacity;
-    const moon = this.moon.material as THREE.SpriteMaterial;
-    moon.color.set(p.moon);
-    moon.opacity = p.moonOpacity;
-    this.stars.visible = p === PALETTES.dark;
-    const dark = p === PALETTES.dark;
-    for (const g of this.glows) (g.sprite.material as THREE.SpriteMaterial).opacity = g.base * (dark ? 1 : 0.6);
+  /** 0 = section just entering at the bottom of the viewport, 1 = fully in view. */
+  setScroll(p: number) {
+    this.scroll = clamp(p, 0, 1);
   }
 
   setPointer(x: number, y: number) {
