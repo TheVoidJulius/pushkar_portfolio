@@ -924,10 +924,13 @@ export class SnowScene {
 
     // camera: frame the house on any aspect, drift with the pointer
     const aspect = this.w / this.h;
-    const narrow = clamp(1.35 / aspect, 1, 2.6);
-    const dist = 9.4 * Math.pow(narrow, 0.72);
-    this.cam.x = damp(this.cam.x, r ? 0 : this.pointer[0] * 0.7, 2.5, dt);
-    this.cam.y = damp(this.cam.y, r ? 0 : this.pointer[1] * -0.3, 2.5, dt);
+    const tanH = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
+    // keep the igloo + tunnel (≈ 4 units either side) in frame on any aspect
+    const fitW = (aspect < 0.9 ? 3.75 : 4.3) / (tanH * aspect);
+    const fitH = 3.1 / tanH;
+    const dist = Math.max(fitW, fitH, 10.5) * (1 + (1 - p) * 0.28);
+    const az = -0.14 + (1 - p) * -0.5 + this.ptr.x * 0.09;
+    const el = 0.115 + (1 - p) * 0.3 - this.ptr.y * 0.035;
     this.camShake = damp(this.camShake, 0, 3.2, dt);
     const shake = this.camShake * 0.08;
     this.target.set(0.55, 1.05 + (1 - p) * 0.5 + (aspect < 0.9 ? 0.25 : 0), 0.9);
