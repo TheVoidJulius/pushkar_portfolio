@@ -6,6 +6,7 @@ import { AssistantDock } from "../momo/AssistantDock";
 import { AssistantProvider } from "../momo/AssistantProvider";
 import { MikuroLife } from "../momo/MikuroLife";
 import { MomoFlight } from "../momo/MomoFlight";
+import { Secrets } from "./secrets/Secrets";
 import { MusicPlayer } from "../music/MusicPlayer";
 import { About } from "./About";
 import { BottomChips, TopNav } from "./Chrome";
@@ -46,6 +47,7 @@ export function PublicSite({ content, previewBanner }: { content: PortfolioConte
           <AssistantDock />
           <MomoFlight />
           <MikuroLife />
+          <Secrets />
         </>
       )}
       </MotionConfig>
