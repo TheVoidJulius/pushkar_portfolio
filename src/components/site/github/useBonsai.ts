@@ -118,3 +118,15 @@ export function useBonsai(enabled: boolean) {
         setItems((cur) => merge([row], cur));
         setCount((c) => c + 1);
         setFresh(row.id);
+        return "shared";
+      } catch {
+        return addLocal();
+      }
+    },
+    [configured],
+  );
+
+  const total = configured ? count : items.length;
+  const last = items[0]?.created_at ?? null;
+  return { items, total, last, configured, fresh, water };
+}
