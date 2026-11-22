@@ -134,6 +134,47 @@ export function GitHubActivity({ showAssistant }: { showAssistant: boolean }) {
               ) : (
                 <p className="font-mono text-[12.5px] tracking-[0.12em] uppercase">Planting the seed…</p>
               )}
+
+            {data && (
+              <div className="mt-6 max-w-md">
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPicking((v) => !v)}
+                    aria-expanded={picking}
+                    aria-controls="bonsai-blossoms"
+                    className="chrome-btn text-[14.5px] font-medium"
+                  >
+                    Water the tree <span aria-hidden className="ml-1.5">💧</span>
+                  </button>
+                  <span className="chip chip-mono" role="status">
+                    {bonsai.total === 0
+                      ? "Not watered yet"
+                      : `Watered ${bonsai.total} time${bonsai.total === 1 ? "" : "s"}${bonsai.last ? ` · last by a visitor ${ago(bonsai.last)}` : ""}`}
+                  </span>
+                </div>
+                {picking && (
+                  <div id="bonsai-blossoms" role="group" aria-label="Pick a blossom to grow" className="mt-3 flex flex-wrap gap-2">
+                    {BLOSSOMS.map((e, i) => (
+                      <button
+                        key={e}
+                        type="button"
+                        onClick={() => water(i)}
+                        aria-label={`Water and grow blossom ${i + 1} of ${BLOSSOMS.length}`}
+                        className="float-btn text-[20px] transition hover:-translate-y-0.5"
+                      >
+                        <span aria-hidden>{e}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {(note || everLocal) && (
+                  <p className="mt-2 text-[12px] text-ink-3" aria-live="polite">
+                    {note || "Saved on this device"}
+                  </p>
+                )}
+              </div>
+            )}
             </div>
           )}
         </FadeUp>
