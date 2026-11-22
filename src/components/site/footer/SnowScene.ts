@@ -625,10 +625,6 @@ export class SnowScene {
       e.position.set(x, 0, 0);
       g.add(e);
     }
-    g.position.set(0, 0.95, 1.28);
-    g.visible = false;
-    this.house.add(g);
-    return g;
   }
 
   private buildParticles(count: number, o: { x: number; y: number; z0: number; z1: number; size: number; fall: number; streak: boolean }) {
