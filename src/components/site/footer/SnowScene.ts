@@ -950,6 +950,28 @@ export class SnowScene {
         if (this.disposed) return;
       }
       job.geo.computeVertexNormals();
+    });
+    mesh.computeBoundingSphere();
+    this.blocks = mesh;
+    this.scene.add(mesh);
+
+    // the warm inside, seen through the joints between blocks
+    const shell = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 18, 0, Math.PI * 2, 0, Math.PI / 2), this.glowMat);
+    shell.scale.set(R - BD - 0.02, H - BD - 0.02, R - BD - 0.02);
+    this.scene.add(shell);
+    const tunnel = new THREE.Mesh(new THREE.CylinderGeometry(rMid - BD / 2 - 0.02, rMid - BD / 2 - 0.02, segLen * segs + 0.6, 20, 1, true, -Math.PI / 2, Math.PI), this.tunnelGlowMat);
+    tunnel.rotation.set(Math.PI / 2, 0, 0);
+    const holder = new THREE.Group();
+    holder.add(tunnel);
+    holder.position.copy(D).multiplyScalar(this.mouthDist - (segLen * segs) / 2 - 0.2).setY(yc);
+    holder.rotation.y = this.doorYaw;
+    // the tunnel's lower walls
+    const walls = new THREE.Mesh(new THREE.PlaneGeometry(segLen * segs + 0.6, yc), this.tunnelGlowMat);
+    for (const side of [-1, 1]) {
+      const w = walls.clone();
+      w.rotation.y = Math.PI / 2;
+      w.position.set(side * (rMid - BD / 2 - 0.02), -yc / 2, 0);
+      holder.add(w);
       job.geo.computeBoundingSphere();
       await nextTask();
     }
