@@ -19,6 +19,13 @@ export function scrollToSection(id: string) {
   history.replaceState(null, "", id === "hero" ? location.pathname : `#${id}`);
 }
 
+/** Scrolls the page to an absolute position (smoothly unless `immediate`). */
+export function scrollToY(y: number, immediate = false) {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (lenis) lenis.scrollTo(y, { immediate: immediate || reduce, duration: 0.9, force: true });
+  else window.scrollTo({ top: y, behavior: immediate || reduce ? "auto" : "smooth" });
+}
+
 /** Pauses smooth scrolling (and page scroll) while a modal is open. */
 export function lockScroll(locked: boolean) {
   if (locked) lenis?.stop();
