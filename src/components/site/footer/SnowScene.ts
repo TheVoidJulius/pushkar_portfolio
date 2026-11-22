@@ -153,8 +153,15 @@ uniform vec3 uColor;
 uniform float uOpacity;
 varying float vAlpha;
 void main() {
-  float d = length(gl_PointCoord - 0.5);
-  float a = smoothstep(0.5, 0.12, d) * vAlpha * uOpacity;
+  vec2 c = gl_PointCoord - 0.5;
+  float a;
+  if (uStreak > 0.5) {
+    float x = c.x + c.y * uSlant;
+    a = smoothstep(0.06, 0.0, abs(x)) * smoothstep(0.5, 0.15, abs(c.y));
+  } else {
+    a = smoothstep(0.5, 0.1, length(c));
+  }
+  a *= vAlpha * uOpacity;
   if (a < 0.01) discard;
   gl_FragColor = vec4(uColor, a);
 }`;
