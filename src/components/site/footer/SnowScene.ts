@@ -832,7 +832,7 @@ export class SnowScene {
     this.rattle.v += 9;
   }
 
-  /** The door slams open from the inside. */
+  /** The door slams open from the inside and the top of the igloo pops apart. */
   burst() {
     this.doorOpen = true;
     if (this.reduced) {
