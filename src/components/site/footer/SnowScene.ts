@@ -90,11 +90,10 @@ const PALETTES: Record<"dark" | "light", Palette> = {
     pine: "#2d5550",
     flake: "#ffffff",
     flakeOpacity: 0.9,
-    path: "#a9b4dd",
-    paw: "#9aa6d6",
-    pawOpacity: 0.5,
-    moon: "#ffd9e6",
-    moonOpacity: 0.55,
+    paw: "#27305a",
+    pawOpacity: 0.55,
+    ink: "#ffffff",
+    neon: 1,
   },
 };
 
