@@ -104,6 +104,7 @@ const LOOKS: Record<Mode, Look> = {
     ink: "#1f242c",
     neon: 0.4,
   },
+  snowRough: number;
   // Light theme after sunset in Delhi: blue hour, peach horizon
   dusk: {
     skyTop: "#4f6396",
