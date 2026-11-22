@@ -309,8 +309,8 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
           type="button"
           onClick={knock}
           disabled={!sleepingNow}
-          aria-label={sleepingNow ? `Knock on ${mikuro}'s door (she will take you back to the top)` : `${mikuro}'s front door`}
-          className={`absolute top-0 left-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+          aria-label={sleepingNow ? `Knock on ${mikuro}'s ice door (she will take you back to the top)` : `${mikuro}'s ice door`}
+          className={`absolute top-0 left-0 rounded-t-full outline-none focus-visible:ring-2 focus-visible:ring-accent ${
             sleepingNow ? "cursor-pointer" : "cursor-default"
           } ${failed ? "!top-[56%] !left-[55%] !h-[16%] !w-[9%] !transform-none" : ""}`}
         >
