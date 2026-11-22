@@ -935,7 +935,38 @@ export class SnowScene {
       1.95 + (narrow - 1) * 0.9 + this.cam.y + Math.cos(t * 53) * shake,
       dist,
     );
-    this.camera.lookAt(0, 1.3 + (narrow - 1) * 0.35, 0);
+    this.camera.lookAt(this.target);
+    this.sky.position.copy(this.camera.position);
+    this.stars.position.copy(this.camera.position);
+
+    // --- weather: wind and gusts
+    const windBase = clamp((w?.wind ?? 6) / 14, 0.25, 3.2);
+    const gustWave = Math.max(0, Math.sin(t * 0.21) * Math.sin(t * 0.67 + 1.3) + Math.sin(t * 0.13 + 2) * 0.4);
+    const wind = windBase * (0.55 + gustWave * 1.4);
+    if (!r) this.windOffset = (this.windOffset + wind * dt * 0.9) % 1000;
+    this.gust = damp(this.gust, 0, 1.6, dt);
+    for (const m of [this.flakes, this.sleet, this.drift]) {
+      m.uniforms.uTime.value = r ? 4 : t;
+      m.uniforms.uGust.value = this.gust;
+    }
+    this.flakes.uniforms.uWind.value = this.windOffset;
+    this.sleet.uniforms.uWind.value = this.windOffset * 1.6;
+    this.sleet.uniforms.uSlant.value = clamp(wind * 0.18, 0, 0.6);
+    this.drift.uniforms.uWind.value = this.windOffset * 4.5;
+    this.drift.uniforms.uOpacity.value = clamp((wind - 0.35) * 0.5, 0, 0.75) * (L.flakeOpacity * 0.8);
+
+    // storm lightning
+    if (w?.condition === "storm" && !r) {
+      this.nextFlash -= dt;
+      if (this.nextFlash < 0) {
+        this.flash = 1;
+        this.nextFlash = 3 + Math.random() * 6;
+      }
+    }
+    this.flash = damp(this.flash, 0, 9, dt);
+    const fl = this.flash > 0.02 ? this.flash * (0.6 + 0.4 * Math.sin(t * 90)) : 0;
+    this.skyMat.uniforms.uFlash.value = fl * 0.6;
+    this.hemi.intensity = L.hemi * (w?.condition === "rain" || w?.condition === "storm" ? 0.85 : 1) + fl * 2.5;
 
     // --- door swing and knock rattle
     const angle = r ? this.door.x : this.door.step(this.doorOpen ? -1.9 : 0, dt);
