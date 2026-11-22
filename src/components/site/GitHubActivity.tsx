@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowUpRight } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GitHubActivity as Activity } from "@/lib/github";
 import { useAssistant } from "../momo/AssistantProvider";
 import { MomoLine } from "../momo/MomoLine";
