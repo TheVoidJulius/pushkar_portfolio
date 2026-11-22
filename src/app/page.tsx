@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PublicSite } from "@/components/site/PublicSite";
 import { getPortfolioContent } from "@/lib/content/queries";
+import { withLiveStats } from "@/lib/live-stats";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getAdminSession } from "@/lib/supabase/server";
 
@@ -26,7 +27,8 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
   const wantsPreview = params.preview === "1" && isSupabaseConfigured;
   const isAdmin = wantsPreview ? (await getAdminSession()).isAdmin : false;
-  const { content } = await getPortfolioContent({ includeDrafts: isAdmin });
+  const { content: stored } = await getPortfolioContent({ includeDrafts: isAdmin });
+  const content = await withLiveStats(stored);
 
   return (
     <PublicSite

@@ -2,7 +2,7 @@
 // (see supabase/migrations) so the same objects flow through the public
 // site, the AI assistant, the admin dashboard and JSON import/export.
 
-export type Stat = { value: string; label: string };
+export type Stat = { value: string; label: string; /** Set server-side when fetched live. */ live?: boolean };
 export type Highlight = { title: string; description: string };
 export type Social = { platform: string; label: string; url: string };
 
