@@ -312,7 +312,7 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
           aria-label={sleepingNow ? `Knock on ${mikuro}'s door (she will take you back to the top)` : `${mikuro}'s front door`}
           className={`absolute top-0 left-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent ${
             sleepingNow ? "cursor-pointer" : "cursor-default"
-          } ${failed ? "!top-[52%] !left-[46%] !h-[22%] !w-[8%] !transform-none" : ""}`}
+          } ${failed ? "!top-[56%] !left-[55%] !h-[16%] !w-[9%] !transform-none" : ""}`}
         >
           <AnimatePresence>
             {sleepingNow && (
