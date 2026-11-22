@@ -618,12 +618,43 @@ export class SnowScene {
   /** Two angry glowing eyes in the dark doorway (used when Mikuro is turned off). */
   private buildEyes() {
     const g = new THREE.Group();
-    for (const x of [-0.13, 0.13]) {
-      const e = new THREE.Mesh(new THREE.CircleGeometry(0.06, 20), new THREE.MeshBasicMaterial({ color: "#ff3b30", toneMapped: false, transparent: true }));
-      e.scale.y = 0.55;
-      e.rotation.z = x > 0 ? 0.35 : -0.35;
-      e.position.set(x, 0, 0);
-      g.add(e);
+    const stake = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.95, 6), new THREE.MeshStandardMaterial({ color: "#3a3f4a", roughness: 0.7 }));
+    stake.position.y = 0.42;
+    stake.castShadow = true;
+    const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 0.195), this.neonMat);
+    plate.position.y = 0.92;
+    g.add(stake, plate);
+    const at = this.mouth.clone().addScaledVector(this.D, 0.55).addScaledVector(this.L, 1.15);
+    g.position.set(at.x, this.height(at.x, at.z), at.z);
+    g.rotation.y = this.doorYaw - 0.35;
+    this.scene.add(g);
+    this.neonGlow = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: this.radial, color: NEON, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, opacity: 0.3 }),
+    );
+    this.neonGlow.position.set(at.x, g.position.y + 0.92, at.z + 0.02);
+    this.neonGlow.scale.set(1.5, 0.6, 1);
+    this.scene.add(this.neonGlow);
+  }
+
+  private buildSleepy() {
+    const zTex = canvasTexture(128, 128, (g) => {
+      g.font = "500 92px ui-monospace, 'SF Mono', Menlo, Consolas, monospace";
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.shadowColor = WARM;
+      g.shadowBlur = 14;
+      g.fillStyle = "#fff4ea";
+      g.fillText("z", 64, 64);
+    });
+    for (let i = 0; i < 3; i++) {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: zTex, transparent: true, opacity: 0, depthWrite: false, toneMapped: false }));
+      this.scene.add(s);
+      this.zzz.push({ sprite: s, phase: i / 3 });
+    }
+    for (let i = 0; i < 6; i++) {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.radial, color: "#f2f4f8", transparent: true, opacity: 0, depthWrite: false }));
+      this.scene.add(s);
+      this.steam.push({ sprite: s, phase: i / 6 });
     }
   }
 
