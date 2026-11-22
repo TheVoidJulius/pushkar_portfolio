@@ -278,3 +278,43 @@ export function VisitorCats() {
 
     return () => {
       teardown = true;
+      cancelAnimationFrame(raf);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("scroll", onScroll);
+      if (demo) clearInterval(demo);
+      if (channel) void channel.unsubscribe();
+      R.clear();
+    };
+  }, [mine]);
+
+  const toggle = () => {
+    const next = !hidden;
+    setHidden(next);
+    try {
+      localStorage.setItem(HIDE_KEY, next ? "1" : "0");
+    } catch {
+      /* private mode: the choice just lasts this visit */
+    }
+  };
+
+  const label = count <= 1 ? "just you" : `${count} cats here`;
+  return (
+    <>
+      <style>{CAT_CSS}</style>
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-30 overflow-hidden" style={{ display: hidden ? "none" : undefined }}>
+        {mine && <GhostCat ref={ownEl} hue={mine.hue} />}
+        {list.map((c) => (
+          <GhostCat
+            key={c.id}
+            hue={c.hue}
+            name={c.name}
+            ref={(el) => {
+              const cur = remotes.current.get(c.id);
+              if (cur) cur.el = el;
+            }}
+          />
+        ))}
+      </div>
+      <button
+        type="button"
