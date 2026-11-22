@@ -193,22 +193,19 @@ export class SnowScene {
   private pawAmt = 0;
   private pawFade = 1;
   private pointer: [number, number] = [0, 0];
-  private cam = { x: 0, y: 0 };
+  private ptr = { x: 0, y: 0 };
+  private scroll = 1;
+  private scrollEased = 1;
+  private lift = new Spring(16, 6.2);
+  private burstClock = -1;
+  private liftNow = 0;
+  private windOffset = 0;
+  private flash = 0;
+  private nextFlash = 3;
+  private wet = 0;
 
-  // pieces that change with the theme or the story
-  private mats: {
-    snow: THREE.MeshStandardMaterial;
-    body: THREE.MeshStandardMaterial;
-    bodyDark: THREE.MeshStandardMaterial;
-    pine: THREE.MeshStandardMaterial;
-    path: THREE.MeshBasicMaterial;
-    window: THREE.MeshBasicMaterial;
-    porthole: THREE.MeshBasicMaterial;
-    interior: THREE.MeshBasicMaterial;
-    doorSign: THREE.MeshBasicMaterial;
-    neonSign: THREE.MeshBasicMaterial;
-    beacon: THREE.MeshBasicMaterial;
-  };
+  // pieces
+  private fog: THREE.FogExp2;
   private hemi: THREE.HemisphereLight;
   private key: THREE.DirectionalLight;
   private warmLight: THREE.PointLight;
