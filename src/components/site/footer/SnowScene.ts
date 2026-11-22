@@ -148,7 +148,7 @@ void main() {
   vAlpha = smoothstep(0.0, 0.6, p.y) * smoothstep(12.0, 10.5, p.y) * smoothstep(0.6, 2.5, -mv.z);
 }`;
 
-const SNOW_FRAG = /* glsl */ `
+const FLAKE_FRAG = /* glsl */ `
 uniform vec3 uColor;
 uniform float uOpacity;
 varying float vAlpha;
