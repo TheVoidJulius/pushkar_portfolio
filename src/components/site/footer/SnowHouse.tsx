@@ -288,7 +288,25 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
         <div ref={hostRef} className="absolute inset-0" aria-hidden />
         {failed && <FallbackHouse />}
 
-        {/* Where Mikuro flies to: positioned every frame from the 3D scene */}
+        {/* HUD: tiny mono notes in the corners */}
+        <div className={`pointer-events-none absolute top-24 left-4 font-mono text-[11px] leading-[1.6] sm:top-28 sm:left-8 sm:text-[12px] ${hud}`}>
+          <p>{"// "}{mikuro}&apos;s igloo</p>
+          <p className={hudSoft}>
+            ice blocks · <span ref={assembledRef}>000</span>% assembled
+          </p>
+        </div>
+        <div className={`pointer-events-none absolute top-24 right-4 max-w-[58vw] text-right font-mono text-[11px] leading-[1.6] sm:top-28 sm:right-8 sm:max-w-none sm:text-[12px] ${hud}`}>
+          <p>{"////// "}{weather ? weatherReadout(weather) : "New Delhi · reading the sky…"}</p>
+          {weather && <p className={`hidden sm:block ${hudSoft}`}>{weatherJoke(weather)}</p>}
+        </div>
+        <div className={`absolute bottom-24 left-4 font-mono text-[11px] leading-[1.7] sm:bottom-28 sm:left-8 sm:text-[12px] ${hud}`}>
+          <p aria-hidden className="max-w-[16ch] sm:max-w-none">{hint}</p>
+          <button type="button" onClick={a.toggleMute} className={`mt-1 inline-flex items-center gap-1.5 transition hover:opacity-100 ${hudSoft}`}>
+            <span aria-hidden>{a.muted ? "◁×" : "◁)"}</span> Sound: {a.muted ? "Off" : "On"}
+          </button>
+        </div>
+
+        {/* Where Mikuro walks to: positioned every frame from the 3D scene */}
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           {ANCHORS.map((id) => (
             <div
