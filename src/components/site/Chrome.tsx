@@ -5,6 +5,7 @@ import { Home, Moon, Play, RotateCcw, Sun, Volume2, VolumeX, X } from "lucide-re
 import { useEffect, useState } from "react";
 import { SECTION_LABELS, SECTIONS } from "@/lib/assistant/protocol";
 import { lockScroll, scrollToSection } from "@/lib/scroll";
+import { MusicButton } from "../music/MusicPlayer";
 import { useAssistant } from "../momo/AssistantProvider";
 import { replayIntro } from "./introControl";
 import { toggleTheme, useTheme } from "./ThemeToggle";
@@ -49,6 +50,7 @@ export function TopNav({ showAssistant }: { showAssistant: boolean }) {
         >
           {theme === "dark" ? <Sun className="size-[15px]" strokeWidth={2.2} /> : <Moon className="size-[15px]" strokeWidth={2.2} />}
         </button>
+        <MusicButton />
         <button type="button" onClick={() => setMenu(true)} className="float-btn w-[54px]" aria-label="Open menu" aria-expanded={menu}>
           <span className="flex flex-col gap-[5px]" aria-hidden>
             <span className="h-[1.6px] w-[18px] rounded bg-current" />
