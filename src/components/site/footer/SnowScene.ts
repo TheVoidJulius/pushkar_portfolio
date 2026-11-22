@@ -604,7 +604,7 @@ export class SnowScene {
         [0.07, 0.085],
       ]) {
         const tm = new THREE.Mesh(toe, mat);
-        tm.position.set(tx, ty, 0);
+        tm.position.set(x, y, 0);
         g.add(tm);
       }
       g.rotation.x = -Math.PI / 2;
