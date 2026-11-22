@@ -1168,3 +1168,4 @@ export class SnowScene {
     pairs.forEach((idx, j) => lines.setXYZ(j, dots.getX(idx), dots.getY(idx), dots.getZ(idx)));
     lines.needsUpdate = true;
   }
+    this.radial.dispose();
