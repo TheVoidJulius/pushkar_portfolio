@@ -673,13 +673,37 @@ export class SnowScene {
     return s;
   }
 
-  private buildStars() {
-    const n = 260;
-    const pos = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      pos[i * 3] = Math.random() * 120 - 60;
-      pos[i * 3 + 1] = 5 + Math.random() * 24;
-      pos[i * 3 + 2] = -45 - Math.random() * 10;
+    this.fog.color.copy(fog);
+    this.fog.density = density;
+    const u = this.skyMat.uniforms;
+    u.uTop.value.copy(top);
+    u.uHorizon.value.copy(fog).lerp(hor, 0.35);
+    u.uSun.value.copy(sun);
+    u.uSunDir.value.set(...L.sunDir);
+    u.uDisc.value = disc;
+    u.uHalo.value = halo;
+
+    this.hemi.color.set(L.hemiSky);
+    this.hemi.groundColor.set(L.hemiGround);
+    this.hemi.intensity = L.hemi * (rain ? 0.85 : 1);
+    this.key.color.copy(key);
+    this.key.intensity = keyI;
+    this.key.position.set(...L.keyDir).normalize().multiplyScalar(22).add(this.key.target.position);
+    this.snowUniforms.uLightDir.value.set(...L.keyDir).normalize();
+    this.snowUniforms.uSparkle.value = rain ? 0.2 : night ? 0.6 : 1;
+    this.snowUniforms.uRipple.value = rain ? 0.5 : 1;
+
+    this.snowMat.color.copy(snow);
+    this.snowMat.roughness = rough;
+    this.mountainMat.color.set(L.mountain).lerp(fog, haze ? 0.45 : 0.15);
+    this.iceMat.color.set(L.ice);
+    if (rain) this.iceMat.color.multiplyScalar(0.9);
+    this.iceUniforms.uRim.value.set(L.rim).multiplyScalar(L.rimAmt);
+    this.doorMat.color.set(L.ice).multiplyScalar(0.95);
+
+    for (const m of this.mists) {
+      m.mat.color.copy(fog);
+      m.mat.opacity = m.base * mist;
     }
     (this.stars.material as THREE.PointsMaterial).opacity = L.stars * (haze || cond === "fog" || rain ? 0.15 : 1);
     this.stars.visible = L.stars > 0;
