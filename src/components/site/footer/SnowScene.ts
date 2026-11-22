@@ -262,15 +262,55 @@ export class SnowScene {
       beacon: new THREE.MeshBasicMaterial({ color: "#ff3b4f", toneMapped: false }),
     };
 
-    this.buildGround();
-    this.buildHouse();
-    this.buildTrees();
-    this.buildPaws();
-    this.eyes = this.buildEyes();
-    this.snowMat = this.buildSnow(opts.mobile ? 900 : 2000);
-    this.moon = this.buildMoon();
-    this.stars = this.buildStars();
-    this.applyTheme();
+  private makeIceMaterial() {
+    const mat = new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.55, metalness: 0 });
+    const u = this.iceUniforms;
+    mat.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, u);
+      sh.vertexShader = sh.vertexShader
+        .replace("#include <common>", "#include <common>\nvarying vec3 vBoxP;")
+        .replace("#include <begin_vertex>", "#include <begin_vertex>\nvBoxP = position;");
+      sh.fragmentShader = sh.fragmentShader
+        .replace(
+          "#include <common>",
+          `#include <common>
+varying vec3 vBoxP;
+uniform vec3 uRim;
+uniform vec3 uSeam;
+uniform vec3 uHalf;
+uniform float uWet;
+float iHash(vec3 p) { return fract(sin(dot(p, vec3(17.1, 113.7, 41.3))) * 43758.5453); }
+float iNoise(vec3 p) {
+  vec3 i = floor(p); vec3 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(iHash(i), iHash(i + vec3(1,0,0)), f.x), mix(iHash(i + vec3(0,1,0)), iHash(i + vec3(1,1,0)), f.x), f.y),
+             mix(mix(iHash(i + vec3(0,0,1)), iHash(i + vec3(1,0,1)), f.x), mix(iHash(i + vec3(0,1,1)), iHash(i + vec3(1,1,1)), f.x), f.y), f.z);
+}`,
+        )
+        .replace(
+          "#include <color_fragment>",
+          `#include <color_fragment>
+float grain = iNoise(vBoxP * 9.0) * 0.6 + iNoise(vBoxP * 23.0) * 0.4;
+diffuseColor.rgb *= 0.9 + 0.12 * grain;`,
+        )
+        .replace(
+          "#include <roughnessmap_fragment>",
+          `#include <roughnessmap_fragment>
+roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
+        )
+        .replace(
+          "#include <emissivemap_fragment>",
+          `#include <emissivemap_fragment>
+{
+  vec3 bp = abs(vBoxP) / uHalf;
+  // light leaking through the joints between blocks
+  float edge = smoothstep(0.8, 1.0, max(bp.x, bp.y)) * (1.0 - smoothstep(-0.7, 0.35, vBoxP.z / uHalf.z));
+  float fres = pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 3.0);
+  // a fake subsurface glow: thin ice lets the inside light through
+  totalEmissiveRadiance += uRim * fres + uSeam * (edge * 0.9 + 0.06 * grain);
+}`,
+        );
+    };
+    return mat;
   }
 
   // -------------------------------------------------------------------
