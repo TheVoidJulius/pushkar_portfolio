@@ -198,6 +198,41 @@ export class SnowScene {
   private disposed = false;
   private last = 0;
   private t = 0;
+    flakeOpacity: 0.85,
+    paw: "#6e6a8c",
+    pawOpacity: 0.45,
+    ink: "#ffffff",
+    neon: 0.8,
+  },
+  // Dark theme: deep blue-grey night, moonlight, a warm glow inside
+  night: {
+    skyTop: "#04070f",
+    horizon: "#1a2340",
+    fog: "#141b31",
+    fogDensity: 0.013,
+    snow: "#aab6d4",
+    snowRough: 0.85,
+    hemiSky: "#5a6ea8",
+    hemiGround: "#0d1120",
+    hemi: 1.0,
+    key: "#a7b9ff",
+    keyI: 1.5,
+    keyDir: [6, 8, 3],
+    ice: "#b9c5e3",
+    rim: "#8ea8ff",
+    rimAmt: 0.32,
+    seam: "#ff8c3c",
+    seamAwake: 1.25,
+    seamAsleep: 0.8,
+    warm: 1.15,
+    mist: 0.5,
+    stars: 1,
+    sun: "#e6ecff",
+    sunDir: [0.5, 0.42, -0.76],
+    sunDisc: 1,
+    sunHalo: 0.22,
+    mountain: "#4a557a",
+    flake: "#eef2ff",
 
   // story state
   private doorOpen = false;
