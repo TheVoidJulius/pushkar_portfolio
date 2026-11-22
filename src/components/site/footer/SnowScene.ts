@@ -1219,3 +1219,4 @@ export class SnowScene {
     this.lift.v += 9;
   private warmed = false;
   private pendingStart = false;
+    pts.renderOrder = 5;
