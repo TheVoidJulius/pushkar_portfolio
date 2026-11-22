@@ -785,12 +785,9 @@ export class SnowScene {
     });
   }
 
-  // -------------------------------------------------------------------
-  // Controls
-  // -------------------------------------------------------------------
-  setTheme(dark: boolean) {
-    this.palette = PALETTES[dark ? "dark" : "light"];
-    this.applyTheme();
+  setWeather(w: Weather) {
+    this.weather = w;
+    this.applyLook();
     if (!this.running) this.renderOnce();
   }
 
