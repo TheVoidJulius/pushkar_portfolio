@@ -38,3 +38,43 @@ const merge = (a: Watering[], b: Watering[]) => {
 export type WaterResult = "shared" | "local" | "rate_limited";
 
 /** Shared waterings (Supabase via /api/bonsai, live over Realtime) with a per-device fallback. */
+export function useBonsai(enabled: boolean) {
+  const [items, setItems] = useState<Watering[]>([]);
+  const [count, setCount] = useState(0);
+  const [configured, setConfigured] = useState(false);
+  const [fresh, setFresh] = useState<string | null>(null);
+  const mine = useRef(new Set<string>());
+
+  useEffect(() => {
+    if (!enabled) return;
+    let cancelled = false;
+    const t = window.setTimeout(() => {
+      const local = readLocal();
+      if (!cancelled && local.length) setItems((cur) => merge(cur, local));
+    }, 0);
+    fetch("/api/bonsai")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { configured: boolean; count: number; items: Watering[] } | null) => {
+        if (cancelled || !d) return;
+        setConfigured(Boolean(d.configured));
+        if (d.configured) {
+          setCount(d.count);
+          setItems((cur) => merge(d.items, cur.filter((w) => w.id.startsWith("local-"))));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [enabled]);
+
+  // Live blossoms from other visitors
+  useEffect(() => {
+    if (!enabled || !configured || !isSupabaseConfigured) return;
+    let off = () => {};
+    let dead = false;
+    import("@/lib/supabase/client").then(({ getSupabaseBrowserClient }) => {
+      if (dead) return;
+      const sb = getSupabaseBrowserClient();
+      const ch = sb
