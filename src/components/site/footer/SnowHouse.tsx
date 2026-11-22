@@ -280,9 +280,9 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
       <div
         className="relative h-[68vh] min-h-[460px] w-full sm:h-[min(88vh,820px)] sm:min-h-[520px]"
         style={{
-        background: dark
-          ? "linear-gradient(180deg, var(--bg) 0%, #0a0e20 24%, #11173a 58%, #151b38 100%)"
-          : "linear-gradient(180deg, var(--bg) 0%, #f4eff8 26%, #ece5f2 60%, #e7e0ee 100%)",
+          background: dark
+            ? "linear-gradient(180deg, var(--bg) 0%, #070b16 30%, #151c32 70%, #1a2238 100%)"
+            : "linear-gradient(180deg, var(--bg) 0%, #c9ced6 30%, #dfe2e7 60%, #e9edf2 100%)",
         }}
       >
         <div ref={hostRef} className="absolute inset-0" aria-hidden />
