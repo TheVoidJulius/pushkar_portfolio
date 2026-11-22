@@ -286,7 +286,11 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
         }}
       >
         <div ref={hostRef} className="absolute inset-0" aria-hidden />
-        {failed && <FallbackHouse />}
+        {failed && <FallbackIgloo dark={dark} />}
+
+        {/* The page fades into the sky, and the snow back into the page */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[var(--bg)] to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-[var(--bg)]" />
 
         {/* HUD: tiny mono notes in the corners */}
         <div className={`pointer-events-none absolute top-24 left-4 font-mono text-[11px] leading-[1.6] sm:top-28 sm:left-8 sm:text-[12px] ${hud}`}>
