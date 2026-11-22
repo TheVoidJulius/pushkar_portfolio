@@ -564,3 +564,40 @@ export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, seaso
 }
 
 export default CommitBonsai;
+/** Watering can tips over the crown and drops fall onto the branches. */
+function Pour() {
+  return (
+    <motion.div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 z-20 overflow-hidden"
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.svg
+        viewBox="0 0 64 48"
+        className="absolute top-[3%] right-[6%] w-[22%] text-ink drop-shadow-md"
+        initial={{ x: 40, y: -10, rotate: 0, opacity: 0 }}
+        animate={{ x: [40, 0, 0, 0, 40], y: [-10, 0, 0, 0, -10], rotate: [0, 0, -28, -28, 0], opacity: [0, 1, 1, 1, 0] }}
+        transition={{ duration: 2.1, times: [0, 0.18, 0.35, 0.8, 1], ease: "easeInOut" }}
+        style={{ transformOrigin: "50% 80%" }}
+      >
+        <path d="M14 18h30l-3 24a4 4 0 0 1-4 3H21a4 4 0 0 1-4-3z" fill="#8fb4e8" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" />
+        <path d="M14 22 4 12l-1 6 11 8" fill="#8fb4e8" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" />
+        <path d="M44 24c6 0 9 3 9 8s-4 8-9 8" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+        <path d="M18 18c0-7 4-11 11-11s11 4 11 11" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      </motion.svg>
+      {Array.from({ length: 12 }, (_, i) => (
+        <motion.span
+          key={i}
+          className="absolute size-[7px] rounded-full bg-[#7fb2f0]"
+          style={{ left: `${30 + ((i * 37) % 38)}%`, top: "14%", borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%" }}
+          initial={{ opacity: 0, y: 0 }}
+          animate={{ opacity: [0, 1, 1, 0], y: [0, 90 + (i % 4) * 28] }}
+          transition={{ delay: 0.7 + (i % 6) * 0.1 + (i > 5 ? 0.35 : 0), duration: 0.75, ease: "easeIn" }}
+        />
+      ))}
+    </motion.div>
+  );
+}
+
