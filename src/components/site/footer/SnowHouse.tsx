@@ -35,10 +35,10 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
   const [failed, setFailed] = useState(false);
   const [knocks, setKnocks] = useState(0);
   const [shout, setShout] = useState<string | null>(null);
-  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
-  const visits = useRef(0);
   const [weather, setWeather] = useState<Weather | null>(null);
   const assembledRef = useRef<HTMLSpanElement>(null);
+  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  const visits = useRef(0);
   const inView = useRef(false);
   const live = useRef(a);
   useEffect(() => {
@@ -100,10 +100,6 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
         d.style.width = `${r.w.toFixed(1)}px`;
         d.style.height = `${r.h.toFixed(1)}px`;
       }
-    };
-
-    const create = () => {
-      if (scene || cancelled) return;
       const a = assembledRef.current;
       if (a) {
         const txt = String(Math.round(spots.assembled * 100)).padStart(3, "0");
@@ -140,6 +136,10 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
           weatherNow = next;
           scene?.setWeather(next);
         });
+    };
+
+    const create = () => {
+      if (scene || cancelled) return;
       void import("./SnowScene")
         .then(({ SnowScene }) => {
           if (cancelled) return;
@@ -156,6 +156,8 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
           Object.assign(scene.canvas.style, { width: "100%", height: "100%", display: "block" });
           host.appendChild(scene.canvas);
           scene.onFrame = place;
+          if (weatherNow) scene.setWeather(weatherNow);
+          scene.setScroll(progress());
           sceneRef.current = scene;
           const size = () => scene?.setSize(host.clientWidth, host.clientHeight);
           size();
@@ -192,12 +194,16 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
     seen.observe(section);
     const onVis = () => (document.hidden ? sceneRef.current?.stop() : inView.current && sceneRef.current?.start());
     document.addEventListener("visibilitychange", onVis);
+    addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("resize", onScroll);
+    section.addEventListener("pointermove", onPointer);
     return () => {
+      removeEventListener("scroll", onScroll);
+      removeEventListener("resize", onScroll);
+      section.removeEventListener("pointermove", onPointer);
       cancelled = true;
       near.disconnect();
       seen.disconnect();
-          if (weatherNow) scene.setWeather(weatherNow);
-          scene.setScroll(progress());
       ro?.disconnect();
       document.removeEventListener("visibilitychange", onVis);
       scene?.canvas.remove();
@@ -245,16 +251,10 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
     });
     later(4300, () => {
       direct({ anchor: "house-inside", face: "sleeping" });
-    addEventListener("scroll", onScroll, { passive: true });
-    addEventListener("resize", onScroll);
-    section.addEventListener("pointermove", onPointer);
       live.current.showQuip(null);
     });
     later(5200, () => {
       scene.setDoor(false);
-      removeEventListener("scroll", onScroll);
-      removeEventListener("resize", onScroll);
-      section.removeEventListener("pointermove", onPointer);
       scene.setSleeping(true);
       setPhase("asleep");
     });
@@ -327,6 +327,19 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
   const mikuro = a.settings.name || "Mikuro";
   const dark = theme === "dark";
   const year = new Date().getFullYear();
+  // The scene is lit for New Delhi's clock: after sunset it's blue hour (or night)
+  const dim = dark || weather?.isDay === false;
+  const hud = dim ? "text-white/80" : "text-[#20252d]/75";
+  const hudSoft = dim ? "text-white/55" : "text-[#20252d]/50";
+
+  const hint =
+    phase === "asleep"
+      ? "She's asleep. Knock on the ice door →"
+      : phase === "knocking"
+        ? "…"
+        : phase === "angry" || phase === "carrying"
+          ? "You've done it now."
+          : "Scroll down to discover.";
 
   return (
     <section ref={sectionRef} aria-label={`${mikuro}'s igloo in the snow`} className="relative isolate overflow-hidden">
@@ -384,19 +397,6 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
           type="button"
           onClick={knock}
           disabled={!sleepingNow}
-  // The scene is lit for New Delhi's clock: after sunset it's blue hour (or night)
-  const dim = dark || weather?.isDay === false;
-  const hud = dim ? "text-white/80" : "text-[#20252d]/75";
-  const hudSoft = dim ? "text-white/55" : "text-[#20252d]/50";
-
-  const hint =
-    phase === "asleep"
-      ? "She's asleep. Knock on the ice door →"
-      : phase === "knocking"
-        ? "…"
-        : phase === "angry" || phase === "carrying"
-          ? "You've done it now."
-          : "Scroll down to discover.";
           aria-label={sleepingNow ? `Knock on ${mikuro}'s ice door (she will take you back to the top)` : `${mikuro}'s ice door`}
           className={`absolute top-0 left-0 rounded-t-full outline-none focus-visible:ring-2 focus-visible:ring-accent ${
             sleepingNow ? "cursor-pointer" : "cursor-default"
@@ -498,8 +498,8 @@ function FallbackIgloo({ dark }: { dark: boolean }) {
       {[400, 370, 340, 310, 280].map((y, i) => (
         <line key={y} x1={330 + i * 14} y1={y} x2={670 - i * 14} y2={y} stroke={line} strokeWidth="2" />
       ))}
+      <path d="M540 430 L540 360 A60 60 0 0 1 660 360 L660 430Z" fill={ice} stroke={line} strokeWidth="3" />
+      <path d="M560 430 L560 368 A40 40 0 0 1 640 368 L640 430Z" fill="#ff9a4f" />
     </svg>
   );
 }
-      <path d="M540 430 L540 360 A60 60 0 0 1 660 360 L660 430Z" fill={ice} stroke={line} strokeWidth="3" />
-      <path d="M560 430 L560 368 A40 40 0 0 1 640 368 L640 430Z" fill="#ff9a4f" />
