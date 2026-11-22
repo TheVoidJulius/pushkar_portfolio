@@ -369,15 +369,17 @@ class Decembers extends Base implements Festive {
 class Fireworks extends Base implements Festive {
   private bursts: Bursts;
   private next = 0.4;
-  private palette = ["#ffe08a", "#ffffff", "#ff7aa8", "#7cc4ff", "#9bffb0"];
+  // Saturated colours that still read against the pale sky (no white)
+  private palette = ["#ffb000", "#ff3d7f", "#2f8cff", "#19c37d", "#a64dff"];
 
   constructor(host: FestiveHost) {
     super(host);
-    this.bursts = new Bursts(this.group, host, host.mobile ? 2 : 4, host.mobile ? 44 : 72, true, 0.22);
+    // Normal blending: the igloo sky is pale, so additive sparks wash out to nothing
+    this.bursts = new Bursts(this.group, host, host.mobile ? 2 : 4, host.mobile ? 44 : 72, false, 0.32);
     if (host.reduced) {
       // one frozen burst, so there is still something festive to look at
-      this.bursts.launch(new THREE.Vector3(-2.4, 8, -7), this.palette, [2, 3.4], 5, 0);
-      this.bursts.launch(new THREE.Vector3(3.6, 9.2, -8), this.palette, [1.6, 2.8], 5, 0);
+      this.bursts.launch(new THREE.Vector3(-2.4, 5.6, -7), this.palette, [2, 3.4], 5, 0);
+      this.bursts.launch(new THREE.Vector3(3.6, 6.4, -8), this.palette, [1.6, 2.8], 5, 0);
       this.bursts.step(1.2, 0.5, 1.4);
     }
   }
@@ -387,7 +389,7 @@ class Fireworks extends Base implements Festive {
     this.t += dt;
     if (this.t > this.next) {
       this.next = this.t + rnd(1.3, 2.8);
-      this.bursts.launch(new THREE.Vector3(rnd(-6, 6), rnd(6.5, 10), rnd(-10, -5)), this.palette, [1.8, 3.6], 2.6, 0.2);
+      this.bursts.launch(new THREE.Vector3(rnd(-6, 6), rnd(4.6, 7.4), rnd(-10, -5)), this.palette, [1.8, 3.6], 2.6, 0.2);
     }
     this.bursts.step(dt, 0.9, 1.5);
   }
