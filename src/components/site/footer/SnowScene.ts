@@ -507,10 +507,87 @@ export class SnowScene {
       g.fillStyle = "#e9fbff";
       g.fillText("z", 64, 70);
     });
-    for (let i = 0; i < 3; i++) {
-      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: zTex, transparent: true, opacity: 0, depthWrite: false, toneMapped: false }));
-      H.add(s);
-      this.zzz.push({ sprite: s, phase: i / 3 });
+    const layers = [
+      { z: -26, y: 4, h: 12, o: 0.45 },
+      { z: -58, y: 3, h: 20, o: 0.7 },
+      { z: -96, y: 2, h: 30, o: 0.75 },
+      { z: -132, y: 4, h: 34, o: 0.8 },
+    ];
+    for (const l of layers) {
+      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false, fog: false, opacity: l.o });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(520, l.h), mat);
+      mesh.position.set(0, l.y + l.h / 2 - 3, l.z);
+      this.scene.add(mesh);
+      this.mists.push({ mesh, mat, base: l.o });
+    }
+  }
+
+  /** The dome (a spiral of blocks), the entrance tunnel and loose chunks. */
+  private buildIgloo() {
+    const R = this.R;
+    const H = this.H;
+    const BW = 0.6;
+    const BH = 0.4;
+    const BD = 0.34;
+    const geo = new RoundedBoxGeometry(BW, BH, BD, this.mobile ? 1 : 2, 0.075);
+    const rnd = mulberry(17);
+    type Inst = { pos: THREE.Vector3; quat: THREE.Quaternion; scale: THREE.Vector3; normal: THREE.Vector3; theta: number; floater: boolean; tint: number };
+    const list: Inst[] = [];
+
+    const rc = R - BD / 2; // radius at the block centres
+    const hc = H - BD / 2;
+    const dTheta = 0.44 / ((rc + hc) / 2);
+    const thetaMax = 1.36;
+    const up = new THREE.Vector3(0, 1, 0);
+    const basis = new THREE.Matrix4();
+    const tx = new THREE.Vector3();
+    const ty = new THREE.Vector3();
+    const nrm = new THREE.Vector3();
+
+    // spiral: elevation climbs one block height per turn
+    let phiAcc = 0;
+    let theta = -dTheta * 0.55;
+    while (theta < thetaMax) {
+      const ringR = rc * Math.cos(theta);
+      const spacing = 0.655;
+      const dPhi = spacing / Math.max(ringR, 0.3);
+      const phi = phiAcc;
+      const ct = Math.cos(theta);
+      const st = Math.sin(theta);
+      const pos = new THREE.Vector3(rc * ct * Math.sin(phi), hc * st, rc * ct * Math.cos(phi));
+      nrm.set((ct * Math.sin(phi)) / rc, st / hc, (ct * Math.cos(phi)) / rc).normalize();
+      tx.set(Math.cos(phi), 0, -Math.sin(phi));
+      ty.crossVectors(nrm, tx).normalize();
+      basis.makeBasis(tx, ty, nrm);
+      const quat = new THREE.Quaternion().setFromRotationMatrix(basis);
+      // follow the spiral's slope
+      const slope = Math.atan2(dTheta * hc, Math.PI * 2 * Math.max(ringR, 0.3));
+      quat.multiply(this.q.setFromAxisAngle(new THREE.Vector3(0, 0, 1), slope));
+      // leave a hole for the tunnel
+      const rel = Math.atan2(Math.sin(phi - this.doorYaw), Math.cos(phi - this.doorYaw));
+      const lateral = Math.abs(Math.sin(rel)) * rc * ct;
+      // (only blocks whose centre sits well inside the arch, so no gaps show)
+      const archTop = 0.36 + Math.sqrt(Math.max(0, 0.68 * 0.68 - lateral * lateral));
+      const inDoor = Math.abs(rel) < Math.PI / 2 && lateral < 0.68 && pos.y < archTop;
+      if (!inDoor && pos.y > -0.25) {
+        const shrink = (Math.min(spacing, ringR * dPhi) - 0.05) / BW;
+        list.push({
+          pos,
+          quat,
+          scale: new THREE.Vector3(clamp(shrink, 0.6, 1.05) * (0.97 + rnd() * 0.05), 0.95 + rnd() * 0.06, 0.95 + rnd() * 0.1),
+          normal: nrm.clone(),
+          theta,
+          floater: theta > 0.98,
+          tint: rnd(),
+        });
+      }
+      phiAcc += dPhi;
+      theta += (dTheta * dPhi) / (Math.PI * 2);
+    }
+    // cap stone
+    {
+      const quat = new THREE.Quaternion().setFromRotationMatrix(basis.makeBasis(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, -1), up));
+      list.push({ pos: new THREE.Vector3(0, H - 0.13, 0), quat, scale: new THREE.Vector3(1.75, 2.6, 0.85), normal: up.clone(), theta: Math.PI / 2, floater: true, tint: rnd() });
     }
 
     // entrance tunnel: three arches of blocks on short walls
