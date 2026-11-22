@@ -50,7 +50,6 @@ type Palette = {
   pine: string;
   flake: string;
   flakeOpacity: number;
-  path: string;
   paw: string;
   pawOpacity: number;
   ink: string;
