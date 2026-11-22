@@ -132,12 +132,11 @@ attribute vec3 aRand;
 varying float vAlpha;
 void main() {
   vec3 p = position;
-  float fall = 0.35 + aRand.x * 0.55;
-  p.y = mod(p.y - uTime * fall, 12.0);
-  p.x += sin(uTime * 0.55 + aRand.y * 6.2831) * 0.35 + uTime * 0.18;
-  p.x = mod(p.x + 15.0, 30.0) - 15.0;
-  p.z += cos(uTime * 0.45 + aRand.y * 4.0) * 0.25;
-  // The door bursting open blows the snow away
+  float fall = (0.45 + aRand.x * 0.55) * uFall;
+  p.y = mod(p.y - uTime * fall, uBox.y);
+  p.x += uWind * (0.7 + aRand.z * 0.6) + sin(uTime * 0.6 + aRand.y * 6.2831) * 0.3;
+  p.x = mod(p.x + uBox.x, 2.0 * uBox.x) - uBox.x;
+  p.z += cos(uTime * 0.5 + aRand.y * 4.0) * 0.25;
   vec3 d = p - uGustOrigin;
   p += normalize(d + 1e-4) * uGust * 3.0 * exp(-length(d) * 0.35);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
