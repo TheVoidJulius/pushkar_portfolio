@@ -182,7 +182,6 @@ export class SnowScene {
   private doorOpen = false;
   private door = new Spring(38, 9);
   private rattle = new Spring(900, 16);
-  private squash = new Spring(260, 11);
   private camShake = 0;
   private gust = 0;
   private sleeping = false;
