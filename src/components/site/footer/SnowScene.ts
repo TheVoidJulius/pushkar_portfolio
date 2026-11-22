@@ -7,7 +7,7 @@ import * as THREE from "three";
  *
  * The React side drives the story (door, knocks, sleeping); this class only
  * animates it and reports where things are on screen so Mikuro, who lives in
- * her own canvas, can fly to the door.
+ * her own canvas, can walk to the door.
  */
 
 export type ScreenSpot = { x: number; y: number; s: number };
