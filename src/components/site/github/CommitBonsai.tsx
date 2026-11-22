@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 
+import { BLOSSOMS } from "./useBonsai";
 /* ═════════════════════════════════════════════════════════════════════
    Commit Bonsai
    Your contribution history, grown into a pixel bonsai.
