@@ -327,6 +327,19 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
           type="button"
           onClick={knock}
           disabled={!sleepingNow}
+  // The scene is lit for New Delhi's clock: after sunset it's blue hour (or night)
+  const dim = dark || weather?.isDay === false;
+  const hud = dim ? "text-white/80" : "text-[#20252d]/75";
+  const hudSoft = dim ? "text-white/55" : "text-[#20252d]/50";
+
+  const hint =
+    phase === "asleep"
+      ? "She's asleep. Knock on the ice door →"
+      : phase === "knocking"
+        ? "…"
+        : phase === "angry" || phase === "carrying"
+          ? "You've done it now."
+          : "Scroll down to discover.";
           aria-label={sleepingNow ? `Knock on ${mikuro}'s ice door (she will take you back to the top)` : `${mikuro}'s ice door`}
           className={`absolute top-0 left-0 rounded-t-full outline-none focus-visible:ring-2 focus-visible:ring-accent ${
             sleepingNow ? "cursor-pointer" : "cursor-default"
