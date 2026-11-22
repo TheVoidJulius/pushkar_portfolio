@@ -974,8 +974,46 @@ export class SnowScene {
     this.pawAmt = r ? this.pawTarget : damp(this.pawAmt, this.pawTarget, 1.2, dt);
     if (this.pawAmt > 0.98) this.pawFade = Math.max(0.25, this.pawFade - dt * 0.02);
     const n = this.paws.length;
-    this.paws.forEach((p, i) => {
-      p.mat.opacity = clamp(this.pawAmt * (n + 1) - i, 0, 1) * this.palette.pawOpacity * this.pawFade;
+    this.paws.forEach((pw, i) => {
+      pw.mat.opacity = clamp(this.pawAmt * (n + 1) - i, 0, 1) * L.pawOpacity * this.pawFade;
+    });
+
+    // --- melting
+    if (this.dripMesh.visible) this.updateDrips(dt);
+  }
+
+  private placeFloaters(t: number) {
+    const lift = Math.max(0, this.liftNow);
+    const bobbing = lift > 0.002;
+    if (!bobbing && this.lastLiftApplied === 0) {
+      this.setLabelOpacity(0);
+      return;
+    }
+    const mesh = this.blocks;
+    for (const f of this.floaters) {
+      const k = clamp((lift - f.delay * 0.45) / (1 - f.delay * 0.45), 0, 1.25);
+      const a = k * k * (3 - 2 * Math.min(k, 1));
+      const bob = bobbing ? Math.sin(t * 0.9 + f.phase) * 0.06 * a : 0;
+      this.v.copy(f.pos).addScaledVector(f.dir, f.dist * a).y += bob;
+      this.q.setFromAxisAngle(f.axis, f.angle * a + (bobbing ? Math.sin(t * 0.6 + f.phase) * 0.05 * a : 0));
+      this.q2.copy(this.q).multiply(f.quat);
+      this.m4.compose(this.v, this.q2, f.scale);
+      mesh.setMatrixAt(f.index, this.m4);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    this.lastLiftApplied = bobbing ? lift : 0;
+
+    // numbers + hairlines follow the labelled blocks
+    const op = smooth(0.12, 0.55, lift);
+    this.setLabelOpacity(op);
+    if (op <= 0) return;
+    const dots = this.labelDots.geometry.attributes.position as THREE.BufferAttribute;
+    this.labelled.forEach((f, i) => {
+      mesh.getMatrixAt(f.index, this.m4);
+      // the dot sits on the block's outer face
+      this.v2.set(0, 0, f.depth + 0.01).applyMatrix4(this.m4);
+      dots.setXYZ(i, this.v2.x, this.v2.y, this.v2.z);
+      this.labels[i].position.copy(this.v2);
     });
 
   private setLabelOpacity(o: number) {
