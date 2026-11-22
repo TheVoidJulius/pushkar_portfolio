@@ -165,10 +165,8 @@ export class SnowScene {
   readonly canvas: HTMLCanvasElement;
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
-  private camera = new THREE.PerspectiveCamera(34, 1, 0.1, 120);
-  private house = new THREE.Group();
-  private doorPivot = new THREE.Group();
-  private palette: Palette;
+  private camera = new THREE.PerspectiveCamera(32, 1, 0.1, 400);
+  private mobile: boolean;
   private reduced: boolean;
   private w = 1;
   private h = 1;
