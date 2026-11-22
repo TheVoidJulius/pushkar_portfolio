@@ -388,10 +388,10 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
 
 /** Rough spots for Mikuro over the flat illustration, when WebGL is unavailable. */
 const FALLBACK_SPOTS: Record<(typeof ANCHORS)[number], string> = {
-  path: "!top-[50%] !left-[22%] !size-[110px] !transform-none",
-  door: "!top-[50%] !left-[45%] !size-[100px] !transform-none",
-  inside: "!top-[55%] !left-[47%] !size-[40px] !transform-none",
-  out: "!top-[46%] !left-[42%] !size-[150px] !transform-none",
+  path: "!top-[54%] !left-[30%] !size-[110px] !transform-none",
+  door: "!top-[54%] !left-[52%] !size-[100px] !transform-none",
+  inside: "!top-[60%] !left-[57%] !size-[40px] !transform-none",
+  out: "!top-[50%] !left-[54%] !size-[150px] !transform-none",
 };
 
 /** A flat stand-in for the 3D scene (no WebGL): an igloo on a snow field. */
