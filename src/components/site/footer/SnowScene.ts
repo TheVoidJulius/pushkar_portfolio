@@ -631,7 +631,8 @@ export class SnowScene {
     return g;
   }
 
-  private buildSnow(count: number) {
+  private buildParticles(count: number, o: { x: number; y: number; z0: number; z1: number; size: number; fall: number; streak: boolean }) {
+    const rnd = mulberry(count + (o.streak ? 99 : 1));
     const pos = new Float32Array(count * 3);
     const r = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
