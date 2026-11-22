@@ -892,7 +892,7 @@ export class SnowScene {
   }
 
   renderOnce() {
-    if (this.disposed) return;
+    if (this.disposed || !this.warmed) return;
     this.update(0);
     this.renderer.render(this.scene, this.camera);
     this.report();
