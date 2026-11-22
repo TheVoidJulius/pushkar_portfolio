@@ -372,6 +372,10 @@ float sNoise(vec2 p) {
         .replace(
           "#include <emissivemap_fragment>",
           `#include <emissivemap_fragment>
+  private dark: boolean;
+  private weather: Weather | null = null;
+  private mode: Mode = "day";
+  private look: Look = LOOKS.day;
 {
   // the odd glint of ice crystals
   vec2 cell = floor(vWPos.xz * 22.0);
