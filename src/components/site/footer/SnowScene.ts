@@ -665,6 +665,7 @@ export class SnowScene {
       new THREE.PointsMaterial({ color: "#ffffff", size: 4.5, sizeAttenuation: false, transparent: true, depthTest: false, depthWrite: false, toneMapped: false, fog: false }),
     );
     this.labelDots.renderOrder = 19;
+      fog: false,
     this.labelDots.frustumCulled = false;
     this.scene.add(this.labelLines, this.labelDots);
       uniforms: {
