@@ -945,7 +945,7 @@ export class SnowScene {
     const sq = r ? 0 : this.squash.step(0, dt);
     this.house.scale.set(1 - sq * 0.012, 1 + sq * 0.03, 1 - sq * 0.012);
 
-    // sleeping: dim windows, warm night light inside, zzz and smoke
+    // --- the inside glow: warm when awake, a low amber when asleep, a blaze when open
     this.sleepAmt = damp(this.sleepAmt, this.sleeping ? 1 : 0, 2.2, dt || 1);
     const s = this.sleepAmt;
     const open = clamp(-angle / 1.9, 0, 1);
