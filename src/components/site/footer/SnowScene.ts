@@ -644,7 +644,7 @@ export class SnowScene {
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    geo.setAttribute("aRand", new THREE.BufferAttribute(rnd, 3));
+    geo.setAttribute("aRand", new THREE.BufferAttribute(r, 3));
     const mat = new THREE.ShaderMaterial({
       vertexShader: FLAKE_VERT,
       fragmentShader: FLAKE_FRAG,
