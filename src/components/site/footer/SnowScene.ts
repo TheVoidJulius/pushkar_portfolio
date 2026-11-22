@@ -931,9 +931,9 @@ export class SnowScene {
     this.camShake = damp(this.camShake, 0, 3.2, dt);
     const shake = this.camShake * 0.09;
     this.camera.position.set(
-      this.cam.x + Math.sin(t * 61) * shake,
-      1.95 + (narrow - 1) * 0.9 + this.cam.y + Math.cos(t * 53) * shake,
-      dist,
+      this.target.x + Math.sin(az) * Math.cos(el) * dist + Math.sin(t * 61) * shake,
+      this.target.y + Math.sin(el) * dist + Math.cos(t * 53) * shake,
+      this.target.z + Math.cos(az) * Math.cos(el) * dist,
     );
     this.camera.lookAt(this.target);
     this.sky.position.copy(this.camera.position);
