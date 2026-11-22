@@ -121,7 +121,9 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
           size();
           ro = new ResizeObserver(size);
           ro.observe(host);
-          if (inView.current) scene.start();
+          void scene.warm().then(() => {
+            if (inView.current) sceneRef.current?.start();
+          });
           setReady(true);
         })
         .catch(() => setFailed(true));
