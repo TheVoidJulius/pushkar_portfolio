@@ -689,7 +689,7 @@ export class SnowScene {
   }
 
   // -------------------------------------------------------------------
-  // Textures
+  // Controls
   // -------------------------------------------------------------------
   /** Compile shaders off the main path so the first frame doesn't hitch. */
   private sculptJobs: { geo: THREE.BufferGeometry; f: (x: number, z: number) => number }[] = [];
