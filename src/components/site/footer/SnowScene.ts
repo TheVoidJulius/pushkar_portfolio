@@ -598,10 +598,10 @@ export class SnowScene {
       const padM = new THREE.Mesh(pad, mat);
       padM.scale.set(1, 0.85, 1);
       g.add(padM);
-      for (const [tx, ty] of [
-        [-0.07, 0.085],
-        [0, 0.115],
-        [0.07, 0.085],
+      for (const [x, y] of [
+        [-0.075, 0.095],
+        [0, 0.125],
+        [0.075, 0.095],
       ]) {
         const tm = new THREE.Mesh(toe, mat);
         tm.position.set(x, y, 0);
