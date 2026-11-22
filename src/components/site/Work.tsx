@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { Project } from "@/lib/types";
 import { MomoLine } from "../momo/MomoLine";
 import { FadeUp, SectionPill } from "./Chrome";
@@ -13,6 +13,7 @@ const ease = [0.23, 1, 0.32, 1] as const;
 export function Work({ projects, showAssistant }: { projects: Project[]; showAssistant: boolean }) {
   const [active, setActive] = useState(0);
   const [openId, setOpenId] = useState<string | null>(null);
+  const closeDialog = useCallback(() => setOpenId(null), []);
   const open = projects.find((p) => p.id === openId) ?? null;
   const cur = projects[active];
   const [warp, setWarp] = useState({ key: 0, dir: 1 });
@@ -146,7 +147,7 @@ export function Work({ projects, showAssistant }: { projects: Project[]; showAss
         </>
       )}
 
-      <AnimatePresence>{open && <ProjectDialog p={open} onClose={() => setOpenId(null)} />}</AnimatePresence>
+      <AnimatePresence>{open && <ProjectDialog p={open} onClose={closeDialog} />}</AnimatePresence>
     </section>
   );
 }

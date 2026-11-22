@@ -25,6 +25,10 @@ export const MOOD_TO_EXPRESSION: Record<Mood, Expression> = {
 };
 
 const SLEEP_AFTER_MS = 45_000;
+// Must stay within /api/chat's limits (24 messages, 1200 chars each); the
+// server only reads the last 12 turns anyway.
+const CHAT_HISTORY_LIMIT = 12;
+const CHAT_MESSAGE_MAX_CHARS = 1200;
 const INTRO_MS = 1500;
 
 type SpeechRecognitionLike = {
@@ -131,6 +135,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
   const [open, setOpenState] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [pending, setPending] = useState(false);
+  const sendingRef = useRef(false);
   const [baseExpression, setBaseExpression] = useState<Expression>("idle");
   const [flash, setFlash] = useState<Expression | null>(null);
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>("idle");
@@ -527,7 +532,9 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
   const send = useCallback(
     async (raw: string) => {
       const text = raw.trim();
-      if (!text || pending) return;
+      // A ref, not the `pending` state: a quick double Enter must not send twice
+      if (!text || sendingRef.current) return;
+      sendingRef.current = true;
       voice.unlock();
       if (coffeeHold.current) await coffeeHold.current;
       setAct(null);
@@ -543,7 +550,12 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: history.filter((m) => !m.error).map(({ role, content }) => ({ role, content })) }),
+          body: JSON.stringify({
+            messages: history
+              .filter((m) => !m.error && m.content.trim())
+              .slice(-CHAT_HISTORY_LIMIT)
+              .map(({ role, content }) => ({ role, content: content.slice(0, CHAT_MESSAGE_MAX_CHARS) })),
+          }),
         });
         if (!res.ok || !res.body) {
           const msg = (await res.json().catch(() => null))?.error ?? "I couldn't reach my brain just now.";
@@ -580,10 +592,11 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
         setMessages((ms) => ms.map((m) => (m.id === reply.id ? { ...m, content: msg, mood: "confused", error: true } : m)));
         setBaseExpression("confused");
       } finally {
+        sendingRef.current = false;
         setPending(false);
       }
     },
-    [pending, voice, speak, setAct, showQuip],
+    [voice, speak, setAct, showQuip],
   );
 
   const toggleListening = useCallback(() => {

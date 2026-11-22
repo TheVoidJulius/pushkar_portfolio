@@ -675,6 +675,8 @@ export class MomoRenderer {
     this.envTargets.light?.dispose();
     this.pmrem.dispose();
     this.renderer.dispose();
+    // Browsers cap live WebGL contexts (~16); don't wait for GC to release this one
+    this.renderer.forceContextLoss();
   }
 
   // ---------------------------------------------------------------------
