@@ -158,3 +158,43 @@ export function VisitorCats() {
           const ch = sb.channel("visitor-cats", { config: { broadcast: { self: false }, presence: { key: self.id } } });
           ch.on("broadcast", { event: "pos" }, ({ payload }) => {
             const p = payload as { id?: string; x?: number; y?: number };
+            if (typeof p?.id === "string" && p.id !== self.id && Number.isFinite(p.x) && Number.isFinite(p.y)) {
+              onPos(p.id, p.x as number, p.y as number);
+            }
+          });
+          ch.on("presence", { event: "sync" }, () => {
+            const state = ch.presenceState<{ name: string; hue: number }>();
+            const keys = Object.keys(state);
+            let changedMeta = false;
+            setCount(Math.max(1, keys.length));
+            for (const k of keys) {
+              if (k === self.id) continue;
+              const meta = state[k]?.[0];
+              if (meta) {
+                upsert(k, { name: String(meta.name).slice(0, 14), hue: Number(meta.hue) || 200 });
+                changedMeta = true;
+              }
+            }
+            let changed = changedMeta;
+            for (const id of Array.from(R.keys())) {
+              if (!keys.includes(id)) {
+                R.delete(id);
+                changed = true;
+              }
+            }
+            if (changed) syncIds();
+          });
+          ch.subscribe((status) => {
+            if (status === "SUBSCRIBED") void ch.track({ name: self.name, hue: self.hue });
+          });
+          channel = ch;
+        })
+        .catch(() => {});
+    }
+
+    /* dev-only demo: ?cats=demo spawns fake wandering cats */
+    let demo: number | undefined;
+    if (process.env.NODE_ENV !== "production" && new URLSearchParams(location.search).get("cats") === "demo") {
+      const fake: [string, number][] = [
+        ["Boba", 330],
+        ["Nori", 140],
