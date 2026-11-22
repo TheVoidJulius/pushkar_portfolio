@@ -665,13 +665,76 @@ export class SnowScene {
     return mat;
   }
 
-  private buildMoon() {
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.moonTexture(), transparent: true, fog: false, depthWrite: false }));
-    s.position.set(-11, 10.5, -40);
-    s.scale.set(7, 7, 1);
-    this.scene.add(s);
-    return s;
-  }
+  // -------------------------------------------------------------------
+  // Look: theme × time of day × weather
+  // -------------------------------------------------------------------
+  private applyLook() {
+    const w = this.weather;
+    this.mode = this.dark ? "night" : w && !w.isDay ? "dusk" : "day";
+    const L = LOOKS[this.mode];
+    this.look = L;
+    const night = this.mode !== "day";
+    const cond = w?.condition ?? "clear";
+    const rain = cond === "rain" || cond === "storm";
+    const haze = Boolean(w?.haze);
+    const hot = (w?.temp ?? 0) > HOT_TEMP;
+    const col = (c: string) => new THREE.Color(c);
+
+    const top = col(L.skyTop);
+    const hor = col(L.horizon);
+    const fog = col(L.fog);
+    const sun = col(L.sun);
+    const key = col(L.key);
+    let density = L.fogDensity;
+    let keyI = L.keyI;
+    let mist = L.mist;
+    let disc = L.sunDisc;
+    let halo = L.sunHalo;
+    const snow = col(L.snow);
+    let rough = L.snowRough;
+
+    if (haze) {
+      const smog = col(this.mode === "night" ? "#3d3427" : this.mode === "dusk" ? "#a88f78" : "#b7aa92");
+      top.lerp(smog, 0.55);
+      hor.lerp(smog, 0.7);
+      fog.lerp(smog, 0.75);
+      density *= 1.7;
+      keyI *= 0.7;
+      key.lerp(col("#ffcf94"), 0.5);
+      sun.lerp(col("#ffb070"), 0.7);
+      disc *= 0.7;
+      halo *= 1.8;
+      mist = Math.min(0.95, mist * 1.5);
+      snow.lerp(col("#d8d2c6"), night ? 0.15 : 0.3);
+    }
+    if (cond === "fog") {
+      density *= 5.2;
+      mist = 0.95;
+      keyI *= 0.55;
+      disc *= 0.2;
+      top.lerp(fog, 0.5);
+      hor.lerp(fog, 0.8);
+    }
+    if (cond === "cloudy") {
+      top.lerp(hor, 0.3);
+      disc *= 0.3;
+      keyI *= 0.85;
+    }
+    if (rain) {
+      const dim = cond === "storm" ? 0.55 : 0.78;
+      top.multiplyScalar(dim);
+      hor.multiplyScalar(0.5 + dim * 0.5);
+      fog.multiplyScalar(0.55 + dim * 0.45);
+      density *= 1.35;
+      keyI *= cond === "storm" ? 0.45 : 0.65;
+      disc *= 0.1;
+      snow.multiplyScalar(0.84);
+      rough = 0.38;
+    }
+    if (hot) {
+      key.lerp(col("#ffe2b8"), 0.4);
+      keyI *= 1.1;
+    }
 
     this.fog.color.copy(fog);
     this.fog.density = density;
