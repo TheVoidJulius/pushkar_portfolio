@@ -2,8 +2,8 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
-
 import { BLOSSOMS } from "./useBonsai";
+
 /* ═════════════════════════════════════════════════════════════════════
    Commit Bonsai
    Your contribution history, grown into a pixel bonsai.
@@ -31,14 +31,14 @@ export interface CommitBonsaiProps {
   season?: Season | "auto";
   label?: string;
   className?: string;
-}
-
   /** Visitor blossoms grown on the branch tips (placed deterministically from the id). */
   waterings?: { id: string; blossom: number }[];
   /** The newest blossom id: it pops in with a little spring. */
   freshId?: string | null;
   /** Bump to play the watering-can animation. */
   pourKey?: number;
+}
+
 /* ─────────────────────────── data ─────────────────────────── */
 
 type Week = { start: Date; count: number; active: number; perfect: boolean };
@@ -260,14 +260,6 @@ export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, seaso
   );
   const S = season === "auto" ? seasonFor(latestDay) : season;
   const max = Math.max(1, ...data.map((w) => w.count));
-
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [hover, setHover] = useState<number | null>(null);
-  const hoverRef = useRef<number | null>(null);
-  const live = useRef({ data, tree, S, max });
-  useEffect(() => {
-    hoverRef.current = hover;
-    live.current = { data, tree, S, max };
   // Same row id -> same tip and offset for everyone
   const placed = useMemo(() => {
     const leafy = tree.tips.map((_, i) => i).filter((i) => (data[i]?.count ?? 0) > 0);
@@ -280,6 +272,14 @@ export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, seaso
       return { ...w, x: tip.x + dx, y: tip.y + dy, tilt: (((h >>> 4) % 40) - 20) };
     });
   }, [waterings, tree, data]);
+
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [hover, setHover] = useState<number | null>(null);
+  const hoverRef = useRef<number | null>(null);
+  const live = useRef({ data, tree, S, max });
+  useEffect(() => {
+    hoverRef.current = hover;
+    live.current = { data, tree, S, max };
   }, [hover, data, tree, S, max]);
   // 0 until the tree first scrolls into view, then the moment it started growing
   const born = useRef(0);
@@ -536,6 +536,25 @@ export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, seaso
           onPointerLeave={() => setHover(null)}
           className="block aspect-[128/112] w-full cursor-crosshair [image-rendering:pixelated]"
         />
+        {placed.length > 0 && (
+          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden [container-type:inline-size]">
+            {placed.map((b) => (
+              <motion.span
+                key={b.id}
+                initial={b.id === freshId ? { scale: 0, rotate: -40, opacity: 0 } : false}
+                animate={{ scale: 1, rotate: b.tilt, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 12, delay: b.id === freshId ? 0.9 : 0 }}
+                className="absolute -translate-x-1/2 -translate-y-1/2 leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,.25)]"
+                style={{ left: `${(b.x / W) * 100}%`, top: `${(b.y / H) * 100}%`, fontSize: "4.4cqw" }}
+              >
+                {BLOSSOMS[b.blossom] ?? BLOSSOMS[0]}
+              </motion.span>
+            ))}
+          </div>
+        )}
+        <AnimatePresence>
+          {pourKey > 0 && <Pour key={pourKey} />}
+        </AnimatePresence>
         {hw && ht && (
           <div
             className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+14px)] rounded-lg border border-line bg-bg-elevated px-2 py-1 whitespace-nowrap text-ink shadow-soft"
@@ -556,25 +575,6 @@ export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, seaso
           ["Total", total.toLocaleString("en-US")],
           ["Best week", String(best?.count ?? 0)],
           ["Streak", `${st.current}d`],
-        {placed.length > 0 && (
-          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden [container-type:inline-size]">
-            {placed.map((b) => (
-              <motion.span
-                key={b.id}
-                initial={b.id === freshId ? { scale: 0, rotate: -40, opacity: 0 } : false}
-                animate={{ scale: 1, rotate: b.tilt, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 260, damping: 12, delay: b.id === freshId ? 0.9 : 0 }}
-                className="absolute -translate-x-1/2 -translate-y-1/2 leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,.25)]"
-                style={{ left: `${(b.x / W) * 100}%`, top: `${(b.y / H) * 100}%`, fontSize: "4.4cqw" }}
-              >
-                {BLOSSOMS[b.blossom] ?? BLOSSOMS[0]}
-              </motion.span>
-            ))}
-          </div>
-        )}
-        <AnimatePresence>
-          {pourKey > 0 && <Pour key={pourKey} />}
-        </AnimatePresence>
           ["Longest", `${st.longest}d`],
         ].map(([k, v]) => (
           <div key={k} className="flex flex-col-reverse">
@@ -602,7 +602,6 @@ export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, seaso
   );
 }
 
-export default CommitBonsai;
 /** Watering can tips over the crown and drops fall onto the branches. */
 function Pour() {
   return (
@@ -640,3 +639,4 @@ function Pour() {
   );
 }
 
+export default CommitBonsai;
