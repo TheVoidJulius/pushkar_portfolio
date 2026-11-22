@@ -780,6 +780,7 @@ export class SnowScene {
       const p = curve.getPoint(t);
       const tan = curve.getTangent(t);
       const side = i % 2 ? 1 : -1;
+  }
       const mat = new THREE.MeshBasicMaterial({ color: "#7c8596", transparent: true, opacity: 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
       const g = new THREE.Group();
       const padM = new THREE.Mesh(pad, mat);
