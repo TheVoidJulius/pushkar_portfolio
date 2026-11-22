@@ -128,7 +128,14 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
     };
 
     // Build ahead of time, so the scene is ready by the time you get there
-    const near = new IntersectionObserver(([e]) => e?.isIntersecting && create(), { rootMargin: "900px 0px" });
+    const near = new IntersectionObserver(
+      ([e]) => {
+        if (!e?.isIntersecting) return;
+        askWeather();
+        create();
+      },
+      { rootMargin: "900px 0px" },
+    );
     near.observe(section);
     const seen = new IntersectionObserver(
       ([e]) => {
