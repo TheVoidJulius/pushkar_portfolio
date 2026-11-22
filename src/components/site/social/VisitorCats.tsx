@@ -118,3 +118,43 @@ export function VisitorCats() {
     window.addEventListener("scroll", onScroll, { passive: true });
 
     /* realtime */
+    let channel: RealtimeChannel | null = null;
+    let teardown = false;
+    let lastSent = 0;
+    let lastSentX = -1;
+    let lastSentY = -1;
+    const upsert = (id: string, patch: Partial<Remote>) => {
+      let r = R.get(id);
+      if (!r) {
+        if (R.size >= MAX_REMOTE) return null;
+        r = { id, name: "Cat", hue: 200, x: 0, y: 0, tx: 0, ty: 0, seen: 0, moved: 0, ready: false, el: null };
+        R.set(id, r);
+        syncIds();
+      }
+      Object.assign(r, patch);
+      return r;
+    };
+    const onPos = (id: string, x: number, y: number) => {
+      const r = upsert(id, {});
+      if (!r) return;
+      const px = Math.min(1, Math.max(0, x)) * window.innerWidth;
+      const py = Math.max(0, y);
+      if (!r.ready) {
+        r.x = px;
+        r.y = py;
+        r.ready = true;
+      }
+      if (Math.hypot(px - r.tx, py - r.ty) > 3) r.moved = performance.now();
+      r.tx = px;
+      r.ty = py;
+      r.seen = performance.now();
+    };
+
+    if (isSupabaseConfigured) {
+      import("@/lib/supabase/client")
+        .then(({ getSupabaseBrowserClient }) => {
+          if (teardown) return;
+          const sb = getSupabaseBrowserClient();
+          const ch = sb.channel("visitor-cats", { config: { broadcast: { self: false }, presence: { key: self.id } } });
+          ch.on("broadcast", { event: "pos" }, ({ payload }) => {
+            const p = payload as { id?: string; x?: number; y?: number };
