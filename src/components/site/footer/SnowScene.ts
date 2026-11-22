@@ -312,84 +312,23 @@ export class SnowScene {
       depthWrite: false,
       toneMapped: false,
     });
-    const s = new THREE.Sprite(mat);
-    s.position.set(x, y, z);
-    s.scale.set(sx, sy, 1);
-    parent.add(s);
-    this.glows.push({ sprite: s, base: opacity, flicker });
-    return s;
-  }
-  private glowMap = glowTexture();
-
-  private neonBar(color: string, w: number, h: number, d: number, x: number, y: number, z: number, parent: THREE.Object3D, rotZ = 0) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ color, toneMapped: false }));
-    m.position.set(x, y, z);
-    m.rotation.z = rotZ;
-    parent.add(m);
-    return m;
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(300, 32, 16), mat);
+    mesh.renderOrder = -10;
+    mesh.frustumCulled = false;
+    this.scene.add(mesh);
+    return { mesh, mat };
   }
 
-  private buildHouse() {
-    const H = this.house;
-    const m = this.mats;
-    const W = 3.4;
-    const D = 2.6;
-    const BH = 2.1;
-    const front = D / 2;
-
-    const body = new THREE.Mesh(new THREE.BoxGeometry(W, BH, D), m.body);
-    body.position.y = BH / 2;
-    H.add(body);
-    // panel seams
-    for (const x of [-0.95, 0.95]) {
-      const seam = new THREE.Mesh(new THREE.BoxGeometry(0.03, BH - 0.1, 0.02), m.bodyDark);
-      seam.position.set(x * 1.62, BH / 2, front + 0.005);
-      H.add(seam);
-    }
-    // neon base strip
-    this.neonBar(NEON_PINK, W + 0.04, 0.035, 0.02, 0, 0.16, front + 0.012, H);
-    this.neonBar(NEON_CYAN, 0.035, BH, 0.035, -W / 2, BH / 2, front, H);
-    this.neonBar(NEON_CYAN, 0.035, BH, 0.035, W / 2, BH / 2, front, H);
-
-    // gable wall
-    const gable = new THREE.Shape();
-    gable.moveTo(-W / 2, 0);
-    gable.lineTo(W / 2, 0);
-    gable.lineTo(0, 1.0);
-    gable.closePath();
-    const gableGeo = new THREE.ExtrudeGeometry(gable, { depth: D, bevelEnabled: false });
-    const gableMesh = new THREE.Mesh(gableGeo, m.body);
-    gableMesh.position.set(0, BH, -front);
-    H.add(gableMesh);
-
-    // roof slabs with snow on top
-    const half = 1.92;
-    const rise = 1.06;
-    const ang = Math.atan2(rise, half);
-    const len = Math.hypot(half, rise) + 0.08;
-    for (const side of [-1, 1]) {
-      const slab = new THREE.Mesh(new THREE.BoxGeometry(len, 0.12, D + 0.36), m.bodyDark);
-      slab.position.set((side * half) / 2, BH + rise / 2 + 0.02, 0);
-      slab.rotation.z = -side * ang;
-      H.add(slab);
-      const snow = new THREE.Mesh(new THREE.BoxGeometry(len + 0.02, 0.16, D + 0.4), m.snow);
-      const n = new THREE.Vector2(side * Math.sin(ang), Math.cos(ang));
-      snow.position.set(slab.position.x + n.x * 0.13, slab.position.y + n.y * 0.13, 0);
-      snow.rotation.z = slab.rotation.z;
-      H.add(snow);
-      // neon roof edge
-      this.neonBar(NEON_PINK, len, 0.035, 0.035, slab.position.x - n.x * 0.07, slab.position.y - n.y * 0.07, front + 0.19, H, slab.rotation.z);
-      // icicles along the eave
-      for (let i = 0; i < 7; i++) {
-        const f = 0.1 + i * 0.13;
-        const ic = new THREE.Mesh(
-          new THREE.ConeGeometry(0.028, 0.12 + ((i * 37) % 5) * 0.035, 6),
-          new THREE.MeshStandardMaterial({ color: "#dff4ff", roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.85 }),
-        );
-        ic.rotation.x = Math.PI;
-        ic.position.set(side * (half - f * half * 0.95), BH + 0.02 + (1 - (half - f * half * 0.95) / half) * rise - 0.1, front + 0.17);
-        H.add(ic);
-      }
+  private buildStars() {
+    const n = 420;
+    const pos = new Float32Array(n * 3);
+    const rnd = mulberry(5);
+    for (let i = 0; i < n; i++) {
+      const a = rnd() * Math.PI * 2;
+      const e = 0.06 + Math.pow(rnd(), 0.7) * 1.3;
+      pos[i * 3] = Math.cos(a) * Math.cos(e) * 260;
+      pos[i * 3 + 1] = Math.sin(e) * 260;
+      pos[i * 3 + 2] = Math.sin(a) * Math.cos(e) * 260;
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
