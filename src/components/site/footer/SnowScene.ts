@@ -37,7 +37,55 @@ class Spring {
   }
 }
 
-type Palette = {
+function mulberry(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** 2D gradient noise, roughly in [-1, 1]. */
+function makeNoise(seed: number) {
+  const rnd = mulberry(seed);
+  const p = Array.from({ length: 256 }, (_, i) => i);
+  for (let i = 255; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [p[i], p[j]] = [p[j], p[i]];
+  }
+  const perm = new Uint8Array(512);
+  for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+  const G = [1, 1, -1, 1, 1, -1, -1, -1, 1.41, 0, -1.41, 0, 0, 1.41, 0, -1.41];
+  const g = (h: number, x: number, y: number) => G[(h & 7) * 2] * x + G[(h & 7) * 2 + 1] * y;
+  const fade = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
+  return (x: number, y: number) => {
+    const X = Math.floor(x);
+    const Y = Math.floor(y);
+    const xf = x - X;
+    const yf = y - Y;
+    const xi = X & 255;
+    const yi = Y & 255;
+    const u = fade(xf);
+    const v = fade(yf);
+    const aa = perm[perm[xi] + yi];
+    const ab = perm[perm[xi] + yi + 1];
+    const ba = perm[perm[xi + 1] + yi];
+    const bb = perm[perm[xi + 1] + yi + 1];
+    const x1 = g(aa, xf, yf) + (g(ba, xf - 1, yf) - g(aa, xf, yf)) * u;
+    const x2 = g(ab, xf, yf - 1) + (g(bb, xf - 1, yf - 1) - g(ab, xf, yf - 1)) * u;
+    return (x1 + (x2 - x1) * v) * 0.9;
+  };
+}
+
+// ---------------------------------------------------------------------
+// Looks
+// ---------------------------------------------------------------------
+type Look = {
+  skyTop: string;
+  horizon: string;
   fog: string;
   snow: string;
   hemiSky: string;
