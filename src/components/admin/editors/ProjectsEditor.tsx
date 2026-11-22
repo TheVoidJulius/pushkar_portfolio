@@ -204,7 +204,7 @@ function ProjectForm({
           <Field label="One-line summary" htmlFor="p-summary" error={errors.summary} count={v.summary.length} max={300} hint="Shown on the project card.">
             <Textarea id="p-summary" rows={2} value={v.summary} onChange={(e) => set("summary", e.target.value)} invalid={!!errors.summary} />
           </Field>
-          <Field label="Full description" htmlFor="p-desc" count={v.description.length} max={4000} hint="Shown when a visitor opens the project. Momo also uses it to answer questions.">
+          <Field label="Full description" htmlFor="p-desc" count={v.description.length} max={4000} hint="Shown when a visitor opens the project. Mikuro also uses it to answer questions.">
             <Textarea id="p-desc" rows={5} value={v.description} onChange={(e) => set("description", e.target.value)} />
           </Field>
           <div className="grid gap-5 sm:grid-cols-3">
