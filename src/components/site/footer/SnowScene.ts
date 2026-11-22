@@ -940,10 +940,8 @@ export class SnowScene {
     // door swing, knock rattle, house squash
     const angle = r ? this.door.x : this.door.step(this.doorOpen ? -1.7 : 0, dt);
     const rattle = r ? 0 : this.rattle.step(0, dt);
-    this.doorPivot.rotation.set(0, angle, rattle * 0.012);
-    this.doorPivot.position.z = 1.31 + Math.abs(rattle) * 0.004;
-    const sq = r ? 0 : this.squash.step(0, dt);
-    this.house.scale.set(1 - sq * 0.012, 1 + sq * 0.03, 1 - sq * 0.012);
+    this.doorPivot.rotation.set(rattle * 0.006, angle + rattle * 0.004, rattle * 0.01);
+    this.doorPivot.position.z = Math.abs(rattle) * 0.004;
 
     // --- the inside glow: warm when awake, a low amber when asleep, a blaze when open
     this.sleepAmt = damp(this.sleepAmt, this.sleeping ? 1 : 0, 2.2, dt || 1);
