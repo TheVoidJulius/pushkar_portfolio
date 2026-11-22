@@ -276,39 +276,11 @@ export class SnowScene {
   // -------------------------------------------------------------------
   // Building
   // -------------------------------------------------------------------
-  private buildGround() {
-    const geo = new THREE.PlaneGeometry(130, 70, 150, 80);
-    geo.rotateX(-Math.PI / 2);
-    const pos = geo.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i);
-      const z = pos.getZ(i) - 14;
-      pos.setZ(i, z);
-      // Soft dunes, flattened around the house and along the path
-      const dunes = Math.sin(x * 0.32 + z * 0.12) * 0.28 + Math.sin(x * 0.11 - z * 0.27 + 1.3) * 0.45 + Math.sin(x * 0.7 + z * 0.5) * 0.05;
-      const nearHouse = clamp((Math.hypot(x, z * 1.3) - 3.2) / 4, 0, 1);
-      const onPath = clamp((Math.abs(x + Math.max(0, z - 2) * 0.35) - 0.8) / 1.6, 0, 1);
-      const far = clamp((-z - 8) / 20, 0, 1) * 1.6; // gentle hills in the distance
-      pos.setY(i, (dunes + far) * nearHouse * (z > 1.2 ? onPath : 1) - 0.02);
-    }
-    geo.computeVertexNormals();
-    const ground = new THREE.Mesh(geo, this.mats.snow);
-    this.scene.add(ground);
-
-    // Trodden path to the door
-    const path = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 8), this.mats.path);
-    path.rotation.x = -Math.PI / 2;
-    path.position.set(0, 0.015, 5.2);
-    this.scene.add(path);
-  }
-
-  private glow(color: string, x: number, y: number, z: number, sx: number, sy: number, opacity: number, parent: THREE.Object3D, flicker = false) {
-    const mat = new THREE.SpriteMaterial({
-      map: this.glowMap,
-      color,
-      transparent: true,
-      opacity,
-      blending: THREE.AdditiveBlending,
+  private buildSky() {
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: SKY_VERT,
+      fragmentShader: SKY_FRAG,
+      side: THREE.BackSide,
       depthWrite: false,
       toneMapped: false,
     });
