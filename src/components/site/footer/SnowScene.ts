@@ -1169,3 +1169,4 @@ export class SnowScene {
     lines.needsUpdate = true;
   }
     this.radial.dispose();
+    this.pendingStart = false;
