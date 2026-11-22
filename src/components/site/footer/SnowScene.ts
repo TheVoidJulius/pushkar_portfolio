@@ -849,7 +849,6 @@ export class SnowScene {
     this.sleeping = on;
   }
 
-  /** Glowing eyes in the doorway, for when Mikuro herself is switched off. */
   setEyes(on: boolean) {
     this.eyesOn = on;
   }
