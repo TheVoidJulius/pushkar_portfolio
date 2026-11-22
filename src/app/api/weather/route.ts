@@ -38,3 +38,41 @@ async function load(): Promise<Weather> {
   return {
     temp: Math.round(temp * 10) / 10,
     code,
+    isDay: num(c.is_day) !== 0,
+    wind: Math.round((num(c.wind_speed_10m) ?? 0) * 10) / 10,
+    aqi,
+    condition: conditionFromCode(code),
+    haze: aqi != null && aqi > HAZE_AQI,
+    live: true,
+  };
+}
+
+async function getWeather(): Promise<Weather> {
+  if (cache && Date.now() - cache.at < TTL_MS) return cache.value;
+  inFlight ??= load()
+    .then((value) => {
+      cache = { at: Date.now(), value };
+      return value;
+    })
+    .finally(() => {
+      inFlight = null;
+    });
+  try {
+    return await inFlight;
+  } catch (err) {
+    console.warn("[weather] Open-Meteo unavailable", err instanceof Error ? err.message : err);
+    return cache?.value ?? fallbackWeather();
+  }
+}
+
+export async function GET() {
+  let weather: Weather;
+  try {
+    weather = await getWeather();
+  } catch {
+    weather = fallbackWeather();
+  }
+  return Response.json(weather, {
+    headers: { "Cache-Control": weather.live ? "public, max-age=300, s-maxage=900, stale-while-revalidate=1800" : "no-store" },
+  });
+}
