@@ -20,9 +20,9 @@ export function scrollToSection(id: string) {
 }
 
 /** Scrolls the page to an absolute position (smoothly unless `immediate`). */
-export function scrollToY(y: number, immediate = false) {
+export function scrollToY(y: number, immediate = false, duration = 0.9) {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (lenis) lenis.scrollTo(y, { immediate: immediate || reduce, duration: 0.9, force: true });
+  if (lenis) lenis.scrollTo(y, { immediate: immediate || reduce, duration, force: true });
   else window.scrollTo({ top: y, behavior: immediate || reduce ? "auto" : "smooth" });
 }
 
