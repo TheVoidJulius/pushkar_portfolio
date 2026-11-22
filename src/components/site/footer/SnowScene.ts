@@ -101,29 +101,10 @@ const PALETTES: Record<"dark" | "light", Palette> = {
 const NEON_PINK = "#ff4f9a";
 const NEON_CYAN = "#4ff0ff";
 
-function canvasTexture(w: number, h: number, draw: (g: CanvasRenderingContext2D) => void) {
-  const c = document.createElement("canvas");
-  c.width = w;
-  c.height = h;
-  const g = c.getContext("2d")!;
-  draw(g);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 4;
-  return t;
-}
-
-const glowTexture = () =>
-  canvasTexture(128, 128, (g) => {
-    const r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
-    r.addColorStop(0, "rgba(255,255,255,1)");
-    r.addColorStop(0.25, "rgba(255,255,255,0.45)");
-    r.addColorStop(1, "rgba(255,255,255,0)");
-    g.fillStyle = r;
-    g.fillRect(0, 0, 128, 128);
-  });
-
-const SNOW_VERT = /* glsl */ `
+// ---------------------------------------------------------------------
+// Shaders
+// ---------------------------------------------------------------------
+const FLAKE_VERT = /* glsl */ `
 uniform float uTime;
 uniform float uGust;
 uniform vec3 uGustOrigin;
