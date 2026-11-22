@@ -139,8 +139,7 @@ void main() {
   p.z += cos(uTime * 0.45 + aRand.y * 4.0) * 0.25;
   // The door bursting open blows the snow away
   vec3 d = p - uGustOrigin;
-  float dist = length(d);
-  p += normalize(d + 1e-4) * uGust * 3.2 * exp(-dist * 0.32);
+  p += normalize(d + 1e-4) * uGust * 3.0 * exp(-length(d) * 0.35);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   gl_Position = projectionMatrix * mv;
   float size = uSize * (0.55 + aRand.z * 0.9);
