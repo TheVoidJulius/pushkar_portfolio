@@ -39,6 +39,7 @@ export function PublicSite({ content, previewBanner }: { content: PortfolioConte
       <Contact contact={content.contact} name={content.profile.name} footerNote={content.site.footer_note} showAssistant={show} />
       <MusicPlayer />
       {show && (
+      <VisitorCats />
         <>
           <BottomChips />
           <AssistantDock />
