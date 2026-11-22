@@ -29,6 +29,10 @@ class Spring {
     const n = Math.max(1, Math.ceil(dt / (1 / 240)));
     const h = dt / n;
     for (let i = 0; i < n; i++) {
+const smooth = (a: number, b: number, v: number) => {
+  const t = clamp((v - a) / (b - a), 0, 1);
+  return t * t * (3 - 2 * t);
+};
       this.v += (-this.k * (this.x - target) - this.c * this.v) * h;
       this.x += this.v * h;
     }
