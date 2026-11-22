@@ -294,6 +294,36 @@ export class SnowScene {
   onFrame: ((spots: SceneSpots) => void) | null = null;
 
   constructor(opts: { dark: boolean; reduced: boolean; mobile: boolean }) {
+  #include <colorspace_fragment>
+}`;
+
+const SKY_VERT = /* glsl */ `
+varying vec3 vDir;
+void main() {
+  vDir = normalize(position);
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mv;
+  gl_Position.z = gl_Position.w;
+}`;
+
+const SKY_FRAG = /* glsl */ `
+uniform vec3 uTop;
+uniform vec3 uHorizon;
+uniform vec3 uSun;
+uniform vec3 uSunDir;
+uniform float uDisc;
+uniform float uHalo;
+uniform float uFlash;
+varying vec3 vDir;
+void main() {
+  vec3 dir = normalize(vDir);
+  float h = dir.y;
+  vec3 c = mix(uHorizon, uTop, pow(smoothstep(-0.03, 0.75, h), 0.75));
+  float d = max(dot(dir, normalize(uSunDir)), 0.0);
+  c += uSun * (smoothstep(0.9993, 0.9996, d) * uDisc + pow(d, 28.0) * uHalo + pow(d, 4.0) * uHalo * 0.25);
+  c += vec3(0.75, 0.8, 1.0) * uFlash * (0.6 + 0.4 * smoothstep(0.0, 0.5, h));
+  gl_FragColor = vec4(c, 1.0);
+  #include <colorspace_fragment>
     this.reduced = opts.reduced;
     this.mobile = opts.mobile;
     this.dark = opts.dark;
