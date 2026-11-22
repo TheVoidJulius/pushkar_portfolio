@@ -394,8 +394,11 @@ const FALLBACK_SPOTS: Record<(typeof ANCHORS)[number], string> = {
   out: "!top-[46%] !left-[42%] !size-[150px] !transform-none",
 };
 
-/** A flat stand-in for the 3D scene (no WebGL). */
-function FallbackHouse() {
+/** A flat stand-in for the 3D scene (no WebGL): an igloo on a snow field. */
+function FallbackIgloo({ dark }: { dark: boolean }) {
+  const snow = dark ? "#aab6d4" : "#eef1f5";
+  const ice = dark ? "#b9c5e3" : "#f4f7fb";
+  const line = dark ? "#7d8bb3" : "#c3cad6";
   return (
     <svg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 h-full w-full" aria-hidden>
       <path d="M0 330 L140 250 L260 300 L420 210 L560 290 L700 230 L860 300 L1000 260 L1000 600 L0 600Z" fill={dark ? "#2a3352" : "#d3d8df"} />
