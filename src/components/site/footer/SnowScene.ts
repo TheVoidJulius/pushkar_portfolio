@@ -965,7 +965,7 @@ export class SnowScene {
       (p.sprite.material as THREE.SpriteMaterial).opacity = Math.sin(f * Math.PI) * (0.12 + s * 0.2);
     }
 
-    // eyes in the doorway
+    // --- eyes in the tunnel
     this.eyesAmt = damp(this.eyesAmt, this.eyesOn ? 1 : 0, 6, dt || 1);
     this.eyes.visible = this.eyesAmt > 0.01;
     for (const c of this.eyes.children) ((c as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = this.eyesAmt;
