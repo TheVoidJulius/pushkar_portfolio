@@ -1,9 +1,15 @@
 import * as THREE from "three";
 
 /**
- * The footer's snowy night: a little neon cyber-house where Mikuro sleeps,
- * falling snow, pine trees and paw prints. Everything is built from
- * geometry and canvas textures, so there is nothing to download.
+ * The footer: Mikuro's igloo on a sculpted snow field. The dome is built
+ * from individual rounded ice blocks laid in a spiral, with an entrance
+ * tunnel and a hinged ice-slab door; warm light leaks through the seams.
+ * Behind it: drifts, misty mountain ridges, sky. As the section scrolls in
+ * the camera cranes down and the top blocks float apart (numbered, with
+ * hairline connectors) before settling into place.
+ *
+ * Everything is procedural, so there is nothing to download. New Delhi's
+ * live weather (see weather.ts) tints the whole scene.
  *
  * The React side drives the story (door, knocks, sleeping); this class only
  * animates it and reports where things are on screen so Mikuro, who lives in
