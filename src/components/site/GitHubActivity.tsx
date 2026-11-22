@@ -7,9 +7,9 @@ import { useAssistant } from "../momo/AssistantProvider";
 import { MomoLine } from "../momo/MomoLine";
 import { FadeUp, SectionPill } from "./Chrome";
 import { CommitBonsai } from "./github/CommitBonsai";
-import { SocialIcon } from "./icons";
 import { BLOSSOMS, useBonsai } from "./github/useBonsai";
 import { SOCIAL_LINES } from "./social/lines";
+import { SocialIcon } from "./icons";
 
 type State = { status: "idle" | "loading" } | { status: "ready"; data: Activity } | { status: "error" };
 
@@ -54,9 +54,6 @@ export function GitHubActivity({ showAssistant }: { showAssistant: boolean }) {
   }, []);
 
   const data = state.status === "ready" ? state.data : null;
-  // The last 52 weeks only, so the tree and the numbers agree
-  const year = useMemo(() => {
-    if (!data) return null;
 
   /* water the tree */
   const bonsai = useBonsai(state.status !== "idle");
@@ -82,6 +79,9 @@ export function GitHubActivity({ showAssistant }: { showAssistant: boolean }) {
     [bonsai, showQuip],
   );
   const everLocal = localOnly || (!bonsai.configured && bonsai.items.length > 0);
+  // The last 52 weeks only, so the tree and the numbers agree
+  const year = useMemo(() => {
+    if (!data) return null;
     const active = data.contributions.filter((d) => d.count > 0).length;
     const busiest = data.contributions.reduce((a, d) => (d.count > a.count ? d : a), { date: "", count: 0 });
     const perDay = data.contributions.reduce((n, d) => n + d.count, 0) / Math.max(1, data.contributions.length);
@@ -134,34 +134,6 @@ export function GitHubActivity({ showAssistant }: { showAssistant: boolean }) {
               </a>
               {data && <span className="font-mono text-[12px] text-ink-3">updated {ago(data.updatedAt)}</span>}
             </div>
-          </FadeUp>
-        </div>
-
-        <FadeUp className="flex justify-center md:justify-end">
-          {data ? (
-            <CommitBonsai
-              contributions={data.contributions}
-              seed={data.user}
-              weeks={52}
-              label={`${data.user}'s bonsai`}
-              waterings={bonsai.items}
-              freshId={bonsai.fresh}
-              pourKey={pour}
-            />
-          ) : (
-            <div
-              className="grid aspect-[560/640] w-full max-w-[560px] place-items-center rounded-[22px] border border-line bg-bg-elevated p-6 text-center text-ink-3 shadow-soft"
-              aria-live="polite"
-            >
-              {state.status === "error" ? (
-                <p>
-                  The bonsai couldn&apos;t reach GitHub just now.
-                  <br />
-                  The full history is on the profile.
-                </p>
-              ) : (
-                <p className="font-mono text-[12.5px] tracking-[0.12em] uppercase">Planting the seed…</p>
-              )}
 
             {data && (
               <div className="mt-6 max-w-md">
@@ -203,6 +175,34 @@ export function GitHubActivity({ showAssistant }: { showAssistant: boolean }) {
                 )}
               </div>
             )}
+          </FadeUp>
+        </div>
+
+        <FadeUp className="flex justify-center md:justify-end">
+          {data ? (
+            <CommitBonsai
+              contributions={data.contributions}
+              seed={data.user}
+              weeks={52}
+              label={`${data.user}'s bonsai`}
+              waterings={bonsai.items}
+              freshId={bonsai.fresh}
+              pourKey={pour}
+            />
+          ) : (
+            <div
+              className="grid aspect-[560/640] w-full max-w-[560px] place-items-center rounded-[22px] border border-line bg-bg-elevated p-6 text-center text-ink-3 shadow-soft"
+              aria-live="polite"
+            >
+              {state.status === "error" ? (
+                <p>
+                  The bonsai couldn&apos;t reach GitHub just now.
+                  <br />
+                  The full history is on the profile.
+                </p>
+              ) : (
+                <p className="font-mono text-[12.5px] tracking-[0.12em] uppercase">Planting the seed…</p>
+              )}
             </div>
           )}
         </FadeUp>
