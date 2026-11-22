@@ -854,7 +854,6 @@ export class SnowScene {
     this.eyesOn = on;
   }
 
-  /** Paw prints appear one by one towards the door (0 → 1). */
   walkPaws() {
     this.pawTarget = 1;
     this.pawFade = 1;
