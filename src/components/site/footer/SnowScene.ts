@@ -471,6 +471,10 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
     const bank = Math.exp(-(((r - this.R - 0.15) / 0.55) ** 2)) * 0.22 * smooth(0.45, 0.8, off);
     return h + bank - 0.02;
   }
+  private v2 = new THREE.Vector3();
+  private s3 = new THREE.Vector3();
+  private target = new THREE.Vector3(0.5, 1.15, 0.7);
+  private lastLiftApplied = -1;
 
   private buildTerrain() {
     const W = 150;
