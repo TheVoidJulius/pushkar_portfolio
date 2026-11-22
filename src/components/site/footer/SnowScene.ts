@@ -635,12 +635,12 @@ export class SnowScene {
     const pos = new Float32Array(count * 3);
     const rnd = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      pos[i * 3] = Math.random() * 30 - 15;
-      pos[i * 3 + 1] = Math.random() * 12;
-      pos[i * 3 + 2] = Math.random() * 22 - 13;
-      rnd[i * 3] = Math.random();
-      rnd[i * 3 + 1] = Math.random();
-      rnd[i * 3 + 2] = Math.random();
+      pos[i * 3] = (rnd() * 2 - 1) * o.x;
+      pos[i * 3 + 1] = rnd() * o.y;
+      pos[i * 3 + 2] = o.z0 + rnd() * (o.z1 - o.z0);
+      r[i * 3] = rnd();
+      r[i * 3 + 1] = rnd();
+      r[i * 3 + 2] = rnd();
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
