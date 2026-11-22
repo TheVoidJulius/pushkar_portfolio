@@ -1148,3 +1148,5 @@ export class SnowScene {
     }
     this.burstClock = 0;
     this.lift.v += 9;
+  private warmed = false;
+  private pendingStart = false;
