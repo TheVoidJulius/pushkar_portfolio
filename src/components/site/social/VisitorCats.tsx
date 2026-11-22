@@ -78,3 +78,43 @@ export function VisitorCats() {
   }, [hidden]);
 
   useEffect(() => {
+    if (!mine) return;
+    const self = mine;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const R = remotes.current;
+    const syncIds = () => setList(Array.from(R.values(), (r) => ({ id: r.id, name: r.name, hue: r.hue })));
+
+    /* own cat state */
+    const own = { x: window.innerWidth * 0.78, y: window.innerHeight * 0.72, tx: 0, ty: 0, face: 1, lastMove: performance.now() };
+    own.tx = own.x;
+    own.ty = own.y;
+    let tapDocY = window.scrollY + own.y;
+    const setTarget = (cx: number, cy: number) => {
+      const nx = cx + 22;
+      const ny = Math.max(30, cy + 26);
+      if (Math.hypot(nx - own.tx, ny - own.ty) > 3) own.lastMove = performance.now();
+      own.tx = nx;
+      own.ty = ny;
+    };
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
+      setTarget(e.clientX, e.clientY);
+    };
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType !== "touch" && !coarse) return;
+      tapDocY = window.scrollY + e.clientY;
+      setTarget(e.clientX, e.clientY);
+    };
+    const onScroll = () => {
+      if (!coarse) return;
+      // stay with the last tap, riding the viewport edge as the page moves
+      const vy = Math.min(window.innerHeight - 20, Math.max(40, tapDocY - window.scrollY));
+      if (Math.abs(vy - own.ty) > 3) own.lastMove = performance.now();
+      own.ty = vy;
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerdown", onDown, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    /* realtime */
