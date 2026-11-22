@@ -78,3 +78,43 @@ export function NowOrb() {
     return () => clearTimeout(t);
   }, [state]);
 
+  if (!now?.at) return null;
+  const label = state === "live" ? "coding now" : ago(since);
+  const dot = state === "live" ? "bg-mint" : state === "warm" ? "bg-amber" : "bg-ink-3";
+
+  return (
+    <div className="fixed top-3 left-3 z-50 sm:top-4 sm:left-4" onMouseLeave={() => setOpen(false)}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        onPointerEnter={(e) => e.pointerType === "mouse" && setOpen(true)}
+        aria-expanded={open}
+        aria-label={`Pushkar's GitHub: ${state === "live" ? "coding right now" : `last active ${ago(since)}`}`}
+        className="float-btn !flex !w-auto items-center gap-2 px-3 font-mono text-[11.5px]"
+      >
+        <span className="relative flex size-2.5">
+          {state === "live" && <span className={`absolute inset-0 animate-ping rounded-full ${dot} opacity-70`} />}
+          <span className={`relative size-2.5 rounded-full ${dot} ${state === "warm" ? "shadow-[0_0_8px_var(--amber)]" : ""}`} />
+        </span>
+        <span className="hidden sm:inline">{label}</span>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ duration: 0.18 }}
+            className="absolute top-full left-0 mt-2 w-64 rounded-2xl border border-line bg-bg-elevated p-3.5 text-[13px] shadow-lg"
+          >
+            <p className="flex items-center gap-1.5 font-mono text-[11px] text-ink-3">
+              <span className={`size-1.5 rounded-full ${dot}`} />
+              {state === "live" ? "live on GitHub" : "GitHub"}
+            </p>
+            <p className="mt-1.5 text-ink">
+              Pushkar {VERB[now.kind ?? "other"]} <span className="font-medium">{now.repo}</span>{" "}
+              <span className="text-ink-3">{ago(since)}</span>
+            </p>
+            {now.message && <p className="mt-1 truncate font-mono text-[11.5px] text-ink-3">“{now.message}”</p>}
+            {now.url && (
+              <a href={now.url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-[12.5px] text-accent-text hover:underline">
