@@ -653,7 +653,8 @@ export class SnowScene {
       uniforms: {
         uTime: { value: 0 },
         uGust: { value: 0 },
-        uGustOrigin: { value: new THREE.Vector3(0, 0.8, 1.6) },
+        uGustOrigin: { value: this.mouth.clone().setY(0.6) },
+        uBox: { value: new THREE.Vector3(o.x, o.y, 0) },
         uPixel: { value: 600 },
         uColor: { value: new THREE.Color("#ffffff") },
         uOpacity: { value: 0.9 },
