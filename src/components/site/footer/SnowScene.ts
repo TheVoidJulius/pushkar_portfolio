@@ -958,11 +958,11 @@ export class SnowScene {
       z.sprite.scale.setScalar(0.18 + f * 0.32);
       (z.sprite.material as THREE.SpriteMaterial).opacity = Math.sin(f * Math.PI) * s * 0.95;
     }
-    for (const p of this.smoke) {
-      const f = (t * 0.16 + p.phase) % 1;
-      p.sprite.position.set(-1.0 + f * 0.9 + Math.sin(f * 5 + p.phase * 7) * 0.12, 3.35 + f * 1.8, -0.45);
-      p.sprite.scale.setScalar(0.35 + f * 1.1);
-      (p.sprite.material as THREE.SpriteMaterial).opacity = Math.sin(f * Math.PI) * (0.12 + s * 0.2);
+    for (const st of this.steam) {
+      const f = (t * 0.12 + st.phase) % 1;
+      st.sprite.position.set(f * (0.6 + wind * 0.8) + Math.sin(f * 5 + st.phase * 7) * 0.15, top + f * 2.4, 0);
+      st.sprite.scale.setScalar(0.5 + f * 1.6);
+      (st.sprite.material as THREE.SpriteMaterial).opacity = Math.sin(f * Math.PI) * (this.mode === "day" ? 0.12 : 0.08) * (1 - this.liftNow * 0.6);
     }
 
     // --- eyes in the tunnel
