@@ -655,8 +655,10 @@ export class SnowScene {
         uGust: { value: 0 },
         uGustOrigin: { value: new THREE.Vector3(0, 0.8, 1.6) },
         uPixel: { value: 600 },
-        uColor: { value: new THREE.Color(this.palette.flake) },
-        uOpacity: { value: this.palette.flakeOpacity },
+        uColor: { value: new THREE.Color("#ffffff") },
+        uOpacity: { value: 0.9 },
+        uSlant: { value: 0 },
+        uStreak: { value: o.streak ? 1 : 0 },
       },
     });
     const pts = new THREE.Points(geo, mat);
