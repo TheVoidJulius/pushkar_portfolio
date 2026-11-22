@@ -31,6 +31,12 @@ export interface CommitBonsaiProps {
   className?: string;
 }
 
+  /** Visitor blossoms grown on the branch tips (placed deterministically from the id). */
+  waterings?: { id: string; blossom: number }[];
+  /** The newest blossom id: it pops in with a little spring. */
+  freshId?: string | null;
+  /** Bump to play the watering-can animation. */
+  pourKey?: number;
 /* ─────────────────────────── data ─────────────────────────── */
 
 type Week = { start: Date; count: number; active: number; perfect: boolean };
