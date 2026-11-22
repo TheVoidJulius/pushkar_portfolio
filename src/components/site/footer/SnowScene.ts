@@ -563,8 +563,11 @@ export class SnowScene {
         this.bulbs.push({ mat, phase: i * 0.7 });
       }
     }
-    g.position.set(x, 0, z);
-    this.scene.add(g);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry((rMid - BD / 2) * 2, segLen * segs + 0.6), this.tunnelGlowMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -yc + 0.02;
+    holder.add(floor);
+    this.scene.add(holder);
   }
 
   /** The ice-slab door in the tunnel mouth, hinged on one side. */
