@@ -238,3 +238,43 @@ export function VisitorCats() {
       const speed = Math.hypot(dx, dy);
       const sitting = !reduced && speed < 6 && now - own.lastMove > IDLE_MS;
       if (ownEl.current) place(ownEl.current, own.x, own.y, own.face, sitting ? "sit" : "walk");
+
+      const sy = window.scrollY;
+      const vh = window.innerHeight;
+      for (const r of R.values()) {
+        if (!r.el) continue;
+        const stale = !r.ready || now - r.seen > STALE_MS;
+        const rdx = r.tx - r.x;
+        r.x += rdx * k;
+        r.y += (r.ty - r.y) * k;
+        const vy = r.y - sy;
+        if (stale || vy < -60 || vy > vh + 60) {
+          r.el.style.display = "none";
+          continue;
+        }
+        r.el.style.display = "";
+        const moving = Math.hypot(rdx, r.ty - r.y) > 6;
+        const face = Math.abs(rdx) > 4 ? (rdx > 0 ? 1 : -1) : Number(r.el.style.getPropertyValue("--face")) || 1;
+        place(r.el, r.x, vy, face, !reduced && !moving && now - r.moved > IDLE_MS ? "sit" : "walk");
+      }
+
+      /* broadcast own position, throttled */
+      if (channel && !hiddenRef.current && now - lastSent > SEND_EVERY_MS) {
+        const y = own.y + sy;
+        const moved = Math.hypot(own.x - lastSentX, y - lastSentY) > 2;
+        if (moved || now - lastSent > HEARTBEAT_MS) {
+          lastSent = now;
+          lastSentX = own.x;
+          lastSentY = y;
+          void channel.send({
+            type: "broadcast",
+            event: "pos",
+            payload: { id: self.id, x: +(own.x / window.innerWidth).toFixed(4), y: Math.round(y) },
+          });
+        }
+      }
+    };
+    raf = requestAnimationFrame(frame);
+
+    return () => {
+      teardown = true;
