@@ -35,7 +35,8 @@ export function ChangingRoom({ name = "Mikuro", dim = false }: { name?: string; 
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-label={`Open ${name}'s wardrobe`}
-        className={`group absolute right-4 bottom-24 flex flex-col items-center gap-1 rounded-xl p-1.5 font-mono text-[10.5px] outline-none focus-visible:ring-2 focus-visible:ring-accent sm:right-8 sm:bottom-28 sm:text-[11.5px] ${
+        // Sits above the snow-guestbook panel (bottom-right), with room for its picker to open upward
+        className={`group absolute right-4 bottom-[17rem] flex flex-col items-center gap-1 rounded-xl p-1.5 font-mono text-[10.5px] outline-none focus-visible:ring-2 focus-visible:ring-accent sm:right-8 sm:bottom-[19rem] sm:text-[11.5px] ${
           dim ? "text-white/70 hover:text-white" : "text-[#20252d]/65 hover:text-[#20252d]"
         }`}
       >
