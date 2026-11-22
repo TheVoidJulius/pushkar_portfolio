@@ -318,3 +318,18 @@ export function VisitorCats() {
       </div>
       <button
         type="button"
+        onClick={toggle}
+        aria-pressed={!hidden}
+        aria-label={`Ghost cats ${hidden ? "hidden" : "shown"}, ${label}. Press to ${hidden ? "show" : "hide"} them.`}
+        title={mine ? `You are ${mine.name}` : undefined}
+        className="float-btn !flex fixed bottom-4 left-4 z-40 h-9 items-center gap-1.5 px-3.5 text-[12.5px] text-ink-2"
+      >
+        <span aria-hidden>🐾</span>
+        <span aria-hidden>{hidden ? "cats hidden" : label}</span>
+        <span aria-hidden className="hidden text-ink-3 sm:inline">
+          · {hidden ? "show" : "hide"}
+        </span>
+      </button>
+    </>
+  );
+}
