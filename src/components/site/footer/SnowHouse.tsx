@@ -303,7 +303,7 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
           ))}
         </div>
 
-        {/* The door is a real button: click, tap or press Enter to knock */}
+        {/* The ice door is a real button: click, tap or press Enter to knock */}
         <button
           ref={doorRef}
           type="button"
