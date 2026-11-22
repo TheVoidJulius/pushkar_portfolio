@@ -64,6 +64,9 @@ export function TopNav({ showAssistant }: { showAssistant: boolean }) {
           </AnimatePresence>
         </button>
         <MusicButton />
+        <a href="/resume" className="float-btn px-3 text-[12px] font-medium whitespace-nowrap" aria-label="Recruiter mode: open the plain résumé">
+          Recruiter mode
+        </a>
         <button type="button" onClick={() => setMenu(true)} className="float-btn w-[54px]" aria-label="Open menu" aria-expanded={menu}>
           <span className="flex flex-col gap-[5px]" aria-hidden>
             <span className="h-[1.6px] w-[18px] rounded bg-current" />
