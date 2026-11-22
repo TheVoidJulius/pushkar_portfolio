@@ -118,3 +118,12 @@ export function NowOrb() {
             {now.message && <p className="mt-1 truncate font-mono text-[11.5px] text-ink-3">“{now.message}”</p>}
             {now.url && (
               <a href={now.url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-[12.5px] text-accent-text hover:underline">
+                See it on GitHub →
+              </a>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
