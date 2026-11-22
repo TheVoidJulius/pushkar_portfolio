@@ -38,3 +38,19 @@ export async function getGitHubNow(): Promise<GitHubNow> {
   });
   if (!res.ok) throw new Error(`GitHub events ${res.status}`);
   const events = (await res.json()) as Event[];
+  const e = events.find((x) => x.type in KINDS) ?? events[0];
+  const value: GitHubNow = e
+    ? {
+        at: e.created_at,
+        repo: e.repo.name.split("/").pop() ?? e.repo.name,
+        kind: KINDS[e.type] ?? "other",
+        message:
+          e.payload?.commits?.at(-1)?.message?.split("\n")[0]?.slice(0, 90) ??
+          e.payload?.pull_request?.title?.slice(0, 90) ??
+          (e.type === "CreateEvent" ? `created a ${e.payload?.ref_type ?? "repo"}` : null),
+        url: e.payload?.pull_request?.html_url ?? `https://github.com/${e.repo.name}`,
+      }
+    : { at: null, repo: null, kind: null, message: null, url: null };
+  cache = { at: Date.now(), value };
+  return value;
+}
