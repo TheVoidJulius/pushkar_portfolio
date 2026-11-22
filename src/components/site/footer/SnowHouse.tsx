@@ -336,7 +336,8 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
                 animate={{ opacity: 1, scale: 1, rotate: -4 }}
                 exit={{ opacity: 0, scale: 1.2 }}
                 transition={{ type: "spring", stiffness: 600, damping: 18 }}
-                className="snow-knock pointer-events-none absolute top-[18%] left-full ml-2 whitespace-nowrap font-mono text-[15px] font-bold"
+                className="pointer-events-none absolute top-[10%] left-full ml-2 font-mono text-[15px] font-bold whitespace-nowrap text-white"
+                style={{ textShadow: "0 0 10px #ff9a4f, 0 0 22px #ff6a2a, 0 1px 2px rgba(0,0,0,.5)" }}
               >
                 knock knock!
               </motion.span>
