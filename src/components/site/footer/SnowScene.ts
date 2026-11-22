@@ -615,8 +615,20 @@ export class SnowScene {
     }
   }
 
-  /** Two angry glowing eyes in the dark doorway (used when Mikuro is turned off). */
-  private buildEyes() {
+  /** A tiny neon "MIKURO" on a stake by the entrance. */
+  private buildSign() {
+    const tex = canvasTexture(512, 128, (g) => {
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.font = "700 76px ui-monospace, 'SF Mono', Menlo, Consolas, monospace";
+      g.shadowColor = NEON;
+      g.shadowBlur = 22;
+      g.fillStyle = "#ffd3e6";
+      g.fillText("MIKURO", 256, 66);
+      g.shadowBlur = 6;
+      g.fillText("MIKURO", 256, 66);
+    });
+    this.neonMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false, depthWrite: false });
     const g = new THREE.Group();
     const stake = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.95, 6), new THREE.MeshStandardMaterial({ color: "#3a3f4a", roughness: 0.7 }));
     stake.position.y = 0.42;
