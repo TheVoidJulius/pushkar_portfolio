@@ -278,7 +278,7 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
       className="relative isolate overflow-hidden"
     >
       <div
-        className="relative h-[68vh] min-h-[460px] w-full sm:h-[min(88vh,820px)] sm:min-h-[520px]"
+        className="relative h-[72vh] min-h-[480px] w-full sm:h-[min(90vh,840px)] sm:min-h-[540px]"
         style={{
           background: dark
             ? "linear-gradient(180deg, var(--bg) 0%, #070b16 30%, #151c32 70%, #1a2238 100%)"
