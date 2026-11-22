@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { HOT_TEMP, type Weather } from "./weather";
+import { currentFestival } from "@/lib/festivals";
+import type { Festive } from "./festive";
 
 /**
  * The footer: Mikuro's igloo on a sculpted snow field. The dome is built
@@ -379,6 +381,7 @@ export class SnowScene {
   private w = 1;
   private h = 1;
   private raf = 0;
+  private festive: Festive | null = null;
   private running = false;
   private disposed = false;
   private last = 0;
@@ -546,6 +549,15 @@ export class SnowScene {
     this.sleet = this.buildParticles(opts.mobile ? 500 : 1300, { x: 16, y: 12, z0: -16, z1: 10, size: 0.5, fall: 11, streak: true });
     this.drift = this.buildParticles(opts.mobile ? 180 : 520, { x: 16, y: 0.7, z0: -8, z1: 9, size: 0.035, fall: 0.15, streak: false });
     this.applyLook();
+    // festival dressing: loaded only while a festival is on
+    const fest = currentFestival();
+    if (fest) {
+      void import("./festive").then(({ createFestive }) => {
+        if (this.disposed) return;
+        this.festive = createFestive(fest.id, { scene: this.scene, radial: this.radial, height: (x, z) => this.height(x, z), reduced: opts.reduced, mobile: opts.mobile });
+        if (this.festive && !this.running) this.renderOnce();
+      });
+    }
   }
 
   // -------------------------------------------------------------------
@@ -1533,9 +1545,15 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
     this.report();
   }
 
+  /** For add-on layers (the snow guestbook): the scene graph, camera, terrain and current look. */
+  layerHost() {
+    return { scene: this.scene, camera: this.camera, height: (x: number, z: number) => this.height(x, z), mouth: this.mouth, R: this.R, look: () => this.look };
+  }
+
   dispose() {
     this.stop();
     this.disposed = true;
+    this.festive?.dispose();
     this.scene.traverse((o) => {
       const mesh = o as THREE.Mesh;
       mesh.geometry?.dispose();
@@ -1554,6 +1572,7 @@ roughnessFactor = mix(roughnessFactor, 0.12 + grain * 0.1, uWet);`,
   // Animation
   // -------------------------------------------------------------------
   private update(dt: number) {
+    this.festive?.update(dt);
     const r = this.reduced;
     if (!r) this.t += dt;
     const t = this.t;

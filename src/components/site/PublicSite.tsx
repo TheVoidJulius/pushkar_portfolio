@@ -6,12 +6,14 @@ import { AssistantDock } from "../momo/AssistantDock";
 import { AssistantProvider } from "../momo/AssistantProvider";
 import { MikuroLife } from "../momo/MikuroLife";
 import { MomoFlight } from "../momo/MomoFlight";
+import { Secrets } from "./secrets/Secrets";
 import { MusicPlayer } from "../music/MusicPlayer";
 import { About } from "./About";
 import { BottomChips, TopNav } from "./Chrome";
 import { CinematicIntro } from "./CinematicIntro";
 import { Contact } from "./Contact";
 import { ExperienceDial } from "./ExperienceDial";
+import { FestiveQuip } from "./FestiveQuip";
 import { GitHubActivity } from "./GitHubActivity";
 import { Hero } from "./Hero";
 import { Skills } from "./Skills";
@@ -40,12 +42,14 @@ export function PublicSite({ content, previewBanner }: { content: PortfolioConte
       <Contact contact={content.contact} name={content.profile.name} footerNote={content.site.footer_note} showAssistant={show} />
       <MusicPlayer />
       <VisitorCats />
+      {show && <FestiveQuip />}
       {show && (
         <>
           <BottomChips />
           <AssistantDock />
           <MomoFlight />
           <MikuroLife />
+          <Secrets />
         </>
       )}
       </MotionConfig>

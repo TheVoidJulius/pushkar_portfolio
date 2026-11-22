@@ -9,6 +9,7 @@ import { FadeUp, SectionPill } from "./Chrome";
 import { CommitBonsai } from "./github/CommitBonsai";
 import { BLOSSOMS, useBonsai } from "./github/useBonsai";
 import { SOCIAL_LINES } from "./social/lines";
+import { useFestival } from "./useFestival";
 import { SocialIcon } from "./icons";
 
 type State = { status: "idle" | "loading" } | { status: "ready"; data: Activity } | { status: "error" };
@@ -27,6 +28,7 @@ const ago = (iso: string) => {
  * pixel bonsai. Data loads only as the section approaches the viewport.
  */
 export function GitHubActivity({ showAssistant }: { showAssistant: boolean }) {
+  const festival = useFestival();
   const ref = useRef<HTMLElement>(null);
   const [state, setState] = useState<State>({ status: "idle" });
 
@@ -188,6 +190,7 @@ export function GitHubActivity({ showAssistant }: { showAssistant: boolean }) {
               waterings={bonsai.items}
               freshId={bonsai.fresh}
               pourKey={pour}
+              bloomTint={festival?.bloom}
             />
           ) : (
             <div

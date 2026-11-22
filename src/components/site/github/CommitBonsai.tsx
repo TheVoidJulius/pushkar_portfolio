@@ -29,6 +29,8 @@ export interface CommitBonsaiProps {
   weeks?: number;
   /** "auto" picks from the latest date's month. */
   season?: Season | "auto";
+  /** Festival blossom colours (three hex values) that replace the bloom palette. */
+  bloomTint?: readonly string[];
   label?: string;
   className?: string;
   /** Visitor blossoms grown on the branch tips (placed deterministically from the id). */
@@ -248,7 +250,7 @@ export function seasonFor(date: Date): Season {
 
 /* ─────────────────────────── component ─────────────────────────── */
 
-export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, season = "auto", label, className = "", waterings, freshId, pourKey = 0 }: CommitBonsaiProps) {
+export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, season = "auto", label, className = "", waterings, freshId, pourKey = 0, bloomTint }: CommitBonsaiProps) {
   const n = Math.max(8, Math.min(80, weeks));
   const data = useMemo(() => toWeeks(contributions, n), [contributions, n]);
   const tree = useMemo(() => grow(seed, n), [seed, n]);
@@ -277,10 +279,12 @@ export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, seaso
   const [hover, setHover] = useState<number | null>(null);
   const hoverRef = useRef<number | null>(null);
   const live = useRef({ data, tree, S, max });
+  const tintRef = useRef(bloomTint);
   useEffect(() => {
     hoverRef.current = hover;
     live.current = { data, tree, S, max };
-  }, [hover, data, tree, S, max]);
+    tintRef.current = bloomTint;
+  }, [hover, data, tree, S, max, bloomTint]);
   // 0 until the tree first scrolls into view, then the moment it started growing
   const born = useRef(0);
 
@@ -354,7 +358,7 @@ export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, seaso
       const dt = Math.min(0.2, (now - (lastPaint || now)) / 1000);
       lastPaint = now;
       const { data: D, tree: T, S: SS, max: M } = live.current;
-      const P = PAL[SS];
+      const P = tintRef.current?.length === 3 ? { ...PAL[SS], bloom: tintRef.current } : PAL[SS];
       if (SS !== lastSeason) {
         leaves = [];
         flakes = [];

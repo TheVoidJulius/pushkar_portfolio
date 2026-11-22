@@ -99,7 +99,17 @@ export function Hero({ profile, showAssistant }: { profile: Profile; showAssista
             {profile.stats.map((s) => (
               <div key={s.label} className="contents">
                 <dt className="text-ink-3">{s.label}</dt>
-                <dd className="text-right tabular-nums">{s.value}</dd>
+                <dd className="text-right tabular-nums">
+                  {s.live && (
+                    <span
+                      role="img"
+                      aria-label="Live value"
+                      title="Live: refreshed from the source every few hours"
+                      className="mr-1.5 inline-block size-1.5 -translate-y-px rounded-full bg-emerald-400/80"
+                    />
+                  )}
+                  {s.value}
+                </dd>
               </div>
             ))}
           </motion.dl>
