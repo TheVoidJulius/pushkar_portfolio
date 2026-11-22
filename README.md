@@ -1,4 +1,4 @@
-# Interactive portfolio with Momo, the AI cat assistant
+# Interactive portfolio with Mikuro, the AI cat assistant
 
 A personal portfolio site with an animated, voiced cat assistant, plus a private dashboard where the owner edits everything without touching code.
 
@@ -20,9 +20,9 @@ A personal portfolio site with an animated, voiced cat assistant, plus a private
   - **Experience:** a scroll-driven rotating dial with the role card in the middle.
   - **About:** a photo, story and quote-style highlights.
   - **Contact:** a chrome Contact button and a minimal form.
-- **Momo** is a real-time 3D liquid-chrome puffball cat: round iridescent body, cat ears, a cowlick curl, big glossy anime eyes, and 11 expressions. She's built procedurally with Three.js (`src/components/momo/three/MomoRenderer.ts`), so there are no model files. One instance (`MomoFlight`) glides between landing spots and stays about 60–90px beside the text, like a small guide.
+- **Mikuro** is a real-time 3D liquid-chrome puffball cat: round iridescent body, cat ears, a cowlick curl, big glossy anime eyes, and 11 expressions. She's built procedurally with Three.js (`src/components/momo/three/MomoRenderer.ts`), so there are no model files. One instance (`MomoFlight`) glides between landing spots and stays about 60–90px beside the text, like a small guide.
 - **Narration ("run-through"):**
-  - **Intro:** when the page opens, Momo appears large, shrinks into place and greets the visitor.
+  - **Intro:** when the page opens, Mikuro appears large, shrinks into place and greets the visitor.
   - **Sections:** in every section she says a line generated from the live content (`src/lib/assistant/tour.ts`), with karaoke-style highlighting where spoken words darken and the rest stay grey.
   - **Sound:** the "Tap for sound" chip turns on her voice (browsers block audio until a tap), and "Skip intro" skips the greeting.
   - **Tour:** the menu's "Play the tour" option auto-scrolls through every section.
@@ -133,7 +133,7 @@ Content changes never need a redeploy. The public page is rendered per request f
 **ElevenLabs (anime-style English voice).**
 1. In ElevenLabs, open **Voice Library** and add a young, bright, expressive female English voice to "My Voices". Search terms like *anime*, *cute* or *young female* help. Do **not** assume any particular voice ID exists.
 2. Set `ELEVENLABS_API_KEY` in Vercel and redeploy.
-3. In **/admin → AI Assistant**, click *Load my ElevenLabs voices*, pick the voice, and choose the model. Eleven v3 or newer supports emotion tags like `[excited]` and `[curious]`, which the app adds automatically per reply. Then save and press *Hear Momo*.
+3. In **/admin → AI Assistant**, click *Load my ElevenLabs voices*, pick the voice, and choose the model. Eleven v3 or newer supports emotion tags like `[excited]` and `[curious]`, which the app adds automatically per reply. Then save and press *Hear Mikuro*.
 4. If the configured model isn't available on the plan, the server retries with `eleven_multilingual_v2`. If ElevenLabs fails entirely, the browser voice takes over.
 
 Costs to expect: both providers bill per use. `/api/chat` and `/api/tts` have a per-IP rate limit (`src/lib/rate-limit.ts`, best effort, per server instance). For stricter protection, add Vercel Firewall rules or set spending limits in each provider's console.
@@ -173,4 +173,4 @@ After transferring: rotate any keys the developer created, remove the developer 
 
 ## Replacing the placeholder content
 
-All placeholder data ("Alex Morgan", the projects, companies and images) is fictional. The owner replaces it in the dashboard. To change the starting content before handover instead, edit `supabase/seed-content.json` and run `npm run db:seed:generate`. Placeholder artwork lives in `public/placeholders/`, and uploads replace it.
+The starting content is Pushkar Panwar's real profile, gathered from his public GitHub, LeetCode and profile README. Project covers and the portrait in `public/placeholders/` are generated artwork; upload real screenshots and a photo in the dashboard to replace them. To change the starting content before handover instead, edit `supabase/seed-content.json` and run `npm run db:seed:generate`. Placeholder artwork lives in `public/placeholders/`, and uploads replace it.
