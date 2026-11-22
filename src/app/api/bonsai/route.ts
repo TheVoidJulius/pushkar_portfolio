@@ -38,3 +38,10 @@ export async function POST(req: Request) {
   }
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid" }, { status: 400 });
+  const { data, error } = await db().from("bonsai_waterings").insert({ blossom: parsed.data.blossom }).select("id, created_at, blossom").single();
+  if (error || !data) {
+    console.error("[bonsai] insert failed", error?.message);
+    return Response.json({ error: "failed" }, { status: 502 });
+  }
+  return Response.json(data, { status: 201 });
+}
