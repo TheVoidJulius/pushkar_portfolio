@@ -66,7 +66,17 @@ export function WarpProjects({
     let ro: ResizeObserver | null = null;
     let io: IntersectionObserver | null = null;
 
+    // Waits for a quiet moment, so the heavy work never lands on a busy frame
+    const idle = (timeout: number) =>
+      new Promise<void>((res) =>
+        "requestIdleCallback" in window ? requestIdleCallback(() => res(), { timeout }) : setTimeout(res, 16),
+      );
+
     void (async () => {
+      // Let the page (and Mikuro's shaders) finish first: a second WebGL context
+      // requested while the GPU is still compiling blocks the page for seconds
+      await new Promise((res) => setTimeout(res, 2500));
+      await idle(1500);
       const [{ WarpRenderer }, { drawProjectCard }] = await Promise.all([import("./WarpRenderer"), import("./cardTexture")]);
       if (cancelled) return;
       try {
@@ -77,7 +87,13 @@ export function WarpProjects({
       }
       await document.fonts?.ready;
       const font = getComputedStyle(document.body).fontFamily || "system-ui, sans-serif";
-      const cards = await Promise.all(projects.map((p, i) => drawProjectCard(p, i, n, font)));
+      // One card per idle slot instead of all at once (each is a large canvas draw)
+      const cards = [];
+      for (let i = 0; i < projects.length; i++) {
+        if (cancelled) break;
+        cards.push(await drawProjectCard(projects[i], i, n, font));
+        await idle(150);
+      }
       if (cancelled) {
         r.dispose();
         return;

@@ -174,6 +174,8 @@ export class LensRenderer {
   private lens: THREE.ShaderMaterial;
   private lensScene = new THREE.Scene();
   private lensCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  private compiled = false;
+  private compiling = false;
   private geometry = new THREE.PlaneGeometry(1, 1);
   private textures: THREE.CanvasTexture[] = [];
   private slots: Slot[] = [];
@@ -234,6 +236,8 @@ export class LensRenderer {
       antialias: false, // the lens pass resamples anyway; panel edges are AA'd in the shader
       powerPreference: "high-performance",
     });
+    // Shader error checks force the page to wait on the GPU (seconds on first load); dev only
+    this.renderer.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
     this.renderer.autoClear = false;
     this.renderer.setPixelRatio(1);
     this.canvas.addEventListener("webglcontextlost", (e) => {
@@ -302,6 +306,18 @@ export class LensRenderer {
       return t;
     });
     this.rebuild();
+    if (!this.compiled && !this.compiling) {
+      this.compiling = true;
+      // Shaders compile in the background (KHR_parallel_shader_compile); drawing
+    // before that would make the page wait on the GPU for up to seconds.
+      void Promise.all([this.renderer.compileAsync(this.scene, this.camera), this.renderer.compileAsync(this.lensScene, this.lensCamera)])
+        .catch(() => {})
+        .then(() => {
+          this.compiled = true;
+          this.warm();
+          this.renderOnce();
+        });
+    }
   }
 
   /** Call after redrawing the panel canvases (e.g. a theme change). */
@@ -423,7 +439,7 @@ export class LensRenderer {
    * for setting up the panels that were never on screen yet.
    */
   private warm() {
-    if (this.disposed) return;
+    if (this.disposed || !this.compiled) return;
     for (const s of this.slots) {
       s.mesh.visible = true;
       s.mesh.position.set(0, 0, 0);
@@ -756,6 +772,7 @@ export class LensRenderer {
   }
 
   private render() {
+    if (!this.compiled) return;
     this.layout();
     const un = this.lens.uniforms;
     const f = this.fx.v;

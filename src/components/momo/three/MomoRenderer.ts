@@ -168,6 +168,7 @@ export class MomoRenderer {
   private envTargets: Partial<Record<"dark" | "light", THREE.WebGLRenderTarget>> = {};
   private pmrem: THREE.PMREMGenerator;
   private liquidTime = { value: 0 };
+  private compiled = false;
   private mug!: THREE.Group;
   private steam: { mesh: THREE.Mesh; mat: THREE.MeshBasicMaterial; phase: number }[] = [];
   private bufferPx = 0;
@@ -238,6 +239,8 @@ export class MomoRenderer {
       powerPreference: "high-performance",
       premultipliedAlpha: true,
     });
+    // Shader error checks force the page to wait on the GPU (seconds on first load); dev only
+    this.renderer.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
     // The drawing buffer follows the on-screen size (see setDisplaySize)
     this.renderer.setPixelRatio(1);
     this.displayPx = size;
@@ -257,6 +260,16 @@ export class MomoRenderer {
     this.setTheme(Boolean(opts.dark));
     this.root.add(this.head);
     this.scene.add(this.root);
+
+    // Shaders compile in the background (KHR_parallel_shader_compile); drawing
+    // before that would make the page wait on the GPU for up to seconds.
+    void this.renderer
+      .compileAsync(this.scene, this.camera)
+      .catch(() => {})
+      .then(() => {
+        this.compiled = true;
+        if (!this.running) this.renderOnce();
+      });
 
     // Prepare the other theme's reflections while idle, so toggling never hitches
     const prepare = () => {
@@ -283,7 +296,7 @@ export class MomoRenderer {
     this.lastResize = now;
     this.bufferPx = target;
     this.renderer.setSize(target, target, false);
-    this.renderer.render(this.scene, this.camera); // resizing clears the canvas
+    if (this.compiled) this.renderer.render(this.scene, this.camera); // resizing clears the canvas
   }
 
   // ---------------------------------------------------------------------
@@ -636,7 +649,7 @@ export class MomoRenderer {
       const dt = Math.min(0.05, this.sinceRender);
       this.sinceRender = 0;
       this.update(dt);
-      this.renderer.render(this.scene, this.camera);
+      if (this.compiled) this.renderer.render(this.scene, this.camera);
       this.watchPerformance(elapsed, calm);
     };
     this.raf = requestAnimationFrame(loop);
@@ -662,7 +675,7 @@ export class MomoRenderer {
   }
   renderOnce() {
     this.update(0.016);
-    this.renderer.render(this.scene, this.camera);
+    if (this.compiled) this.renderer.render(this.scene, this.camera);
   }
   dispose() {
     this.disposed = true;

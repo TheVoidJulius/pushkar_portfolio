@@ -19,7 +19,8 @@ function loadImage(src: string) {
     const img = new Image();
     img.crossOrigin = "anonymous"; // Supabase storage sends CORS headers; without them we skip the cover
     img.decoding = "async";
-    img.onload = () => resolve(img);
+    // Decode off the main thread before the canvas draws it
+    img.onload = () => void img.decode().then(() => resolve(img), () => resolve(img));
     img.onerror = () => resolve(null);
     img.src = src;
   });

@@ -158,6 +158,8 @@ export class WarpRenderer {
   private frames = 0;
   private slow = 0;
   private disposed = false;
+  private compiled = false;
+  private compiling = false;
   private reduced: boolean;
 
   constructor(opts: { reducedMotion?: boolean } = {}) {
@@ -170,6 +172,8 @@ export class WarpRenderer {
       premultipliedAlpha: true,
       powerPreference: "high-performance",
     });
+    // Shader error checks force the page to wait on the GPU (seconds on first load); dev only
+    this.renderer.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.setPixelRatio(1);
     this.canvas.addEventListener("webglcontextlost", (e) => e.preventDefault());
@@ -226,6 +230,17 @@ export class WarpRenderer {
       return { mesh, material, texture, accent: new THREE.Color(card.accent) };
     });
     this.kick();
+    if (!this.compiled && !this.compiling) {
+      this.compiling = true;
+      // Shaders compile in the background (KHR_parallel_shader_compile); drawing
+    // before that would make the page wait on the GPU for up to seconds.
+      void Promise.all([this.renderer.compileAsync(this.scene, this.camera), this.renderer.compileAsync(this.postScene, this.postCamera)])
+        .catch(() => {})
+        .then(() => {
+          this.compiled = true;
+          if (!this.disposed) this.render();
+        });
+    }
   }
 
   /** Where the ring should turn to, in card units (0 = first card). */
@@ -323,6 +338,7 @@ export class WarpRenderer {
   }
 
   private render() {
+    if (!this.compiled) return;
     this.layout();
     this.post.uniforms.uVel.value = this.speed;
     this.post.uniforms.uDir.value = this.vel >= 0 ? 1 : -1;
