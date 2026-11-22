@@ -1110,6 +1110,45 @@ export class SnowScene {
     }
 
     // --- eyes in the tunnel
+  private pathCurve!: THREE.QuadraticBezierCurve3;
+
+  /** Melting (hot days): drips running down the dome and a puddle. */
+  private buildMelt() {
+    const n = this.mobile ? 18 : 36;
+    const rnd = mulberry(23);
+    const mat = new THREE.MeshStandardMaterial({ color: "#d9efff", roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.85 });
+    this.dripMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(0.04, 8, 6), mat, n);
+    this.dripMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.dripMesh.visible = false;
+    this.dripMesh.frustumCulled = false;
+    for (let i = 0; i < n; i++) {
+      let phi = rnd() * Math.PI * 2;
+      if (Math.abs(Math.atan2(Math.sin(phi - this.doorYaw), Math.cos(phi - this.doorYaw))) < 0.5) phi += 1;
+      this.drips.push({ phi, theta: 0.6 + rnd() * 0.7, speed: 0, drop: 0, y: 0, wait: rnd() * 4 });
+    }
+    this.scene.add(this.dripMesh);
+    const soft = canvasTexture(
+      64,
+      64,
+      (g) => {
+        const r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+        r.addColorStop(0, "#fff");
+        r.addColorStop(0.72, "#ddd");
+        r.addColorStop(1, "#000");
+        g.fillStyle = r;
+        g.fillRect(0, 0, 64, 64);
+      },
+      false,
+    );
+    this.puddleMat = new THREE.MeshStandardMaterial({ color: "#5d6a7c", roughness: 0.04, metalness: 0.35, transparent: true, opacity: 0.6, alphaMap: soft, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 });
+    this.puddle = new THREE.Mesh(new THREE.CircleGeometry(1, 48), this.puddleMat);
+    this.puddle.rotation.x = -Math.PI / 2;
+    this.puddle.scale.set(this.R + 1.1, this.R + 1.6, 1);
+    this.puddle.position.set(0.25, 0.03, 0.35);
+    this.puddle.visible = false;
+    this.puddle.receiveShadow = true;
+    this.scene.add(this.puddle);
+  }
     this.eyesAmt = damp(this.eyesAmt, this.eyesOn ? 1 : 0, 6, dt || 1);
     this.eyes.visible = this.eyesAmt > 0.01;
     for (const c of this.eyes.children) ((c as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = this.eyesAmt;
