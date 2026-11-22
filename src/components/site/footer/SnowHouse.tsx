@@ -356,9 +356,6 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
             )}
           </AnimatePresence>
         </button>
-
-        {/* The fold at the bottom: snow fades into the page */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-[var(--bg)]" />
       </div>
 
       {/* Carried back to the top: Mikuro holds this spot while the page scrolls */}
