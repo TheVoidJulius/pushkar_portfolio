@@ -988,10 +988,35 @@ export class SnowScene {
     this.mats.beacon.color.set(Math.sin(t * 3) > 0.2 || r ? "#ff3b4f" : "#4a1820");
     for (const b of this.bulbs) b.mat.opacity = r ? 1 : 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 2.4 + b.phase));
 
-    // snow
-    this.gust = damp(this.gust, 0, 1.6, dt);
-    this.snowMat.uniforms.uTime.value = r ? 4 : t;
-    this.snowMat.uniforms.uGust.value = this.gust;
+  private updateDrips(dt: number) {
+    const rc = this.R + 0.02;
+    const hc = this.H + 0.02;
+    this.drips.forEach((d, i) => {
+      if (d.wait > 0) {
+        d.wait -= dt;
+        this.s3.setScalar(0);
+      } else if (d.theta > 0.05) {
+        d.speed = Math.min(0.9, d.speed + dt * 0.35);
+        d.theta -= d.speed * dt;
+        d.y = hc * Math.sin(d.theta);
+        this.s3.set(1, 1.5, 1);
+      } else {
+        d.drop += dt * 2.2;
+        d.y = Math.max(0, d.y - d.drop * dt * 6);
+        this.s3.set(0.8, 2.2, 0.8);
+        if (d.y <= 0.01) {
+          d.theta = 0.55 + Math.random() * 0.75;
+          d.speed = 0;
+          d.drop = 0;
+          d.wait = 0.5 + Math.random() * 2.5;
+        }
+      }
+      const ct = Math.cos(Math.max(d.theta, 0.05));
+      this.v.set(rc * ct * Math.sin(d.phi), d.y, rc * ct * Math.cos(d.phi));
+      this.m4.compose(this.v, this.q.identity(), this.s3);
+      this.dripMesh.setMatrixAt(i, this.m4);
+    });
+    this.dripMesh.instanceMatrix.needsUpdate = true;
   }
 
   private spot(world: THREE.Vector3, worldSize: number): ScreenSpot {
