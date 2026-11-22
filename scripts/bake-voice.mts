@@ -11,6 +11,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SCENE_LINES } from "../src/lib/assistant/scenes";
+import { NOW_LINES } from "../src/components/site/NowOrb";
+import { SOCIAL_LINES } from "../src/components/site/social/lines";
 import { buildLines } from "../src/lib/assistant/tour";
 import type { PortfolioContent } from "../src/lib/types";
 
