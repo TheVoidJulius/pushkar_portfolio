@@ -25,6 +25,8 @@ class Spring {
     public k: number,
     public c: number,
   ) {}
+type Mode = "day" | "dusk" | "night";
+
   step(target: number, dt: number) {
     const n = Math.max(1, Math.ceil(dt / (1 / 240)));
     const h = dt / n;
