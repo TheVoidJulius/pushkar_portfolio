@@ -279,6 +279,8 @@ export class SnowScene {
   private pool!: THREE.Mesh;
   private poolMat!: THREE.MeshBasicMaterial;
   private mouthGlow!: THREE.Sprite;
+uniform float uSlant;
+uniform float uStreak;
   private neonMat!: THREE.MeshBasicMaterial;
   private neonGlow!: THREE.Sprite;
   private flakes: THREE.ShaderMaterial;
