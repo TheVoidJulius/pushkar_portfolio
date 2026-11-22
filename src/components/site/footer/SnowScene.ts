@@ -497,15 +497,14 @@ export class SnowScene {
       H.add(drift);
     }
 
-    // zzz
-    const zTex = canvasTexture(128, 128, (g) => {
-      g.font = "700 96px ui-rounded, 'Segoe UI', system-ui, sans-serif";
-      g.textAlign = "center";
-      g.textBaseline = "middle";
-      g.shadowColor = NEON_CYAN;
-      g.shadowBlur = 18;
-      g.fillStyle = "#e9fbff";
-      g.fillText("z", 64, 70);
+  private buildMist() {
+    const tex = canvasTexture(4, 128, (g) => {
+      const gr = g.createLinearGradient(0, 0, 0, 128);
+      gr.addColorStop(0, "rgba(255,255,255,0)");
+      gr.addColorStop(0.55, "rgba(255,255,255,0.55)");
+      gr.addColorStop(1, "rgba(255,255,255,0.85)");
+      g.fillStyle = gr;
+      g.fillRect(0, 0, 4, 128);
     });
     const layers = [
       { z: -26, y: 4, h: 12, o: 0.45 },
