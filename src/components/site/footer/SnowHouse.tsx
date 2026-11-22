@@ -194,6 +194,9 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
     });
     later(4300, () => {
       direct({ anchor: "house-inside", face: "sleeping" });
+    addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("resize", onScroll);
+    section.addEventListener("pointermove", onPointer);
       live.current.showQuip(null);
     });
     later(5200, () => {
