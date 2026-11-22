@@ -78,3 +78,31 @@ export function applyOverride(base: Weather, query: string | null): Weather {
       case "night":
         w = { ...w, isDay: false };
         break;
+      case "day":
+        w = { ...w, isDay: true };
+        break;
+    }
+  }
+  return w;
+}
+
+/** "New Delhi · 14°C · haze · AQI 182" */
+export function weatherReadout(w: Weather) {
+  const label = w.haze ? "haze" : w.condition === "clear" && !w.isDay ? "clear night" : w.condition;
+  const parts = ["New Delhi", `${Math.round(w.temp)}°C`, label];
+  if (w.aqi != null) parts.push(`AQI ${Math.round(w.aqi)}`);
+  return parts.join(" · ");
+}
+
+/** A dry one-liner for the HUD. */
+export function weatherJoke(w: Weather) {
+  if (w.haze && w.aqi != null) return `AQI ${Math.round(w.aqi)} · even the igloo wants a mask`;
+  if (w.temp > HOT_TEMP) return `${Math.round(w.temp)}°C · the igloo is filing a complaint`;
+  if (w.condition === "storm") return "thunder · she sleeps through anything. except knocking";
+  if (w.condition === "rain") return "sleet over Delhi · the igloo is not convinced";
+  if (w.condition === "fog") return "visibility: about one igloo";
+  if (w.condition === "snow") return "actual snow · the igloo feels seen";
+  if (w.wind > 25) return `wind ${Math.round(w.wind)} km/h · hold on to your blocks`;
+  if (!w.isDay) return "lights low · somebody is sleeping";
+  return w.condition === "cloudy" ? "overcast · igloo weather, allegedly" : "clear skies · igloo weather, allegedly";
+}
