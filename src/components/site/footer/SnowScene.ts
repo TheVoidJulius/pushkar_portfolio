@@ -937,8 +937,8 @@ export class SnowScene {
     );
     this.camera.lookAt(0, 1.3 + (narrow - 1) * 0.35, 0);
 
-    // door swing, knock rattle, house squash
-    const angle = r ? this.door.x : this.door.step(this.doorOpen ? -1.7 : 0, dt);
+    // --- door swing and knock rattle
+    const angle = r ? this.door.x : this.door.step(this.doorOpen ? -1.9 : 0, dt);
     const rattle = r ? 0 : this.rattle.step(0, dt);
     this.doorPivot.rotation.set(rattle * 0.006, angle + rattle * 0.004, rattle * 0.01);
     this.doorPivot.position.z = Math.abs(rattle) * 0.004;
