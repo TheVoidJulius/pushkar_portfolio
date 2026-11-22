@@ -240,7 +240,7 @@ export function seasonFor(date: Date): Season {
 
 /* ─────────────────────────── component ─────────────────────────── */
 
-export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, season = "auto", label, className = "" }: CommitBonsaiProps) {
+export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, season = "auto", label, className = "", waterings, freshId, pourKey = 0 }: CommitBonsaiProps) {
   const n = Math.max(8, Math.min(80, weeks));
   const data = useMemo(() => toWeeks(contributions, n), [contributions, n]);
   const tree = useMemo(() => grow(seed, n), [seed, n]);
