@@ -237,29 +237,115 @@ export class SnowScene {
     this.renderer.toneMappingExposure = 1.05;
     this.canvas = this.renderer.domElement;
 
-    const p = this.palette;
-    this.scene.fog = new THREE.Fog(p.fog, 11, 42);
-    this.hemi = new THREE.HemisphereLight(p.hemiSky, p.hemiGround, p.hemi);
-    this.key = new THREE.DirectionalLight(p.key, p.keyI);
-    this.key.position.set(-6, 9, 6);
-    this.porchLight = new THREE.PointLight("#ff9fc6", 6, 7, 1.6);
-    this.porchLight.position.set(0, 1.6, 2.3);
-    const cyanLight = new THREE.PointLight(NEON_CYAN, 3, 6, 1.8);
-    cyanLight.position.set(1.6, 1.1, 2.1);
-    this.scene.add(this.hemi, this.key, this.porchLight, cyanLight);
+    this.D.set(Math.sin(this.doorYaw), 0, Math.cos(this.doorYaw));
+    this.L.set(Math.cos(this.doorYaw), 0, -Math.sin(this.doorYaw));
+    this.mouth.copy(this.D).multiplyScalar(this.mouthDist);
 
-    this.mats = {
-      snow: new THREE.MeshStandardMaterial({ color: p.snow, roughness: 0.92, metalness: 0 }),
-      body: new THREE.MeshStandardMaterial({ color: p.body, roughness: 0.42, metalness: 0.55 }),
-      bodyDark: new THREE.MeshStandardMaterial({ color: p.bodyDark, roughness: 0.5, metalness: 0.5 }),
-      pine: new THREE.MeshStandardMaterial({ color: p.pine, roughness: 0.85, flatShading: true }),
-      path: new THREE.MeshBasicMaterial({ color: p.path, transparent: true, opacity: 0.22, depthWrite: false }),
-      window: new THREE.MeshBasicMaterial({ map: this.windowTexture(), toneMapped: false }),
-      porthole: new THREE.MeshBasicMaterial({ map: this.portholeTexture(), toneMapped: false }),
-      interior: new THREE.MeshBasicMaterial({ color: "#ffb36b", toneMapped: false }),
-      doorSign: new THREE.MeshBasicMaterial({ map: this.doorSignTexture(), transparent: true, toneMapped: false }),
-      neonSign: new THREE.MeshBasicMaterial({ map: this.neonSignTexture(), transparent: true, toneMapped: false, depthWrite: false }),
-      beacon: new THREE.MeshBasicMaterial({ color: "#ff3b4f", toneMapped: false }),
+    this.fog = new THREE.FogExp2("#d3d7dd", 0.01);
+    this.scene.fog = this.fog;
+    this.hemi = new THREE.HemisphereLight("#fff", "#888", 1);
+    this.key = new THREE.DirectionalLight("#fff", 2);
+    this.key.castShadow = true;
+    const sm = opts.mobile ? 1024 : 1536;
+    this.key.shadow.mapSize.set(sm, sm);
+    const sc = this.key.shadow.camera;
+    sc.left = -7;
+    sc.right = 7;
+    sc.top = 7;
+    sc.bottom = -7;
+    sc.near = 1;
+    sc.far = 40;
+    this.key.shadow.bias = -0.0004;
+    this.key.shadow.normalBias = 0.035;
+    this.key.shadow.radius = 4;
+    this.key.target.position.set(0.5, 0, 0.8);
+    this.warmLight = new THREE.PointLight(WARM, 10, 9, 1.6);
+    this.warmLight.position.copy(this.mouth).addScaledVector(this.D, 0.35).setY(0.6);
+    this.scene.add(this.hemi, this.key, this.key.target, this.warmLight);
+
+    this.snowMat = this.makeSnowMaterial();
+    this.mountainMat = new THREE.MeshStandardMaterial({ color: "#c9ced6", roughness: 1 });
+    this.iceMat = this.makeIceMaterial();
+    this.glowMat = new THREE.MeshBasicMaterial({ color: WARM, toneMapped: false, side: THREE.DoubleSide, fog: false });
+    this.tunnelGlowMat = new THREE.MeshBasicMaterial({ color: WARM, toneMapped: false, side: THREE.DoubleSide, fog: false });
+    this.doorMat = new THREE.MeshStandardMaterial({ color: "#dfe8f2", roughness: 0.35, emissive: new THREE.Color(WARM), emissiveIntensity: 0.05 });
+
+    const sky = this.buildSky();
+    this.sky = sky.mesh;
+    this.skyMat = sky.mat;
+    this.stars = this.buildStars();
+    this.buildTerrain();
+    this.buildMountains();
+    this.buildMist();
+    this.buildIgloo();
+    this.buildDoor();
+    this.buildLabels();
+    this.buildWarmth();
+    this.buildPaws();
+    this.buildMelt();
+    this.buildSign();
+    this.buildSleepy();
+    this.flakes = this.buildParticles(opts.mobile ? 900 : 2400, { x: 18, y: 13, z0: -22, z1: 11, size: 0.06, fall: 0.85, streak: false });
+    this.sleet = this.buildParticles(opts.mobile ? 500 : 1300, { x: 16, y: 12, z0: -16, z1: 10, size: 0.5, fall: 11, streak: true });
+    this.drift = this.buildParticles(opts.mobile ? 180 : 520, { x: 16, y: 0.7, z0: -8, z1: 9, size: 0.035, fall: 0.15, streak: false });
+    this.applyLook();
+  }
+
+  // -------------------------------------------------------------------
+  // Materials
+  // -------------------------------------------------------------------
+  private makeSnowMaterial() {
+    const mat = new THREE.MeshStandardMaterial({ color: "#eef1f5", roughness: 0.9, metalness: 0 });
+    const u = this.snowUniforms;
+    mat.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, u);
+      sh.vertexShader = sh.vertexShader
+        .replace("#include <common>", "#include <common>\nvarying vec3 vWPos;")
+        .replace("#include <project_vertex>", "#include <project_vertex>\nvWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;");
+      sh.fragmentShader = sh.fragmentShader
+        .replace(
+          "#include <common>",
+          `#include <common>
+varying vec3 vWPos;
+uniform float uRipple;
+uniform float uSparkle;
+uniform vec3 uLightDir;
+float sHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float sNoise(vec2 p) {
+  vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(sHash(i), sHash(i + vec2(1, 0)), f.x), mix(sHash(i + vec2(0, 1)), sHash(i + vec2(1, 1)), f.x), f.y);
+}`,
+        )
+        .replace(
+          "#include <normal_fragment_maps>",
+          `#include <normal_fragment_maps>
+{
+  // wind ripples carved across the snow, faded out with distance
+  float camD = length(vWPos - cameraPosition);
+  float amp = uRipple * smoothstep(34.0, 6.0, camD);
+  vec2 wp = vWPos.xz;
+  vec2 dir = normalize(vec2(0.86, 0.5));
+  float warp = sNoise(wp * 0.35) * 6.0 + sNoise(wp * 1.3) * 1.2;
+  float ph = dot(wp, dir) * 5.5 + warp;
+  float k = cos(ph) * (0.55 + 0.45 * sNoise(wp * 0.5 + 3.1));
+  vec3 g = vec3(dir.x, 0.0, dir.y) * k * 0.22 * amp;
+  // fine grain
+  float n1 = sNoise(wp * 9.0) - 0.5;
+  g.xz += vec2(n1, sNoise(wp * 9.0 + 7.7) - 0.5) * 0.12 * amp;
+  normal = normalize(normal - (viewMatrix * vec4(g, 0.0)).xyz);
+}`,
+        )
+        .replace(
+          "#include <emissivemap_fragment>",
+          `#include <emissivemap_fragment>
+{
+  // the odd glint of ice crystals
+  vec2 cell = floor(vWPos.xz * 22.0);
+  float sp = step(0.9965, sHash(cell + floor(vWPos.y * 3.0)));
+  float camD = length(vWPos - cameraPosition);
+  totalEmissiveRadiance += vec3(sp) * uSparkle * smoothstep(18.0, 5.0, camD) * 0.9;
+}`,
+        );
     };
 
   private makeIceMaterial() {
