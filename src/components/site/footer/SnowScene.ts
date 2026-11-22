@@ -256,6 +256,7 @@ export class SnowScene {
   private iceMat: THREE.MeshStandardMaterial;
   private iceUniforms = {
     uRim: { value: new THREE.Color() },
+uniform vec3 uBox;
     uSeam: { value: new THREE.Color() },
     uHalf: { value: new THREE.Vector3(0.3, 0.2, 0.17) },
     uWet: { value: 0 },
