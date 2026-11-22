@@ -866,7 +866,11 @@ export class SnowScene {
     this.renderer.setSize(this.w, this.h, false);
     this.camera.aspect = this.w / this.h;
     this.camera.updateProjectionMatrix();
-    this.snowMat.uniforms.uPixel.value = (this.h * this.renderer.getPixelRatio()) / (2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)));
+    const px = (this.h * this.renderer.getPixelRatio()) / (2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)));
+    for (const m of [this.flakes, this.sleet, this.drift]) m.uniforms.uPixel.value = px;
+    // labels: ~13px tall whatever the canvas height
+    const k = (2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2))) / this.h;
+    for (const l of this.labels) l.scale.set(40 * k, 15 * k, 1);
     if (!this.running) this.renderOnce();
   }
 
