@@ -215,7 +215,37 @@ export class SnowScene {
   private snowMat: THREE.ShaderMaterial;
   private moon: THREE.Sprite;
   private stars: THREE.Points;
-  private glows: { sprite: THREE.Sprite; base: number; flicker?: boolean }[] = [];
+  private snowMat: THREE.MeshStandardMaterial;
+  private mountainMat: THREE.MeshStandardMaterial;
+  private iceMat: THREE.MeshStandardMaterial;
+  private iceUniforms = {
+    uRim: { value: new THREE.Color() },
+    uSeam: { value: new THREE.Color() },
+    uHalf: { value: new THREE.Vector3(0.3, 0.2, 0.17) },
+    uWet: { value: 0 },
+  };
+  private snowUniforms = { uRipple: { value: 1 }, uSparkle: { value: 1 }, uLightDir: { value: new THREE.Vector3(0, 1, 0) } };
+  private glowMat: THREE.MeshBasicMaterial;
+  private tunnelGlowMat: THREE.MeshBasicMaterial;
+  private doorMat: THREE.MeshStandardMaterial;
+  private blocks!: THREE.InstancedMesh;
+  private floaters: Floater[] = [];
+  private labelled: Floater[] = [];
+  private labels: THREE.Sprite[] = [];
+  private labelLines!: THREE.LineSegments;
+  private labelDots!: THREE.Points;
+  private doorGroup = new THREE.Group();
+  private doorPivot = new THREE.Group();
+  private eyes = new THREE.Group();
+  private mists: { mesh: THREE.Mesh; mat: THREE.MeshBasicMaterial; base: number }[] = [];
+  private pool!: THREE.Mesh;
+  private poolMat!: THREE.MeshBasicMaterial;
+  private mouthGlow!: THREE.Sprite;
+  private neonMat!: THREE.MeshBasicMaterial;
+  private neonGlow!: THREE.Sprite;
+  private flakes: THREE.ShaderMaterial;
+  private sleet: THREE.ShaderMaterial;
+  private drift: THREE.ShaderMaterial;
   private zzz: { sprite: THREE.Sprite; phase: number }[] = [];
   private steam: { sprite: THREE.Sprite; phase: number }[] = [];
   private paws: { mesh: THREE.Group; mat: THREE.MeshBasicMaterial }[] = [];
