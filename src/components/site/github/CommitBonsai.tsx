@@ -536,6 +536,25 @@ export function CommitBonsai({ contributions, seed = "bonsai", weeks = 52, seaso
           ["Total", total.toLocaleString("en-US")],
           ["Best week", String(best?.count ?? 0)],
           ["Streak", `${st.current}d`],
+        {placed.length > 0 && (
+          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden [container-type:inline-size]">
+            {placed.map((b) => (
+              <motion.span
+                key={b.id}
+                initial={b.id === freshId ? { scale: 0, rotate: -40, opacity: 0 } : false}
+                animate={{ scale: 1, rotate: b.tilt, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 12, delay: b.id === freshId ? 0.9 : 0 }}
+                className="absolute -translate-x-1/2 -translate-y-1/2 leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,.25)]"
+                style={{ left: `${(b.x / W) * 100}%`, top: `${(b.y / H) * 100}%`, fontSize: "4.4cqw" }}
+              >
+                {BLOSSOMS[b.blossom] ?? BLOSSOMS[0]}
+              </motion.span>
+            ))}
+          </div>
+        )}
+        <AnimatePresence>
+          {pourKey > 0 && <Pour key={pourKey} />}
+        </AnimatePresence>
           ["Longest", `${st.longest}d`],
         ].map(([k, v]) => (
           <div key={k} className="flex flex-col-reverse">
