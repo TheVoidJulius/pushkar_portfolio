@@ -978,12 +978,15 @@ export class SnowScene {
       p.mat.opacity = clamp(this.pawAmt * (n + 1) - i, 0, 1) * this.palette.pawOpacity * this.pawFade;
     });
 
-    // neon flicker, beacon blink, fairy lights
-    const dark = this.palette === PALETTES.dark;
-    for (const g of this.glows) {
-      if (!g.flicker) continue;
-      const f = r ? 1 : 0.85 + Math.sin(t * 7.3) * 0.05 + (Math.sin(t * 23) > 0.97 ? -0.4 : 0);
-      (g.sprite.material as THREE.SpriteMaterial).opacity = g.base * f * (dark ? 1 : 0.6);
+  private setLabelOpacity(o: number) {
+    const vis = o > 0.01;
+    this.labelLines.visible = vis;
+    this.labelDots.visible = vis;
+    (this.labelLines.material as THREE.LineBasicMaterial).opacity = o * 0.7;
+    (this.labelDots.material as THREE.PointsMaterial).opacity = o;
+    for (const l of this.labels) {
+      l.visible = vis;
+      (l.material as THREE.SpriteMaterial).opacity = o;
     }
   }
 
