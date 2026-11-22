@@ -102,6 +102,7 @@ const LOOKS: Record<Mode, Look> = {
     paw: "#7c8596",
     pawOpacity: 0.3,
     ink: "#1f242c",
+  fogDensity: number;
     neon: 0.4,
   },
   snowRough: number;
