@@ -272,11 +272,7 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
   const year = new Date().getFullYear();
 
   return (
-    <section
-      ref={sectionRef}
-      aria-label={`A snowy night outside ${mikuro}'s house`}
-      className="relative isolate overflow-hidden"
-    >
+    <section ref={sectionRef} aria-label={`${mikuro}'s igloo in the snow`} className="relative isolate overflow-hidden">
       <div
         className="relative h-[72vh] min-h-[480px] w-full sm:h-[min(90vh,840px)] sm:min-h-[540px]"
         style={{
