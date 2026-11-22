@@ -691,70 +691,26 @@ export class SnowScene {
   // -------------------------------------------------------------------
   // Textures
   // -------------------------------------------------------------------
-  private windowTexture() {
-    return canvasTexture(256, 208, (g) => {
-      const gr = g.createLinearGradient(0, 0, 0, 208);
-      gr.addColorStop(0, "#ffd9a3");
-      gr.addColorStop(1, "#ff9bc4");
-      g.fillStyle = gr;
-      g.fillRect(0, 0, 256, 208);
-      // a cosy lamp and a cushion silhouette
-      g.fillStyle = "rgba(80,30,70,0.35)";
-      g.beginPath();
-      g.ellipse(170, 182, 70, 24, 0, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = "rgba(255,255,255,0.5)";
-      g.beginPath();
-      g.arc(70, 60, 22, 0, Math.PI * 2);
-      g.fill();
-      // scanlines + mullions
-      g.fillStyle = "rgba(40,20,60,0.08)";
-      for (let y = 0; y < 208; y += 6) g.fillRect(0, y, 256, 2);
-      g.fillStyle = "rgba(30,33,51,0.95)";
-      g.fillRect(124, 0, 8, 208);
-      g.fillRect(0, 100, 256, 8);
-    });
-  }
+  /** Compile shaders off the main path so the first frame doesn't hitch. */
+  private sculptJobs: { geo: THREE.BufferGeometry; f: (x: number, z: number) => number }[] = [];
 
-  private portholeTexture() {
-    return canvasTexture(128, 128, (g) => {
-      const r = g.createRadialGradient(64, 64, 4, 64, 64, 64);
-      r.addColorStop(0, "#c7f6ff");
-      r.addColorStop(1, "#4b6bd6");
-      g.fillStyle = r;
-      g.fillRect(0, 0, 128, 128);
-      g.fillStyle = "rgba(255,255,255,0.75)";
-      g.beginPath();
-      g.arc(78, 50, 22, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = "#6f8be3";
-      g.beginPath();
-      g.arc(88, 44, 20, 0, Math.PI * 2);
-      g.fill();
-    });
-  }
-
-  private doorSignTexture() {
-    return canvasTexture(256, 124, (g) => {
-      g.fillStyle = "#f5efe2";
-      g.beginPath();
-      g.roundRect(6, 22, 244, 96, 14);
-      g.fill();
-      g.strokeStyle = "#2a2e44";
-      g.lineWidth = 3;
-      g.beginPath();
-      g.moveTo(70, 24);
-      g.lineTo(128, 2);
-      g.lineTo(186, 24);
-      g.stroke();
-      g.fillStyle = "#2a2e44";
-      g.textAlign = "center";
-      g.font = "800 34px ui-rounded, 'Segoe UI', system-ui, sans-serif";
-      g.fillText("SLEEPING", 128, 64);
-      g.font = "700 22px ui-rounded, 'Segoe UI', system-ui, sans-serif";
-      g.fillStyle = "#e0527a";
-      g.fillText("do not knock", 128, 98);
-    });
+  /** Displaces the terrain and mountains in ~8ms slices so scrolling stays smooth. */
+  private async sculpt() {
+    const nextTask = () => new Promise<void>((r) => setTimeout(r, 0));
+    for (const job of this.sculptJobs) {
+      const pos = job.geo.attributes.position as THREE.BufferAttribute;
+      let i = 0;
+      while (i < pos.count) {
+        const until = performance.now() + 8;
+        for (; i < pos.count && (i & 255 || performance.now() < until); i++) pos.setY(i, job.f(pos.getX(i), pos.getZ(i)));
+        await nextTask();
+        if (this.disposed) return;
+      }
+      job.geo.computeVertexNormals();
+      job.geo.computeBoundingSphere();
+      await nextTask();
+    }
+    this.sculptJobs.length = 0;
   }
 
   warm() {
