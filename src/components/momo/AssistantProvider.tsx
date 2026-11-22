@@ -7,6 +7,7 @@ import { buildLines, chatGreeting, type MomoLineSpec } from "@/lib/assistant/tou
 import { scrollToSection } from "@/lib/scroll";
 import { useMusic } from "../music/controller";
 import type { AssistantSettings, PortfolioContent } from "@/lib/types";
+import { SCENE_LINES } from "@/lib/assistant/scenes";
 import { setLineProgress } from "./lineProgress";
 import type { Expression } from "./three/MomoRenderer";
 import { VoiceEngine, type VoiceStatus } from "./voice";
@@ -102,7 +103,25 @@ type Ctx = {
   voiceAvailable: boolean;
   cinemaDone: boolean;
   finishCinema: () => void;
+  /** The terminal intro is showing: Mikuro waits, asleep, at the centre of the screen. */
+  beginWake: () => void;
+  /** Called from the Enter key / tap: lets the browser play Mikuro's voice straight away. */
+  wakeGesture: () => void;
+  /** Runs the wake-up (sleep → yawn → pop → happy), then hands over to the normal intro. */
+  wakeUp: () => void;
+  /** Bumps when Mikuro pops awake, so the 3D cat can bounce. */
+  wakeKey: number;
+  /** Whether Mikuro is shown on the site at all. */
+  assistantVisible: boolean;
+  /**
+   * A scene (like the snowy house in the footer) directing Mikuro: where she
+   * goes and what face she makes. The chat still takes priority.
+   */
+  stage: StageDirection | null;
+  setStage: (s: StageDirection | null) => void;
 };
+
+export type StageDirection = { anchor: string; face?: Expression };
 
 const AssistantContext = createContext<Ctx | null>(null);
 
@@ -197,7 +216,20 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
     setActState(a);
   }, []);
   const notice = useCallback((e: MikuroEvent) => noticeRef.current?.(e), []);
-  const finishCinema = useCallback(() => setCinemaDone(true), []);
+  // Terminal wake-up: Mikuro sleeps at the screen's centre until woken
+  const [waking, setWaking] = useState(false);
+  const [stage, setStage] = useState<StageDirection | null>(null);
+  const [wakeStage, setWakeStage] = useState<null | "sleep" | "yawn" | "pop" | "happy">(null);
+  const [wakeKey, setWakeKey] = useState(0);
+  const [woke, setWoke] = useState(false);
+  const wakeRunning = useRef(false);
+  const wakeTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => wakeTimers.current.forEach(clearTimeout), []);
+  const finishCinema = useCallback(() => {
+    setWaking(false);
+    setCinemaDone(true);
+  }, []);
+  const beginWake = useCallback(() => setWaking(true), []);
 
   const react = useCallback((e: Expression, ms = 1400) => {
     clearTimeout(flashTimer.current);
@@ -226,19 +258,15 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
     if (!settings.voice_enabled) return;
     let cancelled = false;
     void (async () => {
-      const [ok, status, manifest] = await Promise.all([
-        voice.available(),
-        voice.remoteStatus(),
-        fetch("/voice/manifest.json")
-          .then((r) => (r.ok ? r.json() : null))
-          .catch(() => null) as Promise<{ voiceId?: string; clips?: Record<string, string> } | null>,
-      ]);
+      // Every line Mikuro says is pre-recorded (npm run voice:bake), keyed by
+      // its text. Nothing is generated while people browse: no credits spent.
+      const manifest = (await fetch("/voice/manifest.json")
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null)) as { clips?: Record<string, string> } | null;
       if (cancelled) return;
-      // Clips recorded with a different voice are never played
-      const usable = manifest?.clips && manifest.voiceId === status.voiceId ? manifest.clips : {};
-      clips.current = usable;
-      remoteVoice.current = ok;
-      setVoiceAvailable(ok || Object.keys(usable).length > 0);
+      clips.current = manifest?.clips ?? {};
+      remoteVoice.current = false;
+      setVoiceAvailable(Object.keys(clips.current).length > 0);
     })();
     return () => {
       cancelled = true;
@@ -302,7 +330,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
       setBaseExpression(MOOD_TO_EXPRESSION[spec.mood]);
 
       const { muted: m, audioUnlocked: u, music: musicPlaying } = live.current;
-      const withVoice = settings.voice_enabled && !m && !musicPlaying && u && remoteVoice.current;
+      const withVoice = settings.voice_enabled && !m && !musicPlaying && u && Boolean(clips.current[text]);
       const est = Math.max(1800, wordsOf(text) * (withVoice ? 360 : 300));
       let start = 0;
 
@@ -353,7 +381,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
             n.raf = requestAnimationFrame(tick); // fall back to timed karaoke
           }
         });
-        void voice.speak(text, spec.mood);
+        void voice.playClip(clips.current[text]);
         // Safety net if the speech engine never reports back
         n.timer = setTimeout(() => token === n.token && finish(), est * 1.8 + 4000);
       } else {
@@ -477,7 +505,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
       const ms = Math.max(2800, words * 420);
       setQuip(q);
       quipTimer.current = setTimeout(() => setQuip(null), ms);
-      const clip = clips.current[q.id];
+      const clip = clips.current[q.text];
       if (clip && !live.current.muted && !live.current.music && live.current.audioUnlocked) {
         void voice.playClip(clip);
       } else {
@@ -667,6 +695,41 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
     if (!narr.current.id && !live.current.messages.length) showQuip(pickQuip("musicStart"));
   }, [musicOn, voice, showQuip]);
 
+  const wakeGesture = useCallback(() => {
+    voice.unlock();
+    setAudioUnlocked(true);
+    live.current.audioUnlocked = true;
+  }, [voice]);
+
+  const wakeUp = useCallback(() => {
+    if (wakeRunning.current) return; // the intro may ask twice (reveal + end); once is enough
+    wakeRunning.current = true;
+    wakeTimers.current.forEach(clearTimeout);
+    setWaking(true);
+    setWakeStage("sleep");
+    const at = (ms: number, fn: () => void) => wakeTimers.current.push(setTimeout(fn, ms));
+    at(550, () => {
+      setWakeStage("yawn");
+      showQuip({ id: "wake-1", ...SCENE_LINES.wakeYawn }, true);
+    });
+    at(1850, () => {
+      setWakeStage("pop");
+      setWakeKey((k) => k + 1);
+      showQuip(null);
+    });
+    at(2250, () => {
+      setWakeStage("happy");
+      showQuip({ id: "wake-2", ...SCENE_LINES.wakeUp }, true);
+    });
+    at(3400, () => {
+      showQuip(null);
+      setWakeStage(null);
+      setWoke(true);
+      wakeRunning.current = false;
+      finishCinema(); // the usual intro + narration take it from here
+    });
+  }, [showQuip, finishCinema]);
+
   const stopSpeaking = useCallback(() => voice.stop(), [voice]);
   const replay = useCallback(
     (m: ChatMessage) => {
@@ -679,10 +742,14 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
   const poke = useCallback(() => react(Math.random() < 0.5 ? "happy" : "surprised", 1200), [react]);
 
   const talking = voiceStatus === "speaking" || silentTalk;
+  const WAKE_FACE = { sleep: "sleeping", yawn: "yawning", pop: "surprised", happy: "happy" } as const;
   let expression: Expression = flash ?? baseExpression;
-  if (listening) expression = "listening";
+  if (wakeStage) expression = WAKE_FACE[wakeStage];
+  else if (stage?.face && !open) expression = stage.face; // the scene's direction beats passing reactions
+  else if (waking) expression = "sleeping";
+  else if (listening) expression = "listening";
   else if (pending && !flash) expression = "thinking";
-  else if (intro) expression = "surprised";
+  else if (intro) expression = woke ? "happy" : "surprised";
   else if (act && act !== "lookaround" && !flash && !(talking && act !== "coffee")) expression = act;
   else if (sleeping && !open && !talking && !flash && !narrating) expression = "sleeping";
 
@@ -698,7 +765,7 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
   else if (expression === "happy" || expression === "excited" || expression === "smug") state = "happy";
 
   const introPlaying = narrationEnabled && cinemaDone && (intro || (activeLine === "hero" && !lineState.hero?.done));
-  const anchor = open ? "chat" : intro ? "intro" : activeLine ? `line-${activeLine}` : "dock";
+  const anchor = waking ? "wake" : open ? "chat" : stage ? stage.anchor : intro ? "intro" : activeLine ? `line-${activeLine}` : "dock";
 
   const value: Ctx = {
     settings,
@@ -750,6 +817,13 @@ export function AssistantProvider({ content, children }: { content: PortfolioCon
     voiceAvailable,
     cinemaDone,
     finishCinema,
+    beginWake,
+    wakeGesture,
+    wakeUp,
+    wakeKey,
+    assistantVisible: content.site.show_assistant,
+    stage,
+    setStage,
   };
 
   return <AssistantContext.Provider value={value}>{children}</AssistantContext.Provider>;
