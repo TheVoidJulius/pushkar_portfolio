@@ -198,3 +198,43 @@ export function VisitorCats() {
       const fake: [string, number][] = [
         ["Boba", 330],
         ["Nori", 140],
+        ["Yuzu", 48],
+        ["Miso", 275],
+        ["Pip", 190],
+      ];
+      fake.forEach(([name, hue], i) => {
+        upsert(`demo-${i}`, { name, hue });
+        onPos(`demo-${i}`, 0.1 + i * 0.18, window.scrollY + 140 + i * 90);
+      });
+      syncIds();
+      window.setTimeout(() => setCount(fake.length + 1), 0);
+      demo = window.setInterval(() => {
+        fake.forEach((_, i) => {
+          if (Math.random() < 0.55) onPos(`demo-${i}`, 0.06 + Math.random() * 0.88, window.scrollY + 90 + Math.random() * (window.innerHeight - 200));
+        });
+      }, 1800);
+    }
+
+    /* animation loop (writes transforms straight to the DOM, no React renders) */
+    let raf = 0;
+    let prev = performance.now();
+    const place = (el: HTMLDivElement, x: number, y: number, face: number, pose: string) => {
+      el.style.transform = `translate3d(${(x - 22).toFixed(1)}px,${(y - 36).toFixed(1)}px,0)`;
+      el.style.setProperty("--face", String(face));
+      if (el.dataset.pose !== pose) el.dataset.pose = pose;
+    };
+    const frame = (now: number) => {
+      raf = requestAnimationFrame(frame);
+      const dt = Math.min(0.1, (now - prev) / 1000);
+      prev = now;
+      if (document.hidden) return;
+      const k = reduced ? 1 : 1 - Math.exp(-dt * 6.5);
+
+      const dx = own.tx - own.x;
+      const dy = own.ty - own.y;
+      own.x += dx * k;
+      own.y += dy * k;
+      if (Math.abs(dx) > 4) own.face = dx > 0 ? 1 : -1;
+      const speed = Math.hypot(dx, dy);
+      const sitting = !reduced && speed < 6 && now - own.lastMove > IDLE_MS;
+      if (ownEl.current) place(ownEl.current, own.x, own.y, own.face, sitting ? "sit" : "walk");
