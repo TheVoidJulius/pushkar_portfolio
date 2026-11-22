@@ -526,9 +526,17 @@ export class SnowScene {
     this.scene.add(lamp);
     this.glow(NEON_CYAN, 2.5, 2.05, 2.95, 1.6, 1.6, 0.45, this.scene);
 
-    H.rotation.y = -0.16;
-    this.scene.add(H);
-  }
+    // loose chunks and snowballs in the snow
+    for (let i = 0; i < 7; i++) {
+      const a = this.doorYaw + (rnd() < 0.5 ? -1 : 1) * (0.8 + rnd() * 1.5);
+      const r = R + 0.6 + rnd() * 1.6;
+      const x = Math.sin(a) * r;
+      const z = Math.cos(a) * r;
+      const pos = new THREE.Vector3(x, this.height(x, z) + 0.05, z);
+      const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(rnd() * 0.6, rnd() * 6, rnd() * 0.6));
+      const s = 0.4 + rnd() * 0.35;
+      list.push({ pos, quat, scale: new THREE.Vector3(s, s, s), normal: up.clone(), theta: 0, floater: false, tint: rnd() });
+    }
 
     const mesh = new THREE.InstancedMesh(geo, this.iceMat, list.length);
     mesh.castShadow = true;
