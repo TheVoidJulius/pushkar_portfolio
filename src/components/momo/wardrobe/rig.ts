@@ -163,7 +163,7 @@ export class Wardrobe {
     );
 
     const beanie = new THREE.Group();
-    const CAP = 1.0; // polar angle where the cap ends
+    const CAP = 1.12; // polar angle where the cap ends
     const capGeo = this.own(new THREE.SphereGeometry(1, 48, 20, 0, Math.PI * 2, 0, CAP));
     const cap = new THREE.Mesh(capGeo, knit);
     cap.scale.set(SX * 1.06, SY * 1.08, SZ * 1.06);
@@ -175,7 +175,7 @@ export class Wardrobe {
     const pom = new THREE.Mesh(this.own(new THREE.IcosahedronGeometry(0.17, 2)), cream);
     pom.position.set(0, SY * 1.08 + 0.1, -0.08);
     beanie.add(cap, brim, pom);
-    beanie.rotation.x = -0.2; // tipped back: the brim clears the eyes
+    beanie.rotation.x = -0.08; // tipped back: the brim clears the eyes
     beanie.position.y = 0.02;
 
     const scarf = new THREE.Group();
@@ -205,7 +205,7 @@ export class Wardrobe {
       ),
     );
     const fabric = this.own(
-      addRim(new THREE.MeshStandardMaterial({ color: "#23262d", roughness: 0.88, metalness: 0, side: THREE.DoubleSide }), "#39ff88", 1.1, 3.2),
+      addRim(new THREE.MeshStandardMaterial({ color: "#23262d", roughness: 0.88, metalness: 0, side: THREE.DoubleSide }), "#39ff88", 0.7, 3.6),
     );
     const neon = this.own(new THREE.MeshBasicMaterial({ color: "#39ff88", toneMapped: false }));
 
@@ -271,6 +271,7 @@ export class Wardrobe {
     const by = -0.66;
     bow.position.set(0, by, surfZ(0, by) + 0.05);
     bow.rotation.x = 0.62; // lies on the curve of the body
+    bow.scale.setScalar(1.25);
     root.add(bow);
     return gold;
   }
