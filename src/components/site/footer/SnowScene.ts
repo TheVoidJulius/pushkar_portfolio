@@ -530,37 +530,35 @@ export class SnowScene {
     this.scene.add(H);
   }
 
-  private pine(x: number, z: number, h: number, lights = false) {
-    const g = new THREE.Group();
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.07 * h, 0.1 * h, 0.35 * h, 6), this.mats.bodyDark);
-    trunk.position.y = 0.17 * h;
-    g.add(trunk);
-    const tiers = 3;
-    for (let i = 0; i < tiers; i++) {
-      const r = (0.55 - i * 0.13) * h;
-      const th = (0.5 - i * 0.06) * h;
-      const y = 0.3 * h + i * 0.24 * h;
-      const cone = new THREE.Mesh(new THREE.ConeGeometry(r, th, 7), this.mats.pine);
-      cone.position.y = y + th / 2;
-      cone.rotation.y = i * 0.6;
-      g.add(cone);
-      const snow = new THREE.Mesh(new THREE.ConeGeometry(r * 0.62, th * 0.5, 7), this.mats.snow);
-      snow.position.y = y + th * 0.78;
-      snow.rotation.y = i * 0.6;
-      g.add(snow);
-    }
-    if (lights) {
-      const colors = [NEON_PINK, NEON_CYAN, "#ffd36b", "#a99cff"];
-      for (let i = 0; i < 14; i++) {
-        const f = i / 14;
-        const a = f * Math.PI * 5.2;
-        const y = 0.38 * h + f * 0.75 * h;
-        const r = (0.5 - f * 0.4) * h;
-        const mat = new THREE.MeshBasicMaterial({ color: colors[i % 4], toneMapped: false, transparent: true });
-        const b = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), mat);
-        b.position.set(Math.cos(a) * r, y, Math.sin(a) * r);
-        g.add(b);
-        this.bulbs.push({ mat, phase: i * 0.7 });
+    const mesh = new THREE.InstancedMesh(geo, this.iceMat, list.length);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    const c = new THREE.Color();
+    const maxTheta = Math.max(...list.filter((b) => b.floater).map((b) => b.theta));
+    list.forEach((b, i) => {
+      this.m4.compose(b.pos, b.quat, b.scale);
+      mesh.setMatrixAt(i, this.m4);
+      const v = 0.9 + b.tint * 0.1;
+      c.setRGB(v, v + 0.005, v + 0.02 * (1 - b.tint));
+      mesh.setColorAt(i, c);
+      if (b.floater) {
+        const hNorm = clamp((b.theta - 0.98) / (maxTheta - 0.98), 0, 1);
+        const lat = new THREE.Vector3(rnd() - 0.5, 0, rnd() - 0.5).multiplyScalar(0.6);
+        this.floaters.push({
+          index: i,
+          pos: b.pos.clone(),
+          quat: b.quat.clone(),
+          scale: b.scale.clone(),
+          normal: b.normal.clone(),
+          dir: b.normal.clone().multiplyScalar(0.75).add(new THREE.Vector3(0, 1, 0)).add(lat).normalize(),
+          dist: 0.3 + hNorm * 1.05 + rnd() * 0.3,
+          axis: new THREE.Vector3(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5).normalize(),
+          angle: 0.25 + rnd() * 0.6,
+          delay: 1 - hNorm,
+          phase: rnd() * 6.28,
+          depth: (BD / 2) * b.scale.z,
+        });
       }
     }
     const floor = new THREE.Mesh(new THREE.PlaneGeometry((rMid - BD / 2) * 2, segLen * segs + 0.6), this.tunnelGlowMat);
