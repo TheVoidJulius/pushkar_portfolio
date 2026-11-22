@@ -324,7 +324,11 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
                 transition={{ delay: 0.9, duration: 0.4 }}
                 className="pointer-events-none absolute bottom-full left-1/2 mb-[42%] -translate-x-1/2 whitespace-nowrap"
               >
-                <span className="snow-hint block rounded-full px-3 py-1 font-mono text-[12px]">knock knock?</span>
+                <span className="rounded-full border border-white/25 bg-black/45 px-2.5 py-1 font-mono text-[11px] whitespace-nowrap text-white backdrop-blur-sm">
+                  knock knock?
+                </span>
+                <span className="h-7 w-px bg-white/60" />
+                <span className="size-1.5 rounded-full bg-white/80" />
               </motion.span>
             )}
           </AnimatePresence>
