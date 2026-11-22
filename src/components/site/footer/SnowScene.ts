@@ -21,6 +21,8 @@ const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 class Spring {
   x = 0;
   v = 0;
+  /** 0 = blocks floating apart, 1 = igloo fully assembled */
+  assembled: number;
   constructor(
     public k: number,
     public c: number,
