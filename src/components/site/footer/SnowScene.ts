@@ -836,7 +836,7 @@ export class SnowScene {
   burst() {
     this.doorOpen = true;
     if (this.reduced) {
-      this.door.x = -1.7;
+      this.door.x = -1.9;
       return;
     }
     this.door.v = -18;
