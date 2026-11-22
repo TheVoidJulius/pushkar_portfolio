@@ -567,19 +567,99 @@ export class SnowScene {
     this.scene.add(g);
   }
 
-  private buildTrees() {
-    this.pine(-4.0, -0.6, 2.7, true);
-    this.pine(-5.5, -3.2, 3.3);
-    this.pine(4.3, -1.3, 2.4);
-    this.pine(5.9, -3.8, 3.5);
-    this.pine(-8.2, -8, 3.9);
-    this.pine(8.8, -9, 4.1);
-    this.pine(-2.6, -7.2, 3.0);
-    this.pine(2.9, -8.6, 3.2);
-    this.pine(11.5, -15, 4.8);
-    this.pine(-12, -15.5, 5.2);
-    this.pine(-6.8, 3.2, 1.6);
-    this.pine(7.2, 2.4, 1.9);
+  /** The ice-slab door in the tunnel mouth, hinged on one side. */
+  private buildDoor() {
+    const w = 1.18;
+    const r = w / 2;
+    const straight = 0.36;
+    const shape = new THREE.Shape();
+    shape.moveTo(-r, 0);
+    shape.lineTo(r, 0);
+    shape.lineTo(r, straight);
+    shape.absarc(0, straight, r, 0, Math.PI, false);
+    shape.lineTo(-r, 0);
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.1, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 3, curveSegments: 24 });
+    geo.translate(r, 0, -0.05);
+    const slab = new THREE.Mesh(geo, this.doorMat);
+    slab.castShadow = true;
+    slab.receiveShadow = true;
+    // a hide strap handle to knock on
+    const handle = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.018, 8, 20), new THREE.MeshStandardMaterial({ color: "#5a4636", roughness: 0.8 }));
+    handle.position.set(w * 0.78, straight * 0.95, 0.1);
+    this.doorPivot.add(slab, handle);
+    this.doorPivot.position.set(-r, 0, 0);
+    this.doorGroup.add(this.doorPivot);
+    this.doorGroup.position.copy(this.mouth).addScaledVector(this.D, -0.08).setY(0.02);
+    this.doorGroup.rotation.y = this.doorYaw;
+    this.scene.add(this.doorGroup);
+
+    // angry eyes in the dark tunnel (when Mikuro herself is switched off)
+    for (const x of [-0.14, 0.14]) {
+      const e = new THREE.Mesh(new THREE.CircleGeometry(0.065, 20), new THREE.MeshBasicMaterial({ color: "#ff3b30", toneMapped: false, transparent: true, fog: false }));
+      e.scale.y = 0.55;
+      e.rotation.z = x > 0 ? 0.35 : -0.35;
+      e.position.set(x, 0, 0);
+      this.eyes.add(e);
+    }
+    this.eyes.position.copy(this.mouth).addScaledVector(this.D, -0.45).setY(0.62);
+    this.eyes.rotation.y = this.doorYaw;
+    this.eyes.visible = false;
+    this.scene.add(this.eyes);
+  }
+
+  /** Numbers and hairlines on the floating blocks. */
+  private buildLabels() {
+    const picks = [0.12, 0.3, 0.45, 0.58, 0.7, 0.84, 0.96].map((f) => this.floaters[Math.floor(f * (this.floaters.length - 1))]);
+    this.labelled = picks.filter(Boolean);
+    this.labelled.forEach((_, i) => {
+      const tex = canvasTexture(128, 48, (g) => {
+        g.font = "500 34px ui-monospace, 'SF Mono', Menlo, Consolas, monospace";
+        g.textBaseline = "middle";
+        g.fillStyle = "#ffffff";
+        g.fillText(LABELS[i % LABELS.length], 14, 26);
+      });
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false, sizeAttenuation: false, toneMapped: false, fog: false }));
+      s.center.set(0, 0.5);
+      s.renderOrder = 20;
+      this.scene.add(s);
+      this.labels.push(s);
+    });
+    const n = this.labelled.length;
+    const segs: number[] = [];
+    for (let i = 0; i < n - 1; i++) if (i !== 2) segs.push(i, i + 1);
+    const lgeo = new THREE.BufferGeometry();
+    lgeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(segs.length * 3), 3));
+    lgeo.userData.pairs = segs;
+    this.labelLines = new THREE.LineSegments(lgeo, new THREE.LineBasicMaterial({ color: "#ffffff", transparent: true, depthTest: false, depthWrite: false, toneMapped: false, fog: false }));
+    this.labelLines.renderOrder = 19;
+    this.labelLines.frustumCulled = false;
+    const dgeo = new THREE.BufferGeometry();
+    dgeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+    this.labelDots = new THREE.Points(
+      dgeo,
+      new THREE.PointsMaterial({ color: "#ffffff", size: 4.5, sizeAttenuation: false, transparent: true, depthTest: false, depthWrite: false, toneMapped: false, fog: false }),
+    );
+    this.labelDots.renderOrder = 19;
+    this.labelDots.frustumCulled = false;
+    this.scene.add(this.labelLines, this.labelDots);
+  }
+
+  /** Warm light pooling on the snow outside the entrance. */
+  private buildWarmth() {
+    this.poolMat = new THREE.MeshBasicMaterial({ map: this.radial, color: WARM, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, opacity: 0.5 });
+    this.pool = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.poolMat);
+    this.pool.rotation.x = -Math.PI / 2;
+    this.pool.rotation.z = this.doorYaw;
+    this.pool.scale.set(3.2, 4.4, 1);
+    this.pool.position.copy(this.mouth).addScaledVector(this.D, 1.2).setY(0.04);
+    this.pool.renderOrder = 2;
+    this.scene.add(this.pool);
+    this.mouthGlow = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: this.radial, color: WARM, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, opacity: 0.4 }),
+    );
+    this.mouthGlow.position.copy(this.mouth).addScaledVector(this.D, 0.25).setY(0.55);
+    this.mouthGlow.scale.set(2.4, 2.0, 1);
+    this.scene.add(this.mouthGlow);
   }
 
   private buildPaws() {
