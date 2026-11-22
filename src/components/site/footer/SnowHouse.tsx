@@ -398,19 +398,12 @@ const FALLBACK_SPOTS: Record<(typeof ANCHORS)[number], string> = {
 function FallbackHouse() {
   return (
     <svg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 h-full w-full" aria-hidden>
-      <rect x="0" y="420" width="1000" height="180" fill="#eef2fb" />
-      <ellipse cx="500" cy="430" rx="620" ry="40" fill="#eef2fb" />
-      <rect x="380" y="270" width="240" height="160" fill="#1d2133" />
-      <polygon points="360,275 500,190 640,275" fill="#121522" />
-      <polygon points="360,268 500,183 640,268" fill="none" stroke="#ffffff" strokeWidth="10" strokeLinejoin="round" />
-      <rect x="465" y="320" width="70" height="110" fill="#121522" stroke="#ff4f9a" strokeWidth="4" />
-      <rect x="398" y="310" width="50" height="42" fill="#ffc9a8" stroke="#4ff0ff" strokeWidth="3" />
-      <rect x="552" y="310" width="50" height="42" fill="#ffc9a8" stroke="#4ff0ff" strokeWidth="3" />
-      <text x="500" y="305" textAnchor="middle" fontSize="20" fontWeight="800" fill="#ff8fc0" fontFamily="system-ui">
-        MIKURO
-      </text>
-      {[120, 210, 800, 890].map((x, i) => (
-        <polygon key={x} points={`${x - 45},430 ${x},${300 - i * 10} ${x + 45},430`} fill="#2d5550" />
+      <path d="M0 330 L140 250 L260 300 L420 210 L560 290 L700 230 L860 300 L1000 260 L1000 600 L0 600Z" fill={dark ? "#2a3352" : "#d3d8df"} />
+      <rect x="0" y="420" width="1000" height="180" fill={snow} />
+      <ellipse cx="500" cy="425" rx="640" ry="44" fill={snow} />
+      <path d="M330 430 A170 180 0 0 1 670 430Z" fill={ice} stroke={line} strokeWidth="3" />
+      {[400, 370, 340, 310, 280].map((y, i) => (
+        <line key={y} x1={330 + i * 14} y1={y} x2={670 - i * 14} y2={y} stroke={line} strokeWidth="2" />
       ))}
     </svg>
   );
