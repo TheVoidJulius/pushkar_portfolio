@@ -369,7 +369,7 @@ export function SnowHouse({ name, footerNote }: { name: string; footerNote: stri
       />
 
       <p className="sr-only" aria-live="polite">
-        {phase === "asleep" ? `${mikuro} is asleep inside. Knock on the door to wake her.` : ""}
+        {phase === "asleep" ? `${mikuro} is asleep inside her igloo. Knock on the ice door to wake her.` : ""}
         {phase === "angry" ? `${mikuro} is not happy about being woken up.` : ""}
       </p>
 
