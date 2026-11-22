@@ -513,18 +513,39 @@ export class SnowScene {
       this.zzz.push({ sprite: s, phase: i / 3 });
     }
 
-    // lamp post
-    const lamp = new THREE.Group();
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 2.0, 8), m.bodyDark);
-    pole.position.y = 1.0;
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.14, 0.22), new THREE.MeshBasicMaterial({ color: NEON_CYAN, toneMapped: false }));
-    head.position.y = 2.05;
-    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.06, 0.3), m.snow);
-    cap.position.y = 2.15;
-    lamp.add(pole, head, cap);
-    lamp.position.set(2.5, 0, 2.9);
-    this.scene.add(lamp);
-    this.glow(NEON_CYAN, 2.5, 2.05, 2.95, 1.6, 1.6, 0.45, this.scene);
+    // entrance tunnel: three arches of blocks on short walls
+    const D = this.D;
+    const Lt = this.L;
+    const yc = 0.36;
+    const rMid = 0.79;
+    const segLen = 0.47;
+    const segs = 4;
+    for (let s = 0; s < segs; s++) {
+      const along = this.mouthDist - segLen * (s + 0.5);
+      const centre = D.clone().multiplyScalar(along);
+      const count = 5;
+      const offset = s % 2 ? 0.5 : 0;
+      for (let k = 0; k < count + (s % 2 ? -1 : 0); k++) {
+        const a = ((k + 0.5 + offset) / count) * Math.PI;
+        const radial = Lt.clone().multiplyScalar(Math.cos(a)).addScaledVector(up, Math.sin(a));
+        const pos = centre.clone().addScaledVector(radial, rMid).setY(yc + Math.sin(a) * rMid);
+        // x along the arch, y along the tunnel, z outwards
+        const tArc = Lt.clone().multiplyScalar(-Math.sin(a)).addScaledVector(up, Math.cos(a));
+        const yAxis = new THREE.Vector3().crossVectors(radial, tArc).normalize();
+        basis.makeBasis(tArc, yAxis, radial);
+        const quat = new THREE.Quaternion().setFromRotationMatrix(basis);
+        list.push({ pos, quat, scale: new THREE.Vector3(0.86 + rnd() * 0.06, 1.08, 0.95), normal: radial, theta: 0, floater: false, tint: rnd() });
+      }
+      // short walls under the arch springs
+      for (const side of [-1, 1]) {
+        const radial = Lt.clone().multiplyScalar(side);
+        const pos = centre.clone().addScaledVector(radial, rMid).setY(0.17);
+        const yAxis = new THREE.Vector3().crossVectors(radial, up).normalize();
+        basis.makeBasis(up.clone().multiplyScalar(side), yAxis.multiplyScalar(side), radial);
+        const quat = new THREE.Quaternion().setFromRotationMatrix(basis);
+        list.push({ pos, quat, scale: new THREE.Vector3(0.62, 1.1, 0.95), normal: radial, theta: 0, floater: false, tint: rnd() });
+      }
+    }
 
     // loose chunks and snowballs in the snow
     for (let i = 0; i < 7; i++) {
