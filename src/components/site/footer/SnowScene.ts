@@ -250,6 +250,10 @@ export class SnowScene {
   private warmLight: THREE.PointLight;
   private sky: THREE.Mesh;
   private skyMat: THREE.ShaderMaterial;
+uniform float uWind;
+uniform float uFall;
+uniform float uSize;
+uniform float uDensity;
   private stars: THREE.Points;
   private snowMat: THREE.MeshStandardMaterial;
   private mountainMat: THREE.MeshStandardMaterial;
