@@ -38,3 +38,43 @@ export function NowOrb() {
   const [open, setOpen] = useState(false);
   const said = useRef(false);
   const live = useRef(a);
+  useEffect(() => {
+    live.current = a;
+  });
+
+  useEffect(() => {
+    let stop = false;
+    const load = () => {
+      if (document.hidden) return;
+      void fetch("/api/github/now")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((v: Now | null) => !stop && v && setNow(v))
+        .catch(() => {});
+      setClock(Date.now());
+    };
+    load();
+    const id = setInterval(load, POLL_MS);
+    const tick = setInterval(() => setClock(Date.now()), 30_000);
+    document.addEventListener("visibilitychange", load);
+    return () => {
+      stop = true;
+      clearInterval(id);
+      clearInterval(tick);
+      document.removeEventListener("visibilitychange", load);
+    };
+  }, []);
+
+  const since = now?.at ? clock - Date.parse(now.at) : Infinity;
+  const state = since < LIVE_MS ? "live" : since < WARM_MS ? "warm" : "away";
+
+  // Mikuro mentions it once a visit, when he is actually at it
+  useEffect(() => {
+    if (state !== "live" || said.current) return;
+    const t = setTimeout(() => {
+      const s = live.current;
+      if (said.current || !s.cinemaDone || s.intro || s.narrating || s.stage) return;
+      said.current = s.showQuip({ id: "now-live", ...NOW_LINES.live });
+    }, 20_000);
+    return () => clearTimeout(t);
+  }, [state]);
+
