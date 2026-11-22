@@ -609,7 +609,9 @@ export class SnowScene {
       }
       g.rotation.x = -Math.PI / 2;
       g.rotation.z = Math.atan2(-tan.x, -tan.z);
-      g.position.set(p.x + tan.z * 0.12 * side, 0.03, p.z - tan.x * 0.12 * side);
+      const x = p.x + tan.z * 0.13 * side;
+      const z = p.z - tan.x * 0.13 * side;
+      g.position.set(x, this.height(x, z) + 0.025, z);
       this.scene.add(g);
       this.paws.push({ mesh: g, mat });
     }
